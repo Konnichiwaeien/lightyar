@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
 import { InnerHeader } from "@/components/layout/inner-header";
@@ -79,7 +80,7 @@ export default function CampaignsPage({ searchParams }: PageProps) {
           </div>
 
           {/* URL Controller Components */}
-          <CampaignsControls />
+          <Suspense fallback={null}><CampaignsControls /></Suspense>
 
           {/* Bento Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
@@ -167,7 +168,7 @@ export default function CampaignsPage({ searchParams }: PageProps) {
             )}
           </div>
 
-          <CampaignsPagination currentPage={safePage} totalPages={totalPages} />
+          <Suspense fallback={null}><CampaignsPagination currentPage={safePage} totalPages={totalPages} /></Suspense>
           
         </div>
       </main>

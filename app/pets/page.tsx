@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PetsControls } from "@/components/pets/pets-controls";
 import { PetsPagination } from "@/components/pets/pets-pagination";
 import { InnerHeader } from "@/components/layout/inner-header";
@@ -97,7 +98,7 @@ export default function PetsPage({ searchParams }: PageProps) {
           </div>
 
           {/* Controls */}
-          <PetsControls />
+          <Suspense fallback={null}><PetsControls /></Suspense>
 
           {/* Bento Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
@@ -177,7 +178,7 @@ export default function PetsPage({ searchParams }: PageProps) {
             )}
           </div>
 
-          <PetsPagination currentPage={safePage} totalPages={totalPages} />
+          <Suspense fallback={null}><PetsPagination currentPage={safePage} totalPages={totalPages} /></Suspense>
 
         </div>
       </main>
