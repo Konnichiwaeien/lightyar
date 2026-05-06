@@ -1,11 +1,7 @@
 "use client";
 
 import { ShoppingCart, Package, Heart, Truck } from "lucide-react";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const ITEMS = [
   { 
@@ -34,7 +30,8 @@ const ITEMS = [
   },
 ];
 
-export function NeedsSection({ textEnter, textLeave }: Props) {
+export function NeedsSection() {
+  const { textEnter, textLeave } = useCursor();
   return (
     <section className="py-24 md:py-32 px-6 md:px-12 bg-[#f4f0eb] border-b border-stone-200" id="needs">
       <div className="max-w-7xl mx-auto">

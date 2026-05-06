@@ -2,13 +2,10 @@
 
 import { useRef } from "react";
 import { motion } from "framer-motion";
+import { useCursor } from "@/components/ui/cursor-context";
 
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-}
-
-export function HeroSection({ textEnter, textLeave }: Props) {
+export function HeroSection() {
+  const { textEnter, textLeave } = useCursor();
   const sectionRef = useRef<HTMLElement>(null);
 
   // Animation durations

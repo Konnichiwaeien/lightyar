@@ -3,13 +3,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-  imageEnter: () => void;
-  imageLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const DOGS = [
   { name: "Байкал", tag: "Найден на трассе", isLink: false },
@@ -19,7 +13,8 @@ const DOGS = [
   { name: "Все хвостики", tag: "Каталог", isLink: true },
 ];
 
-export function DogsStoriesSection({ textEnter, textLeave, imageEnter, imageLeave }: Props) {
+export function DogsStoriesSection() {
+  const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,

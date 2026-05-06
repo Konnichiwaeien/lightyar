@@ -4,11 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, HeartPulse, Sparkles, ShieldCheck, Cookie, Stethoscope, HeartHandshake } from "lucide-react";
 import { z } from "zod";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const RECENT_DONATIONS = Array.from({ length: 20 }).map((_, i) => ({
   name: ["Мария О.", "Алексей", "Анонимный друг", "Елена", "Михаил", "Анна С.", "Дмитрий", "Ольга"][i % 8],
@@ -33,7 +29,8 @@ const TAB_LABELS = { monthly: "Ежемесячно", once: "Разово" } as 
 
 const inputBase = "w-full bg-white border-2 rounded-2xl px-6 md:px-8 py-5 text-stone-900 focus:outline-none placeholder:text-stone-400 transition-all duration-300 focus:border-amber-400 focus:shadow-[0_10px_30px_-10px_rgba(245,158,11,0.1)]";
 
-export function PaymentSection({ textEnter, textLeave }: Props) {
+export function PaymentSection() {
+  const { textEnter, textLeave } = useCursor();
   const [donationType, setDonationType] = useState<(typeof TABS)[number]>("monthly");
   const [donationAmount, setDonationAmount] = useState("500");
   const [isAnonymous, setIsAnonymous] = useState(false);

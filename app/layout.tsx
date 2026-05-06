@@ -23,6 +23,8 @@ export const metadata: Metadata = {
 
 import { MenuOverlay } from "@/components/layout/menu-overlay";
 import { Footer } from "@/components/sections/footer";
+import { CursorProvider } from "@/components/ui/cursor-context";
+import { CustomCursor } from "@/components/ui/custom-cursor";
 
 export default function RootLayout({
   children,
@@ -30,9 +32,12 @@ export default function RootLayout({
   return (
     <html lang="ru" className={`${inter.variable} ${playfair.variable} antialiased`}>
       <body className="min-h-screen overflow-x-hidden">
-        {children}
-        <Footer />
-        <MenuOverlay />
+        <CursorProvider>
+          <CustomCursor />
+          {children}
+          <Footer />
+          <MenuOverlay />
+        </CursorProvider>
       </body>
     </html>
   );

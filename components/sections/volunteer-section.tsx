@@ -1,13 +1,10 @@
 "use client";
 
 import { Mail } from "lucide-react";
+import { useCursor } from "@/components/ui/cursor-context";
 
-interface Props {
-  imageEnter: () => void;
-  imageLeave: () => void;
-}
-
-export function VolunteerSection({ imageEnter, imageLeave }: Props) {
+export function VolunteerSection() {
+  const { imageEnter, imageLeave } = useCursor();
   return (
     <section
       className="relative py-24 md:py-32 flex items-center justify-center text-center overflow-hidden"

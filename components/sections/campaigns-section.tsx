@@ -2,11 +2,7 @@
 
 import { Heart, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const FUNDS = [
   { id: 1, title: "Операция для Рекса", desc: "Сбит машиной. Требуется срочная операция на тазобедренном суставе.", current: 15, total: 45, image: "https://images.unsplash.com/photo-1544568100-847a9ec5d878?auto=format&fit=crop&q=80&w=800" },
@@ -14,7 +10,8 @@ const FUNDS = [
   { id: 3, title: "Утепление вольеров", desc: "Закупка сена, ремонт будок и установка ветрозащиты перед грядущими морозами.", current: 5, total: 50, image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=800" },
 ];
 
-export function CampaignsSection({ textEnter, textLeave }: Props) {
+export function CampaignsSection() {
+  const { textEnter, textLeave } = useCursor();
   return (
     <section className="relative z-20 py-24 md:py-32" id="campaigns">
       <div className="max-w-7xl mx-auto px-6 md:px-12 mb-24">

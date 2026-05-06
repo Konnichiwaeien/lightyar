@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-  imageEnter: () => void;
-  imageLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 interface Particle {
   size: number;
@@ -129,7 +123,8 @@ function LightParticles() {
   );
 }
 
-export function AboutSection({ textEnter, textLeave, imageEnter, imageLeave }: Props) {
+export function AboutSection() {
+  const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
   return (
     <section className="relative py-24 md:py-32 w-full overflow-hidden" id="about">
       <LightParticles />

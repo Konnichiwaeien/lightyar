@@ -1,11 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-
-interface Props {
-  textEnter: () => void;
-  textLeave: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const NEWS = [
   {
@@ -45,7 +41,8 @@ const NEWS = [
   },
 ];
 
-export function NewsSection({ textEnter, textLeave }: Props) {
+export function NewsSection() {
+  const { textEnter, textLeave } = useCursor();
   return (
     <section className="relative pt-24 pb-36 md:pb-48 px-6 md:px-12 bg-[#e8e4dc] text-[#1c1c1c]" id="news">
       <div className="max-w-[1400px] mx-auto">

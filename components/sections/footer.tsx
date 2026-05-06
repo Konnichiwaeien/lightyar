@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { FileText, Download, ArrowUpRight, Mail, Phone, MapPin, ChevronDown } from "lucide-react";
 import Link from "next/link";
-
-interface Props {
-  textEnter?: () => void;
-  textLeave?: () => void;
-}
+import { useCursor } from "@/components/ui/cursor-context";
 
 const DOCUMENTS = [
   "Устав АНБО «Светлый»",
@@ -17,13 +13,10 @@ const DOCUMENTS = [
   "Отчет за 2024 год"
 ];
 
-const noop = () => {};
-
-export function Footer({ textEnter, textLeave }: Props = {}) {
+export function Footer() {
+  const { textEnter, textLeave } = useCursor();
   const [showRequisites, setShowRequisites] = useState(false);
-  const onEnter = textEnter ?? noop;
-  const onLeave = textLeave ?? noop;
-  const cursorClass = textEnter ? "cursor-none" : "";
+  const cursorClass = "cursor-none";
 
   return (
     <footer className="w-full flex flex-col lg:flex-row relative z-20 rounded-t-[3rem] md:rounded-t-[4rem] overflow-hidden shadow-2xl" id="footer">
@@ -60,8 +53,8 @@ export function Footer({ textEnter, textLeave }: Props = {}) {
               <a 
                 href="mailto:info@svetly.ru" 
                 className={`text-3xl md:text-4xl lg:text-5xl leading-none font-light hover:text-amber-500 transition-colors ${cursorClass} inline-flex items-center gap-4 group`}
-                onMouseEnter={onEnter}
-                onMouseLeave={onLeave}
+                onMouseEnter={textEnter}
+                onMouseLeave={textLeave}
               >
                 info@svetly.ru <ArrowUpRight size={28} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden md:block" />
               </a>
@@ -74,8 +67,8 @@ export function Footer({ textEnter, textLeave }: Props = {}) {
               <a 
                 href="tel:+79990000000" 
                 className={`text-3xl md:text-4xl lg:text-5xl leading-none font-light hover:text-amber-500 transition-colors ${cursorClass} inline-flex items-center gap-4 group`}
-                onMouseEnter={onEnter}
-                onMouseLeave={onLeave}
+                onMouseEnter={textEnter}
+                onMouseLeave={textLeave}
               >
                 +7 (999) 000-00-00 <ArrowUpRight size={28} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden md:block" />
               </a>
@@ -97,16 +90,16 @@ export function Footer({ textEnter, textLeave }: Props = {}) {
               <a 
                 href="#" 
                 className={`text-lg font-medium hover:text-amber-500 transition-colors ${cursorClass}`}
-                onMouseEnter={onEnter}
-                onMouseLeave={onLeave}
+                onMouseEnter={textEnter}
+                onMouseLeave={textLeave}
               >
                 Telegram
               </a>
               <a 
                 href="#" 
                 className={`text-lg font-medium hover:text-amber-500 transition-colors ${cursorClass}`}
-                onMouseEnter={onEnter}
-                onMouseLeave={onLeave}
+                onMouseEnter={textEnter}
+                onMouseLeave={textLeave}
               >
                 VKontakte
               </a>
@@ -136,8 +129,8 @@ export function Footer({ textEnter, textLeave }: Props = {}) {
                   key={i} 
                   href="#" 
                   className={`group flex flex-col sm:flex-row sm:items-center justify-between py-5 border-b border-[#1c1c1c]/10 hover:border-[#1c1c1c]/30 transition-colors ${cursorClass}`}
-                  onMouseEnter={onEnter}
-                  onMouseLeave={onLeave}
+                  onMouseEnter={textEnter}
+                  onMouseLeave={textLeave}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-[#1c1c1c]/5 flex items-center justify-center shrink-0 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors duration-300">
