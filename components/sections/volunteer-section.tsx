@@ -23,11 +23,11 @@ export function VolunteerSection({ imageEnter, imageLeave }: Props) {
 
       <div className="relative z-10 max-w-3xl mx-auto px-6">
         <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 text-white">
-          Стань частью<br />
-          <span className="font-serif italic text-amber-500">Команды</span>
+          Приходите<br />
+          <span className="font-serif italic text-amber-500">помогать</span>
         </h2>
         <p className="text-lg md:text-xl text-white/50 mb-10 font-light max-w-lg mx-auto">
-          Нам нужны фотографы, автоволонтеры и просто люди с большим сердцем для выгула собак.
+          Выгул собак, фотосъёмка для соцсетей, помощь на передержке — любые руки нужны.
         </p>
         <a
           href="mailto:help@svetly.ru?subject=Хочу стать волонтером"

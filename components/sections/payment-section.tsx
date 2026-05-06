@@ -84,19 +84,19 @@ export function PaymentSection({ textEnter, textLeave }: Props) {
           <div className="md:w-1/2">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-stone-200/60 mb-8 shadow-sm cursor-none pointer-events-auto hover:bg-white transition-colors">
               <Sparkles size={16} className="text-amber-500" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">Ваша помощь бесценна</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">На счету каждый рубль</span>
             </div>
             <h2
               className="text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-bold tracking-tighter text-stone-900 drop-shadow-sm"
               onMouseEnter={textEnter}
               onMouseLeave={textLeave}
             >
-              Дарите <span className="italic font-serif text-amber-600">будущее.</span><br />Прямо сейчас.
+              Без вас не <span className="italic font-serif text-amber-600">справимся.</span>
             </h2>
           </div>
           <div className="md:w-1/2 md:pb-2">
             <p className="text-stone-500 text-lg md:text-xl font-light leading-relaxed max-w-lg">
-              Подписка на ежемесячный платеж — это гарантия. Вы становитесь ангелом-хранителем для сотен хвостов, которым некому больше помочь.
+              Регулярный платёж — самая ценная помощь. Он позволяет планировать лечение, закупать корм и не зависеть от случая.
             </p>
           </div>
         </div>

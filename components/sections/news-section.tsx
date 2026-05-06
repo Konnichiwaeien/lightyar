@@ -52,10 +52,10 @@ export function NewsSection({ textEnter, textLeave }: Props) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
           <div className="max-w-2xl">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif text-[#1c1c1c] leading-[1.05] tracking-tight mb-6">
-              Главные <span className="italic text-amber-500">новости</span>
+              Новости <span className="italic text-amber-500">приюта</span>
             </h2>
             <p className="text-[#1c1c1c]/60 text-lg md:text-xl font-light">
-              Каждый день мы делаем жизнь животных лучше благодаря вашей поддержке. Следите за нашими результатами и счастливыми историями.
+              Что у нас происходит: пристройства, сборы, отчёты и истории подопечных.
             </p>
           </div>
         </div>

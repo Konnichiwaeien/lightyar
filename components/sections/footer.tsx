@@ -48,7 +48,7 @@ export function Footer({ textEnter, textLeave }: Props = {}) {
           <div className="mb-16 lg:mb-24">
             <Link href="/" className={`text-4xl lg:text-7xl font-serif mb-6 text-white leading-none block hover:text-amber-500 transition-colors duration-300 ${cursorClass}`}>Светлый.</Link>
             <p className="text-white/80 text-lg md:text-xl font-light leading-relaxed max-w-sm drop-shadow-md">
-              Мы работаем каждый день, чтобы у каждого хвостатого появился свой дом. Несем свет туда, где темно.
+              Лечим, любим, ищем семью. Каждый день — без выходных.
             </p>
           </div>
           

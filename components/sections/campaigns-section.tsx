@@ -23,8 +23,8 @@ export function CampaignsSection({ textEnter, textLeave }: Props) {
           onMouseEnter={textEnter}
           onMouseLeave={textLeave}
         >
-          Им нужен <br />
-          <span className="text-red-600 italic font-serif">Свет.</span> Сейчас.
+          Нужна <br />
+          <span className="text-amber-500 italic font-serif">помощь</span>
         </h2>
       </div>
 

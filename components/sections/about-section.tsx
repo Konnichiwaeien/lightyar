@@ -138,7 +138,7 @@ export function AboutSection({ textEnter, textLeave, imageEnter, imageLeave }: P
         
         {/* Label */}
         <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] mb-10 text-[#F5A623]">
-          [ О Фонде Светлый ]
+          [ О нас ]
         </h2>
 
         {/* Massive Centered Editorial Title */}
@@ -147,12 +147,12 @@ export function AboutSection({ textEnter, textLeave, imageEnter, imageLeave }: P
           onMouseEnter={textEnter}
           onMouseLeave={textLeave}
         >
-          С 2024 года мы ломаем <span className="italic font-light text-[#F5A623]">стереотипы</span> о приютах
+          Небольшая команда, большое <span className="italic font-light text-[#F5A623]">дело</span>
         </p>
 
         {/* Subtitle / Description */}
         <p className="text-lg md:text-2xl font-light opacity-60 text-center max-w-4xl leading-relaxed mb-16 md:mb-24">
-          Организация создана волонтерами Ярославля с многолетним стажем. Мы лечим, социализируем и возвращаем веру в человека.
+          Мы — волонтёры из Ярославля с многолетним стажем. В октябре 2024 объединились в фонд, чтобы помогать системно. Сейчас на попечении 85 хвостиков — и каждому мы ищем свою семью.
         </p>
 
         {/* Cinematic Integrated Block */}

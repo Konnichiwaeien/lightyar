@@ -40,7 +40,7 @@ export function NeedsSection({ textEnter, textLeave }: Props) {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-12 justify-between items-end mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">[ Гуманитарная помощь ]</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6">[ Нужды приюта ]</h2>
             <h3
               className="text-4xl md:text-5xl lg:text-7xl font-serif text-stone-900 leading-[1.05]"
               onMouseEnter={textEnter}
