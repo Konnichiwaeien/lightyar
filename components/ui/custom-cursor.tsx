@@ -1,10 +1,27 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useCursor } from "@/components/ui/cursor-context";
+import { usePathname } from "next/navigation";
 
 export function CustomCursor() {
   const { mousePosition, cursorVariant } = useCursor();
+  const pathname = usePathname();
+  const isHomepage = pathname === "/";
+
+  useEffect(() => {
+    if (isHomepage) {
+      document.body.classList.add("has-custom-cursor");
+    } else {
+      document.body.classList.remove("has-custom-cursor");
+    }
+    return () => {
+      document.body.classList.remove("has-custom-cursor");
+    };
+  }, [isHomepage]);
+
+  if (!isHomepage) return null;
 
   const cursorVariants = {
     default: {

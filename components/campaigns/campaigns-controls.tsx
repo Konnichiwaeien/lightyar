@@ -27,7 +27,8 @@ export function CampaignsControls() {
       <div className="flex bg-white rounded-full p-1 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
         <button
           onClick={() => router.push(pathname + "?" + createQueryString("status", "active"))}
-          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+          aria-pressed={currentStatus === "active"}
+          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
             currentStatus === "active" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
           }`}
         >
@@ -35,7 +36,8 @@ export function CampaignsControls() {
         </button>
         <button
           onClick={() => router.push(pathname + "?" + createQueryString("status", "closed"))}
-          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+          aria-pressed={currentStatus === "closed"}
+          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
             currentStatus === "closed" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
           }`}
         >
@@ -45,11 +47,12 @@ export function CampaignsControls() {
 
       {/* Sorting */}
       <div className="flex items-center gap-4 w-full md:w-auto bg-white rounded-full px-6 py-3 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40">Сортировка:</span>
+        <label htmlFor="campaigns-sort-select" className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 cursor-pointer">Сортировка:</label>
         <select
+          id="campaigns-sort-select"
           value={currentSort}
           onChange={(e) => router.push(pathname + "?" + createQueryString("sort", e.target.value))}
-          className="bg-transparent border-none text-[#1c1c1c] font-medium text-sm focus:ring-0 cursor-none outline-none"
+          className="bg-transparent border-none text-[#1c1c1c] font-medium text-sm focus:ring-0 cursor-none outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden rounded-md px-1"
         >
           <option value="date_desc">Сначала новые</option>
           <option value="date_asc">Сначала старые</option>

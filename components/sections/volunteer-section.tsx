@@ -19,7 +19,7 @@ export function VolunteerSection() {
       </div>
 
       <div className="relative z-10 max-w-3xl mx-auto px-6">
-        <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 text-white">
+        <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 text-white text-wrap: balance">
           Приходите<br />
           <span className="font-serif italic text-amber-500">помогать</span>
         </h2>
@@ -30,7 +30,7 @@ export function VolunteerSection() {
           href="mailto:help@svetly.ru?subject=Хочу стать волонтером"
           className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-amber-500 transition-colors pointer-events-auto cursor-none"
         >
-          <Mail size={16} /> Отправить заявку
+          <Mail size={16} aria-hidden="true" /> Отправить заявку
         </a>
       </div>
     </section>

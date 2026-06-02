@@ -84,3 +84,9 @@ body {
   -webkit-text-fill-color: transparent;
   mix-blend-mode: multiply;
 }
+
+/* Restore standard cursors on pages where the custom cursor is not loaded */
+body:not(.has-custom-cursor) .cursor-none,
+body:not(.has-custom-cursor) [class*="cursor-none"] {
+  cursor: revert !important;
+}

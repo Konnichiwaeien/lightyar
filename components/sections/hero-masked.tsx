@@ -92,6 +92,7 @@ export function HeroSection({ textEnter, textLeave }: Props) {
           muted
           loop
           playsInline
+          preload="auto"
           onError={(e) => {
             e.currentTarget.style.display = "none";
           }}

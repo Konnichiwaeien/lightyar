@@ -31,6 +31,20 @@ export function MenuOverlay() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -39,12 +53,16 @@ export function MenuOverlay() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Главное меню"
           className="fixed inset-0 z-200 bg-dark-card text-[#e8e4dc] flex flex-col justify-center items-center px-6 md:px-12 pointer-events-auto"
         >
           {/* Close button */}
           <button
             onClick={() => setIsOpen(false)}
-            className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors duration-300"
+            aria-label="Закрыть меню"
+            className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden transition-colors duration-300"
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -64,7 +82,7 @@ export function MenuOverlay() {
                   <Link
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="group flex items-center justify-center gap-6"
+                    className="group flex items-center justify-center gap-6 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden rounded-xl px-4 py-2"
                   >
                     <span className="text-4xl md:text-5xl lg:text-6xl font-serif text-white/70 group-hover:text-amber-500 transition-colors duration-500 block">
                       {item.label}
@@ -82,3 +100,4 @@ export function MenuOverlay() {
     </AnimatePresence>
   );
 }
+

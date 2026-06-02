@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, HeartPulse, Sparkles, ShieldCheck, Cookie, Stethoscope, HeartHandshake } from "lucide-react";
+import { ArrowRight, HeartPulse, Sparkles, ShieldCheck, Cookie, Stethoscope, HeartHandshake, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useCursor } from "@/components/ui/cursor-context";
 
@@ -36,10 +36,24 @@ export function PaymentSection() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedTier = TIERS.find((t) => t.amount === donationAmount);
 
+  const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const nextIndex = index === 0 ? 1 : 0;
+      const nextTab = TABS[nextIndex];
+      setDonationType(nextTab);
+      const buttons = document.querySelectorAll('[role="tab"]');
+      (buttons[nextIndex] as HTMLButtonElement)?.focus();
+    }
+  };
+
   const handleSubmit = () => {
+    if (isSubmitting) return;
+
     if (isAnonymous) {
       const result = donationSchema.shape.email.safeParse(formData.email);
       if (!result.success) {
@@ -60,7 +74,12 @@ export function PaymentSection() {
       }
       setErrors({});
     }
-    alert(`CloudPayments: ${donationAmount} ₽, ${donationType}`);
+    
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      alert(`CloudPayments: ${donationAmount} ₽, ${donationType}`);
+    }, 1500);
   };
 
   return (
@@ -80,11 +99,11 @@ export function PaymentSection() {
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-end pt-8">
           <div className="md:w-1/2">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-stone-200/60 mb-8 shadow-sm cursor-none pointer-events-auto hover:bg-white transition-colors">
-              <Sparkles size={16} className="text-amber-500" />
+              <Sparkles size={16} className="text-amber-500" aria-hidden="true" />
               <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-stone-600">На счету каждый рубль</span>
             </div>
             <h2
-              className="text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-bold tracking-tighter text-stone-900 drop-shadow-sm"
+              className="text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-bold tracking-tighter text-stone-900 drop-shadow-sm text-wrap: balance"
               onMouseEnter={textEnter}
               onMouseLeave={textLeave}
             >
@@ -103,15 +122,26 @@ export function PaymentSection() {
           <div className="flex flex-col lg:flex-row items-stretch">
 
             {/* Left: Donation Form */}
-            <div className="w-full lg:w-7/12 p-8 md:p-12 lg:p-14 flex flex-col cursor-auto">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="w-full lg:w-7/12 p-8 md:p-12 lg:p-14 flex flex-col cursor-auto"
+            >
 
               {/* Toggle with sliding indicator */}
-              <div className="relative flex p-2 bg-stone-100/60 rounded-3xl mb-10 border border-stone-200/50">
-                {TABS.map((tab) => (
+              <div role="tablist" aria-label="Периодичность пожертвования" className="relative flex p-2 bg-stone-100/60 rounded-3xl mb-10 border border-stone-200/50">
+                {TABS.map((tab, idx) => (
                   <button
                     key={tab}
+                    type="button"
                     onClick={() => setDonationType(tab)}
-                    className={`flex-1 relative z-10 py-4 text-xs font-bold uppercase tracking-widest transition-all duration-500 rounded-2xl cursor-pointer ${
+                    onKeyDown={(e) => handleTabKeyDown(e, idx)}
+                    role="tab"
+                    aria-selected={donationType === tab}
+                    tabIndex={donationType === tab ? 0 : -1}
+                    className={`flex-1 relative z-10 py-4 text-xs font-bold uppercase tracking-widest transition-all duration-500 rounded-2xl cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
                       donationType === tab ? "text-white" : "text-stone-400 hover:text-stone-600"
                     }`}
                   >
@@ -128,7 +158,7 @@ export function PaymentSection() {
 
               {/* Tier selectors */}
               <div className="mb-4">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-4 block ml-1">Выберите тир поддержки</label>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-4 block ml-1">Выберите тир поддержки</span>
                 <div className="grid grid-cols-3 gap-3 md:gap-4">
                   {TIERS.map((tier) => {
                     const Icon = tier.icon;
@@ -136,14 +166,16 @@ export function PaymentSection() {
                     return (
                       <button
                         key={tier.amount}
+                        type="button"
                         onClick={() => setDonationAmount(tier.amount)}
-                        className={`flex flex-col items-center justify-center py-6 md:py-8 rounded-2xl transition-all duration-300 border-2 cursor-pointer group ${
+                        aria-pressed={active}
+                        className={`flex flex-col items-center justify-center py-6 md:py-8 rounded-2xl transition-all duration-300 border-2 cursor-pointer group focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
                           active
                           ? "border-amber-400 bg-amber-50/50 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.15)] -translate-y-1"
                           : "border-stone-100 bg-white hover:border-amber-200 hover:-translate-y-1 hover:shadow-md hover:shadow-stone-200/50"
                         }`}
                       >
-                        <Icon size={20} className={`mb-2 ${tier.color}`} />
+                        <Icon size={20} className={`mb-2 ${tier.color}`} aria-hidden="true" />
                         <span className={`text-2xl md:text-3xl font-serif font-bold transition-colors ${active ? "text-amber-700" : "text-stone-700 group-hover:text-amber-600"}`}>{tier.amount}</span>
                         <span className={`text-[10px] font-bold uppercase mt-1 md:mt-2 transition-colors ${active ? "text-amber-500" : "text-stone-300 group-hover:text-amber-400"}`}>рублей</span>
                       </button>
@@ -163,7 +195,7 @@ export function PaymentSection() {
                     transition={{ duration: 0.2 }}
                     className="flex items-center gap-3 px-5 py-3.5 bg-amber-50/60 rounded-2xl border border-amber-100 mb-6"
                   >
-                    <selectedTier.icon size={18} className="text-amber-500 shrink-0" />
+                    <selectedTier.icon size={18} className="text-amber-500 shrink-0" aria-hidden="true" />
                     <div>
                       <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">{selectedTier.label}</span>
                       <span className="text-xs text-amber-600/80 ml-1.5">— {selectedTier.desc}</span>
@@ -174,9 +206,14 @@ export function PaymentSection() {
 
               {/* Custom amount */}
               <div className="group relative mb-4">
+                <label htmlFor="custom-donation-amount" className="sr-only">Другая сумма пожертвования</label>
                 <input
                   type="number"
-                  placeholder="Другая сумма"
+                  id="custom-donation-amount"
+                  name="amount"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  placeholder="Другая сумма, например 1000…"
                   onChange={(e) => { if (e.target.value) setDonationAmount(e.target.value); }}
                   className={`${inputBase} border-stone-100 text-xl font-serif placeholder:text-stone-300`}
                 />
@@ -187,35 +224,51 @@ export function PaymentSection() {
               <div className="flex flex-col gap-4">
                 {!isAnonymous && (
                   <div>
+                    <label htmlFor="donation-name" className="sr-only">Ваше имя</label>
                     <input
                       type="text"
-                      placeholder="Ваше имя"
+                      id="donation-name"
+                      name="name"
+                      autoComplete="name"
+                      inputMode="text"
+                      placeholder="Ваше имя, например Алексей…"
                       value={formData.name}
                       onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setErrors((p) => ({ ...p, name: undefined })); }}
+                      aria-invalid={!!errors.name}
+                      aria-describedby={errors.name ? "donation-name-error" : undefined}
                       className={`${inputBase} ${errors.name ? "border-red-300" : "border-stone-100"}`}
                     />
-                    {errors.name && <p className="text-red-500 text-xs mt-1.5 ml-2">{errors.name}</p>}
+                    {errors.name && <p id="donation-name-error" className="text-red-500 text-xs mt-1.5 ml-2" role="alert">{errors.name}</p>}
                   </div>
                 )}
                 <div>
+                  <label htmlFor="donation-email" className="sr-only">Email для квитанции</label>
                   <input
                     type="email"
-                    placeholder="Email для квитанции"
+                    id="donation-email"
+                    name="email"
+                    autoComplete="email"
+                    spellCheck={false}
+                    inputMode="email"
+                    placeholder="Email для квитанции, например name@example.com…"
                     value={formData.email}
                     onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setErrors((p) => ({ ...p, email: undefined })); }}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "donation-email-error" : undefined}
                     className={`${inputBase} ${errors.email ? "border-red-300" : "border-stone-100"}`}
                   />
-                  {errors.email && <p className="text-red-500 text-xs mt-1.5 ml-2">{errors.email}</p>}
+                  {errors.email && <p id="donation-email-error" className="text-red-500 text-xs mt-1.5 ml-2" role="alert">{errors.email}</p>}
                 </div>
-                <label className="flex items-center gap-3 ml-1 mt-1 cursor-pointer">
+                <label className="flex items-center gap-3 ml-1 mt-1 cursor-pointer" htmlFor="donation-anonymous">
                   <div className="relative">
                     <input
                       type="checkbox"
+                      id="donation-anonymous"
                       checked={isAnonymous}
                       onChange={(e) => setIsAnonymous(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-5 h-5 rounded-lg border-2 border-stone-200 peer-checked:border-amber-500 peer-checked:bg-amber-500 transition-all flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-lg border-2 border-stone-200 peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2 transition-all flex items-center justify-center">
                       {isAnonymous && (
                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -229,21 +282,31 @@ export function PaymentSection() {
 
               {/* Submit — gradient hover */}
               <button
-                onClick={handleSubmit}
-                className="mt-10 relative w-full overflow-hidden bg-stone-900 text-white rounded-2xl h-16 md:h-[72px] font-bold uppercase tracking-widest text-xs md:text-sm cursor-pointer group transition-transform duration-300 hover:scale-[1.02] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)]"
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-10 relative w-full overflow-hidden bg-stone-900 text-white rounded-2xl h-16 md:h-[72px] font-bold uppercase tracking-widest text-xs md:text-sm cursor-pointer group transition-transform duration-300 hover:scale-[1.02] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <span className="relative z-10 inline-flex items-center gap-3">
-                  Перевести {donationAmount} ₽
-                  <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-500" />
+                  {isSubmitting ? (
+                    <>
+                      Обработка…
+                      <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                    </>
+                  ) : (
+                    <>
+                      Перевести {donationAmount} ₽
+                      <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-500" aria-hidden="true" />
+                    </>
+                  )}
                 </span>
                 <div className="absolute inset-0 bg-linear-to-r from-stone-800 via-amber-600 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
               </button>
 
               <div className="mt-6 flex items-center justify-center text-[10px] text-stone-400 uppercase tracking-widest font-bold">
-                <ShieldCheck size={14} className="text-stone-300 mr-2" />
+                <ShieldCheck size={14} className="text-stone-300 mr-2" aria-hidden="true" />
                 Безопасный платеж
               </div>
-            </div>
+            </form>
 
             {/* Right: Live Feed */}
             <div className="w-full lg:w-5/12 bg-stone-50 border-t lg:border-t-0 lg:border-l border-stone-100 flex flex-col relative">
@@ -254,15 +317,15 @@ export function PaymentSection() {
                   </h4>
                   <p className="text-xs font-light text-stone-400">Нас поддерживают прямо сейчас</p>
                 </div>
-                <HeartPulse className="text-stone-200" size={28} strokeWidth={1} />
+                <HeartPulse className="text-stone-200" size={28} strokeWidth={1} aria-hidden="true" />
               </div>
 
               <div className="overflow-y-auto max-h-[800px] px-6 pb-8 md:px-8 custom-scrollbar" onMouseEnter={textEnter} onMouseLeave={textLeave}>
-                <div className="flex flex-col gap-2.5">
+                <ul className="flex flex-col gap-2.5">
                   {RECENT_DONATIONS.map((d, i) => (
-                    <div key={i} className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-none pointer-events-auto group">
+                    <li key={i} className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-none pointer-events-auto group">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full ${d.avatarBg} flex items-center justify-center text-sm font-bold font-serif shrink-0`}>
+                        <div className={`w-10 h-10 rounded-full ${d.avatarBg} flex items-center justify-center text-sm font-bold font-serif shrink-0`} aria-hidden="true">
                           {d.name[0]}
                         </div>
                         <div className="flex flex-col justify-center">
@@ -275,9 +338,9 @@ export function PaymentSection() {
                       <div className="text-xl font-serif font-extrabold text-amber-500 whitespace-nowrap">
                         +{d.amount.toLocaleString("ru-RU")} <span className="text-sm font-bold text-amber-400">₽</span>
                       </div>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
 
               <div className="h-16 bg-linear-to-t from-stone-50 to-transparent absolute bottom-0 left-0 w-full pointer-events-none" />

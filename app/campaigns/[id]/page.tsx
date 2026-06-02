@@ -1,58 +1,104 @@
 import { InnerHeader } from "@/components/layout/inner-header";
 import { CampaignGallery } from "@/components/campaigns/campaign-gallery";
-import { Heart, Megaphone } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { campaignsService } from "@/lib/api/services/campaigns";
 
-export const metadata: Metadata = {
-  title: "Детали сбора | Светлый",
-};
+export const revalidate = 3600; // Enable ISR revalidation every hour
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-// Dummy fetch function
-function getCampaignMock(id: string) {
+// Generate dynamic SEO metadata
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const campaign = await campaignsService.getCampaignByIdOrSlug(resolvedParams.id);
+
+  if (!campaign) {
+    return {
+      title: "Сбор не найден | Светлый",
+    };
+  }
+
   return {
-    id,
-    title: "Поддержать Шона в реабилитации после автотравмы",
-    shortDesc: "Шон долго бродил по улицам Ярославля в поисках хозяев, но так и не нашёл их. Скорее всего, его сбила машина. Впереди — долгое восстановление.",
-    longDesc: `Обычно мы публикуем истории счастливых спасений. Но иногда нужно просто показать, сколько стоит вернуть собаку к нормальной жизни. 
-    
-Шон долго бродил по улицам Ярославля в поисках хозяев, но так и не нашёл их. В феврале он поступил к нам в приют со сломанной лапкой. Скорее всего, его сбила машина — это объясняет и характер травмы. Рентген показал сложный перелом задней лапы с осколками. 
-
-Позади — тяжелая операция (остеосинтез), впереди — долгое медикаментозное восстановление. Мы делаем всё, чтобы облегчить его страдания, и верим: скоро он снова сможет бегать и радоваться жизни. 
-
-Для полноценной реабилитации нам необходимы:
-— Лечебный корм для восстановления костей (3 мешка x 5000 ₽)
-— Медикаменты, обезболивающее и антибиотики (курс 7000 ₽)
-— Оплата стационара в ветеринарной клинике (около 15000 ₽)
-— Повторные рентген-снимки (заложены 5000 ₽)
-
-Только благодаря вашей регулярной поддержке мы сможем покрыть эти расходы. Пожалуйста, помогите пёсику! Каждые 100 рублей приближают его к здоровой жизни без боли.`,
-    current: 39650,
-    total: 80000,
-    deadline: "31.05.2026",
-    images: [
-      "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&q=80&w=1200",
-      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=800",
-      "https://images.unsplash.com/photo-1537151608828-ea2b11777ee9?auto=format&fit=crop&q=80&w=800",
-      "https://images.unsplash.com/photo-1601630138404-32b0ed355153?auto=format&fit=crop&q=80&w=800"
-    ],
-    feed: [
-      { name: "Анонимный помощник", type: "Разовая помощь", date: "04.04.2026", amount: 50 },
-      { name: "Екатерина", type: "Разовая помощь", date: "04.04.2026", amount: 200 },
-      { name: "Нелля", type: "Ежемесячная помощь", date: "27.03.2026", amount: 500 },
-      { name: "Иван", type: "Разовая помощь", date: "26.03.2026", amount: 1500 },
-      { name: "Анонимный помощник", type: "Разовая помощь", date: "25.03.2026", amount: 100 },
-      { name: "Ольга", type: "Разовая помощь", date: "25.03.2026", amount: 300 },
-    ]
+    title: `${campaign.title} | Сборы приюта «Светлый»`,
+    description: campaign.shortDesc || "Поддержите сборы и проекты помощи бездомным животным в Ярославле.",
   };
 }
 
-export default function CampaignDetailsPage({ params }: PageProps) {
-  const campaign = getCampaignMock(params.id);
+// Generate static params for compile-time speed (SSG)
+export async function generateStaticParams() {
+  const identifierObjects = await campaignsService.getAllCampaignIdentifiers();
+  // Return both ids and slugs as potential parameters to pre-render
+  const paramsList = [];
+  for (const item of identifierObjects) {
+    if (item.id) paramsList.push({ id: item.id });
+    if (item.slug) paramsList.push({ id: item.slug });
+  }
+  return paramsList;
+}
+
+export default async function CampaignDetailsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const rawCampaign = await campaignsService.getCampaignByIdOrSlug(resolvedParams.id);
+
+  if (!rawCampaign) {
+    notFound();
+  }
+
+  // Parse total and current
+  const total = Number(rawCampaign.total) || 100;
+  const current = Number(rawCampaign.current) || 0;
+  const deadlineDate = rawCampaign.deadline ? new Date(rawCampaign.deadline) : null;
+  const deadlineStr = deadlineDate ? deadlineDate.toLocaleDateString("ru-RU") : "окончания сбора";
+
+  // Resolve image URLs
+  const imageUrls: string[] = [];
+  if (rawCampaign.images && rawCampaign.images.length > 0) {
+    rawCampaign.images.forEach(img => {
+      imageUrls.push(campaignsService.resolveMediaUrl(img.url));
+    });
+  } else {
+    // Default fallback images matching visual guidelines
+    imageUrls.push(
+      "https://images.unsplash.com/photo-1544568100-847a9ec5d878?auto=format&fit=crop&q=80&w=1200",
+      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=800"
+    );
+  }
+
+  // Resolve direct linked pet details
+  const petName = rawCampaign.pet?.name || "";
+  const petUrl = rawCampaign.pet?.documentId ? `/pets/${rawCampaign.pet.documentId}` : null;
+
+  // Map donations feed from real database transactions relation
+  const donations = rawCampaign.donations || [];
+  const feedMapped = [...donations]
+    .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime())
+    .map(d => ({
+      name: d.donorName || "Анонимный помощник",
+      type: d.type === "monthly" ? "Ежемесячная помощь" : "Разовая помощь",
+      date: new Date(d.publishedAt || d.createdAt).toLocaleDateString("ru-RU"),
+      amount: Number(d.amount) || 0
+    }));
+
+  const campaign = {
+    id: rawCampaign.documentId,
+    title: rawCampaign.title,
+    shortDesc: rawCampaign.shortDesc,
+    longDesc: rawCampaign.longDesc || "Сбор средств для подопечных нашего приюта. Спасибо вам за помощь!",
+    current,
+    total,
+    deadline: deadlineStr,
+    images: imageUrls,
+    feed: feedMapped,
+    petName,
+    petUrl
+  };
 
   const detailedDescription = (
     <div className="bg-white rounded-[2rem] p-8 md:p-12 lg:p-16 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-[#1c1c1c]/5 w-full pointer-events-auto">
@@ -81,6 +127,14 @@ export default function CampaignDetailsPage({ params }: PageProps) {
             
             {/* Main Info Card */}
             <div className="bg-white rounded-[2rem] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-[#1c1c1c]/5 pointer-events-auto">
+              {campaign.petName && campaign.petUrl && (
+                <Link
+                  href={campaign.petUrl}
+                  className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-500 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-500/10 mb-4 hover:bg-amber-500 hover:text-white transition-all duration-300 pointer-events-auto"
+                >
+                  Сбор для питомца: {campaign.petName} →
+                </Link>
+              )}
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif leading-[1.1] mb-6 text-[#1c1c1c]">
                 {campaign.title}
               </h1>
@@ -104,7 +158,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                   />
                 </div>
                 <p className="text-[10px] text-[#1c1c1c]/40 uppercase tracking-widest font-bold">
-                  Осталось собрать: {(campaign.total - campaign.current).toLocaleString()} ₽ до {campaign.deadline}
+                  Осталось собрать: {Math.max(0, campaign.total - campaign.current).toLocaleString()} ₽ до {campaign.deadline}
                 </p>
               </div>
 
@@ -177,7 +231,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                 className="group bg-white rounded-[2rem] overflow-hidden border border-[#1c1c1c]/5 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1"
               >
                 <div className="h-48 overflow-hidden relative">
-                  <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                  <Image src={item.img} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-1000 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-linear-to-t from-white via-white/20 to-transparent opacity-80" />
                   <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]">
                     {item.tag}

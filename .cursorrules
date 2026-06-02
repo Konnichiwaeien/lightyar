@@ -1,0 +1,28 @@
+# Rules for AI Coding Assistant (Antigravity/Cursor/Claude)
+
+You are an expert software architect. You MUST adhere to the following project-wide development standards for the "Lightyar" codebase at all times.
+
+## 1. File & Folder Naming Convention
+*   **Strictly use kebab-case** for ALL files, directories, React components, and assets.
+*   **Examples:** `pet-card.tsx`, `pets-grid.tsx`, `calculate-age-in-years.ts`, `components/pets/`.
+*   **NEVER** use CamelCase, PascalCase, or snake_case for filenames.
+
+## 2. Directory Structure & Layers
+*   `app/`: Routing layer. Pages (`page.tsx`) must be light Server Components. Keep JSX minimal, delegate complex sections to feature components, and mapping/formatting logic to helpers.
+*   `components/`: UI components. Place page-specific blocks in `components/[feature]/` and generic UI elements in `components/ui/`.
+*   `lib/helpers/`: Small, reusable logic files.
+*   `lib/api/`: Data services and client.
+
+## 3. Modular Logic (One Utility Per File)
+*   **Strict Rule:** Every helper, mapping, or formatting utility must reside in its own isolated file under `lib/helpers/` or `lib/utils/`.
+*   **Example:** `lib/helpers/pets/calculate-age-in-years.ts` contains ONLY the `calculateAgeInYears` function.
+*   This improves bundle size (Tree Shaking), simplifies imports, and enables atomic unit testing.
+
+## 4. UI & React Component Guidelines
+*   Use named exports instead of `export default` for all React components. (Only files requiring `default` by Next.js, e.g. `page.tsx`, `layout.tsx`, can use it).
+*   Always define and export the TypeScript interface for props (e.g. `export interface PetCardProps`).
+*   Keep markup semantic (`<article>`, `<section>`, `<ul>`, etc.).
+*   Prioritize responsive layouts, elegant typography (Inter, Outfit, Playfair Display), rich color palettes, and micro-animations.
+
+## 5. Reference Documentation
+*   Refer to `docs/development-standards.md` for the complete specification.

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 
 /**
  * Мягкие морфящиеся gradient-блобы, создающие эффект «живого света».

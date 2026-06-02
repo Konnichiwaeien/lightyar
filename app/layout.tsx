@@ -6,6 +6,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "cyrillic"],
   display: "swap",
+  adjustFontFallback: true,
 });
 
 const playfair = Playfair_Display({
@@ -14,6 +15,7 @@ const playfair = Playfair_Display({
   display: "swap",
   weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -33,6 +35,12 @@ export default function RootLayout({
     <html lang="ru" className={`${inter.variable} ${playfair.variable} antialiased`}>
       <body className="min-h-screen overflow-x-hidden">
         <CursorProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-black focus:px-6 focus:py-3 focus:rounded-full focus:shadow-lg focus:font-bold focus:uppercase focus:tracking-widest focus:text-xs focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
+          >
+            Перейти к основному контенту
+          </a>
           <CustomCursor />
           {children}
           <Footer />
