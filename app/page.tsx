@@ -11,48 +11,46 @@ import { ColorTransitionWrapper } from "@/components/home/color-transition-wrapp
 import { newsService } from "@/lib/api/services/news";
 import { petsService } from "@/lib/api/services/pets";
 import { campaignsService } from "@/lib/api/services/campaigns";
+import { donationsService } from "@/lib/api/services/donations";
+import type { RecentDonation } from "@/components/sections/payment-section";
 import { normalizePetData } from "@/lib/helpers/pets/normalize-pet-data";
+import { normalizeCampaignData, MappedCampaign } from "@/lib/helpers/campaigns/normalize-campaign-data";
 
 export default async function Home() {
-  const news = await newsService.getLatestNews(5);
-  
-  // Fetch real pets looking for a home directly from the API
-  const realPetsRaw = await petsService.getPets({ status: "shelter", limit: 5 }) || [];
-  const petsInShelter = realPetsRaw
-    .map(normalizePetData)
-    .map((pet) => ({
-      id: pet.id,
-      name: pet.name,
-      tag: pet.tag,
-      image: pet.image
+  let news: Awaited<ReturnType<typeof newsService.getLatestNews>> = [];
+  let petsInShelter: { id: string; name: string; tag: string; image: string }[] = [];
+  let activeCampaigns: MappedCampaign[] = [];
+  let recentDonations: RecentDonation[] = [];
+
+  try {
+    const [newsResult, realPetsRaw, campaignsRaw, donationsRaw] = await Promise.all([
+      newsService.getLatestNews(5),
+      petsService.getPets({ status: "shelter", limit: 5 }).then(r => r || []),
+      campaignsService.getCampaigns({ status: "active", limit: 3 }),
+      donationsService.getRecentDonations(20),
+    ]);
+
+    news = newsResult;
+
+    recentDonations = donationsRaw.map((d) => ({
+      name: d.donorName || "Анонимный помощник",
+      amount: d.amount,
+      type: d.type,
     }));
 
-  // Fetch real active campaigns directly from Strapi
-  const campaignsRaw = await campaignsService.getCampaigns({ status: "active", limit: 3 });
-  const activeCampaigns = (campaignsRaw.data || []).map((camp) => {
-    let imageUrl = "";
-    if (camp.images && camp.images.length > 0) {
-      imageUrl = campaignsService.resolveMediaUrl(camp.images[0].url);
-    } else {
-      const DEFAULT_CAMP_IMAGES = [
-        "https://images.unsplash.com/photo-1544568100-847a9ec5d878?auto=format&fit=crop&q=80&w=800",
-        "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=800",
-        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=800"
-      ];
-      imageUrl = DEFAULT_CAMP_IMAGES[camp.id % DEFAULT_CAMP_IMAGES.length];
-    }
+    petsInShelter = realPetsRaw
+      .map(normalizePetData)
+      .map((pet) => ({
+        id: String(pet.id),
+        name: pet.name,
+        tag: pet.tag,
+        image: pet.image
+      }));
 
-    return {
-      id: camp.documentId,
-      title: camp.title,
-      desc: camp.shortDesc,
-      current: Number(camp.current) || 0,
-      total: Number(camp.total) || 100,
-      image: imageUrl,
-      tag: camp.tag || "Срочно",
-      petName: camp.pet?.name || ""
-    };
-  });
+    activeCampaigns = (campaignsRaw.data || []).map(normalizeCampaignData);
+  } catch (error) {
+    console.error("Failed to fetch homepage data:", error);
+  }
 
   return (
     <ColorTransitionWrapper
@@ -69,7 +67,7 @@ export default async function Home() {
       }
       darkZone={
         <>
-          <PaymentSection />
+          <PaymentSection recentDonations={recentDonations} />
           <NeedsSection />
           <VolunteerSection />
           <NewsSection initialNews={news} />

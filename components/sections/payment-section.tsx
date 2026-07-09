@@ -6,12 +6,13 @@ import { ArrowRight, HeartPulse, Sparkles, ShieldCheck, Cookie, Stethoscope, Hea
 import { z } from "zod";
 import { useCursor } from "@/components/ui/cursor-context";
 
-const RECENT_DONATIONS = Array.from({ length: 20 }).map((_, i) => ({
-  name: ["Мария О.", "Алексей", "Анонимный друг", "Елена", "Михаил", "Анна С.", "Дмитрий", "Ольга"][i % 8],
-  amount: [500, 1000, 300, 1500, 200, 5000, 100, 800][i % 8],
-  type: (["monthly", "once", "monthly", "once", "once", "monthly", "once", "monthly"] as const)[i % 8],
-  avatarBg: ["bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700", "bg-sky-100 text-sky-700", "bg-emerald-100 text-emerald-700"][i % 4],
-}));
+export interface RecentDonation {
+  name: string;
+  amount: number;
+  type: "once" | "monthly";
+}
+
+const AVATAR_COLORS = ["bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700", "bg-sky-100 text-sky-700", "bg-emerald-100 text-emerald-700"];
 
 const TIERS = [
   { amount: "300", icon: Cookie, label: "Кормилец", desc: "Сытый день для одного подопечного — сухой корм и витамины", color: "text-amber-500" },
@@ -29,8 +30,9 @@ const TAB_LABELS = { monthly: "Ежемесячно", once: "Разово" } as 
 
 const inputBase = "w-full bg-white border-2 rounded-2xl px-6 md:px-8 py-5 text-stone-900 focus:outline-none placeholder:text-stone-400 transition-all duration-300 focus:border-amber-400 focus:shadow-[0_10px_30px_-10px_rgba(245,158,11,0.1)]";
 
-export function PaymentSection() {
+export function PaymentSection({ recentDonations = [] }: { recentDonations?: RecentDonation[] }) {
   const { textEnter, textLeave } = useCursor();
+  const hasDonations = recentDonations.length > 0;
   const [donationType, setDonationType] = useState<(typeof TABS)[number]>("monthly");
   const [donationAmount, setDonationAmount] = useState("500");
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -83,20 +85,14 @@ export function PaymentSection() {
   };
 
   return (
-    <section className="py-24 md:py-32 px-6 md:px-12 bg-[#e8e4dc] relative overflow-hidden flex flex-col" id="donate">
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #d6d3d1; border-radius: 20px; }
-      `}</style>
-
+    <section className="py-20 md:py-28 px-6 md:px-12 bg-[#e8e4dc] relative overflow-hidden flex flex-col" id="donate">
       <div className="absolute top-[-10%] left-1/4 w-[40vw] h-[40vw] bg-amber-400/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-1/4 w-[30vw] h-[30vw] bg-rose-400/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto flex flex-col gap-12 lg:gap-16 w-full">
 
         {/* Header: title left, description right */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-end pt-8">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-start md:items-end">
           <div className="md:w-1/2">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-full border border-stone-200/60 mb-8 shadow-sm cursor-none pointer-events-auto hover:bg-white transition-colors">
               <Sparkles size={16} className="text-amber-500" aria-hidden="true" />
@@ -127,7 +123,7 @@ export function PaymentSection() {
                 e.preventDefault();
                 handleSubmit();
               }}
-              className="w-full lg:w-7/12 p-8 md:p-12 lg:p-14 flex flex-col cursor-auto"
+              className={`w-full ${hasDonations ? "lg:w-7/12" : ""} p-8 md:p-12 lg:p-14 flex flex-col cursor-auto`}
             >
 
               {/* Toggle with sliding indicator */}
@@ -309,6 +305,7 @@ export function PaymentSection() {
             </form>
 
             {/* Right: Live Feed */}
+            {hasDonations && (
             <div className="w-full lg:w-5/12 bg-stone-50 border-t lg:border-t-0 lg:border-l border-stone-100 flex flex-col relative">
               <div className="flex items-center justify-between px-8 pt-8 pb-4 md:px-10 md:pt-10 md:pb-5 shrink-0" onMouseEnter={textEnter} onMouseLeave={textLeave}>
                 <div>
@@ -322,10 +319,10 @@ export function PaymentSection() {
 
               <div className="overflow-y-auto max-h-[800px] px-6 pb-8 md:px-8 custom-scrollbar" onMouseEnter={textEnter} onMouseLeave={textLeave}>
                 <ul className="flex flex-col gap-2.5">
-                  {RECENT_DONATIONS.map((d, i) => (
+                  {recentDonations.map((d, i) => (
                     <li key={i} className="bg-white p-4 rounded-2xl border border-stone-100 shadow-sm flex items-center justify-between gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-none pointer-events-auto group">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full ${d.avatarBg} flex items-center justify-center text-sm font-bold font-serif shrink-0`} aria-hidden="true">
+                        <div className={`w-10 h-10 rounded-full ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold font-serif shrink-0`} aria-hidden="true">
                           {d.name[0]}
                         </div>
                         <div className="flex flex-col justify-center">
@@ -345,6 +342,7 @@ export function PaymentSection() {
 
               <div className="h-16 bg-linear-to-t from-stone-50 to-transparent absolute bottom-0 left-0 w-full pointer-events-none" />
             </div>
+            )}
 
           </div>
         </div>
