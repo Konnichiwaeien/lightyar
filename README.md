@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Светлый — сайт благотворительной организации
 
-## Getting Started
+Официальный сайт АНБО «Светлый» (Ярославль) — помощь бездомным и попавшим в беду животным: [lightyar.shdk.tech](https://lightyar.shdk.tech)
 
-First, run the development server:
+## Стек
+
+- **Next.js 16** (App Router, Server Components, ISR)
+- **React 19**, TypeScript
+- **Tailwind CSS 4**
+- **Framer Motion** + Lenis (анимации и плавный скролл)
+- Данные — из [Strapi 5](https://github.com/Konnichiwaeien/lightyar-backend) через REST API
+
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env.local   # заполнить REST_API_KEY и STRAPI_API_URL
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Бэкенд должен быть запущен локально (см. репозиторий lightyar-backend, `docker compose -f docker-compose.dev.yml up`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Структура
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/` — страницы (главная, `/pets`, `/campaigns`, `/news`, `/about`)
+- `components/` — секции и UI-компоненты (kebab-case)
+- `lib/api/` — клиент Strapi и сервисы данных
+- `lib/helpers/` — нормализация данных, справочники пород
+- `docs/` — стандарты разработки и документация проекта
 
-## Learn More
+## Деплой
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Пуш в `master` запускает GitHub Actions workflow (`.github/workflows/deploy.yml`): сборка на сервере и перезапуск через PM2 (порт 3003, конфиг — `ecosystem.config.js`).
