@@ -33,9 +33,9 @@ const ITEMS = [
 export function NeedsSection() {
   const { textEnter, textLeave } = useCursor();
   return (
-    <section className="py-24 md:py-32 px-6 md:px-12 bg-[#f4f0eb] border-b border-stone-200" id="needs">
+    <section className="py-20 md:py-28 px-6 md:px-12 bg-[#f4f0eb] border-b border-stone-200" id="needs">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-12 justify-between items-end mb-16">
+        <div className="flex flex-col md:flex-row gap-12 justify-between items-start md:items-end mb-12 md:mb-16">
           <div className="max-w-2xl">
             <span className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6 inline-block">[ Нужды приюта ]</span>
             <h2

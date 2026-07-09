@@ -1,88 +1,144 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Dog, Cat } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Thumbs, Autoplay } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface Props {
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/thumbs";
+
+interface CampaignGalleryProps {
   images: string[];
+  title?: string;
   petName?: string;
   species?: string;
 }
 
-export function CampaignGallery({ images, petName, species }: Props) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const hasImages = images && images.length > 0;
+export function CampaignGallery({ images, title, petName }: CampaignGalleryProps) {
+  const altText = petName || title || "Фото";
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  if (!images || images.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 w-full pointer-events-auto">
-      {/* Main Image */}
-      <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden bg-[#1c1c1c]/5">
-        {hasImages ? (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, scale: 1.02 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0"
+    <div className="flex flex-col gap-4 w-full">
+      {/* ── Main Image Swiper ── */}
+      <div
+        className="group relative w-full aspect-[16/10] rounded-[2rem] overflow-hidden bg-stone-100"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <Swiper
+          modules={[Navigation, Thumbs, Autoplay]}
+          navigation={{
+            prevEl: ".campaign-gallery-prev",
+            nextEl: ".campaign-gallery-next",
+          }}
+          thumbs={{
+            swiper:
+              thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
+          }}
+          autoplay={{
+            delay: 5000,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }}
+          loop={images.length > 1}
+          className="h-full w-full"
+        >
+          {images.map((src, idx) => (
+            <SwiperSlide key={idx}>
+              <div className="relative h-full w-full">
+                <Image
+                  src={src}
+                  alt={`${altText} — фото ${idx + 1} из ${images.length}`}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                  className="object-cover"
+                  priority={idx === 0}
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Предыдущее фото"
+              className={`campaign-gallery-prev absolute left-4 top-1/2 z-10 -translate-y-1/2
+                flex h-10 w-10 items-center justify-center
+                rounded-full bg-white/60 backdrop-blur-sm
+                text-stone-700 shadow-lg
+                transition-all duration-300 cursor-pointer
+                hover:bg-white/90 hover:scale-105
+                ${isHovered ? "opacity-100" : "opacity-0"}
+              `}
             >
-              <Image
-                src={images[currentIndex]}
-                alt={petName && species 
-                  ? `Фотография питомца ${petName} (${species.toLowerCase()}) в приюте «Светлый» — кадр ${currentIndex + 1} из ${images.length}`
-                  : `Фотография галереи — кадр ${currentIndex + 1} из ${images.length}`
-                }
-                fill
-                sizes="(max-width: 1024px) 100vw, 58vw"
-                className="object-cover"
-                priority={currentIndex === 0}
-              />
-            </motion.div>
-          </AnimatePresence>
-        ) : (
-          <div className="absolute inset-0 bg-[#f4ece1] flex flex-col items-center justify-center text-amber-600/70 p-8 select-none">
-            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xs mb-4 text-amber-500/80">
-              {species === "Собака" ? <Dog size={36} strokeWidth={1.5} /> : <Cat size={36} strokeWidth={1.5} />}
-            </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#1c1c1c]/40 text-center">Фотография питомца скоро появится</span>
-          </div>
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              aria-label="Следующее фото"
+              className={`campaign-gallery-next absolute right-4 top-1/2 z-10 -translate-y-1/2
+                flex h-10 w-10 items-center justify-center
+                rounded-full bg-white/60 backdrop-blur-sm
+                text-stone-700 shadow-lg
+                transition-all duration-300 cursor-pointer
+                hover:bg-white/90 hover:scale-105
+                ${isHovered ? "opacity-100" : "opacity-0"}
+              `}
+            >
+              <ChevronRight size={20} strokeWidth={2.5} />
+            </button>
+          </>
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* ── Thumbnails Strip ── */}
       {images.length > 1 && (
-        <ul className="grid grid-cols-4 gap-4" role="list">
-          {images.map((img, idx) => (
-            <li key={idx}>
-              <button
-                type="button"
-                onClick={() => setCurrentIndex(idx)}
-                aria-label={`Просмотреть фотографию ${idx + 1}`}
-                aria-pressed={currentIndex === idx}
-                className={`relative w-full aspect-square md:aspect-[4/3] rounded-[1rem] overflow-hidden transition-all duration-300 cursor-pointer block focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
-                  currentIndex === idx ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-[#e8e4dc] opacity-100" : "opacity-60 hover:opacity-100"
-                }`}
+        <Swiper
+          modules={[Thumbs]}
+          onSwiper={setThumbsSwiper}
+          watchSlidesProgress
+          slidesPerView="auto"
+          spaceBetween={12}
+          className="w-full !overflow-visible"
+        >
+          {images.map((src, idx) => (
+            <SwiperSlide
+              key={idx}
+              className="!w-20 !h-20 flex-shrink-0 cursor-pointer"
+            >
+              <div
+                className={`
+                  relative w-20 h-20 rounded-xl overflow-hidden
+                  border-2 transition-all duration-300
+                  [.swiper-slide-thumb-active_&]:border-[#f59e0b]
+                  [.swiper-slide-thumb-active_&]:shadow-[0_0_0_1px_#f59e0b]
+                  border-stone-200/60
+                  hover:border-white hover:shadow-md
+                `}
               >
-                <Image 
-                  src={img} 
-                  alt={petName 
-                    ? `Миниатюра фото ${idx + 1} питомца ${petName}`
-                    : `Миниатюра фото ${idx + 1}`
-                  } 
-                  fill 
-                  sizes="(max-width: 1024px) 25vw, 15vw" 
-                  className="object-cover" 
+                <Image
+                  src={src}
+                  alt={`Миниатюра ${idx + 1} — ${altText}`}
+                  fill
+                  sizes="80px"
+                  className="object-cover"
                 />
-              </button>
-            </li>
+              </div>
+            </SwiperSlide>
           ))}
-        </ul>
+        </Swiper>
       )}
     </div>
   );
 }
-
-

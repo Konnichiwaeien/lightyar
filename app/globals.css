@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
   --color-background: #e8e4dc;
   --color-foreground: #1c1c1c;
   --color-paper: #e8e4dc;
   --color-dark: #0a0a0a;
-  --color-dark-card: #111111;
+  --color-dark-card: #2c2825;
   --color-dark-surface: #050505;
   --color-amber: #f59e0b;
   --color-text-primary: #1c1c1c;
   --color-text-muted: rgba(255,255,255,0.5);
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
 }
 
-html { scroll-behavior: smooth; }
+
 
 body {
   background-color: #e8e4dc;
@@ -37,7 +37,7 @@ body {
 .film-grain {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 5;
   pointer-events: none;
   opacity: 0.03;
   mix-blend-mode: multiply;
@@ -89,4 +89,41 @@ body {
 body:not(.has-custom-cursor) .cursor-none,
 body:not(.has-custom-cursor) [class*="cursor-none"] {
   cursor: revert !important;
+}
+
+/* Shimmer animation for progress bars */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Accessibility: respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .film-grain {
+    display: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimize rendering for off-screen cards */
+.card-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 460px;
+}
+
+/* Custom scrollbar for donation feed */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #d6d3d1; border-radius: 20px; }
+
+/* Apply custom cursor only on devices with hover capability */
+@media (hover: none) {
+  .cursor-none { cursor: auto !important; }
 }

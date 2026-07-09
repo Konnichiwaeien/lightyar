@@ -14,7 +14,7 @@ export class NewsService extends StrapiClient {
   }): Promise<StrapiResponseCollection<StrapiNews>> {
     try {
       const sortQuery = options?.sort || "publishedAt:desc";
-      let query = `/news?populate=*&sort[0]=${sortQuery}`;
+      let query = `/news?populate[0]=mainImage&populate[1]=tags&populate[2]=gallery&sort[0]=${sortQuery}`;
       
       if (options?.tag) {
         const tagSlugs = options.tag.split(",").filter(Boolean);
@@ -68,7 +68,7 @@ export class NewsService extends StrapiClient {
   async getLatestNews(limit: number = 5): Promise<StrapiNews[]> {
     try {
       const response = await this.fetchJson<StrapiResponseCollection<StrapiNews>>(
-        `/news?populate=*&sort[0]=publishedAt:desc&pagination[limit]=${limit}`,
+        `/news?populate[0]=mainImage&populate[1]=tags&fields[0]=title&fields[1]=slug&fields[2]=excerpt&fields[3]=publishedAt&fields[4]=documentId&sort[0]=publishedAt:desc&pagination[limit]=${limit}`,
         {
           next: { revalidate: 3600 } // Cache and revalidate every hour
         }

@@ -24,7 +24,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
   const newsItems = initialNews.slice(0, 4);
 
   return (
-    <section className="relative pt-24 pb-36 md:pb-48 px-6 md:px-12 bg-[#e8e4dc] text-[#1c1c1c]" id="news">
+    <section className="relative py-20 md:py-28 px-6 md:px-12 bg-[#e8e4dc] text-[#1c1c1c]" id="news">
       <div className="max-w-[1400px] mx-auto">
         
         {/* Style tag for custom Swiper pagination matching our amber theme */}
@@ -48,7 +48,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
         `}} />
 
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-8">
           <div className="max-w-2xl">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif text-[#1c1c1c] leading-[1.05] tracking-tight mb-6 text-wrap: balance">
               Новости <span className="italic text-amber-500">приюта</span>
@@ -124,7 +124,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
             </ul>
 
             {/* Global Button */}
-            <div className="mt-16 md:mt-24 flex justify-center">
+            <div className="mt-12 md:mt-16 flex justify-center">
               <Link
                 href="/news"
                 className="inline-flex items-center gap-3 bg-transparent border border-[#1c1c1c]/20 text-[#1c1c1c] px-10 py-5 rounded-full font-medium sm:text-lg hover:border-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-300 pointer-events-auto cursor-none"

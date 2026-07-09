@@ -1,9 +1,6 @@
 import { StrapiClient } from "../client";
 import { StrapiPet, StrapiResponseCollection } from "../types";
 
-export interface PetFilters {
-  status?: string; // 'shelter' or 'home' (wait, in Strapi schema there isn't a direct status field, but wait, let's check how "home" / "shelter" is handled in our DB! Ah! If birthDate exists or isHome exists? Let's check how the DB schema handles this. Wait, let's look at the DB fields: sterilized, socialized, etc. But wait, in the mock page: status is 'home' or 'shelter'. In Strapi, do we have a status? No! Wait, how did the db represent home vs shelter? Ah, maybe we don't have it, or we can filter by type (cat/dog), or we can treat them all as in shelter, or we can treat sterilized/socialized as indicators. Wait! Let's check if the DB has a way to distinguish them, or if we can just return all pets as "shelter" since they are in the database, and only if they are adopted we set it? Actually, let's filter by type/breed, and we can also check if the pet name matches home/shelter, or we can treat all pets as in shelter for now! Let's support a filter by species ('cat' | 'dog') and general query parameters.)
-}
 
 export class PetsService extends StrapiClient {
   /**
@@ -15,11 +12,13 @@ export class PetsService extends StrapiClient {
     sex?: 'male' | 'female';
     size?: 'small' | 'medium' | 'large';
     search?: string;
+    sort?: string;
     limit?: number;
     start?: number;
   }): Promise<StrapiPet[] | null> {
     try {
-      let query = "/pets?populate[0]=photos&populate[1]=dogBreed&populate[2]=catBreed&populate[3]=color&sort[0]=createdAt:desc";
+      const defaultSort = options?.sort || 'createdAt:desc';
+      let query = `/pets?populate[0]=photos&populate[1]=dogBreed&populate[2]=catBreed&populate[3]=color&sort[0]=${defaultSort}`;
       
       if (options?.type) {
         query += `&filters[type][$eq]=${options.type}`;

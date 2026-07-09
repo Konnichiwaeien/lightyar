@@ -7,7 +7,7 @@ export function VolunteerSection() {
   const { imageEnter, imageLeave } = useCursor();
   return (
     <section
-      className="relative py-24 md:py-32 flex items-center justify-center text-center overflow-hidden"
+      className="relative py-20 md:py-28 px-6 md:px-12 flex items-center justify-center text-center overflow-hidden"
       id="volunteer"
       onMouseEnter={imageEnter}
       onMouseLeave={imageLeave}
@@ -18,7 +18,7 @@ export function VolunteerSection() {
         <div className="absolute inset-0 bg-linear-to-b from-[#1c1c1c]/50 via-transparent to-[#1c1c1c]/50" />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-6">
+      <div className="relative z-10 max-w-3xl mx-auto">
         <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 text-white text-wrap: balance">
           Приходите<br />
           <span className="font-serif italic text-amber-500">помогать</span>

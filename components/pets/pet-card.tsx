@@ -100,7 +100,7 @@ export function PetCard({ pet, isLarge = false, index = 0 }: PetCardProps) {
          y: { type: "spring", stiffness: 120, damping: 16, delay: Math.min(index * 0.04, 0.3) },
          layout: { type: "spring", stiffness: 300, damping: 30 } 
       }}
-      className={`${colSpanClass} h-full list-none ${showBreedTooltip ? "relative z-40" : ""}`}
+      className={`${colSpanClass} h-full list-none card-lazy ${showBreedTooltip ? "relative z-40" : ""}`}
     >
       <Link
         href={`/pets/${pet.id}`}

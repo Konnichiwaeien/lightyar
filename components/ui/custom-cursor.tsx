@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { useCursor } from "@/components/ui/cursor-context";
 import { usePathname } from "next/navigation";
 
+/**
+ * PERF: No framer-motion, no useState for position. The cursor DOM node
+ * is positioned via CSS transform set directly by CursorProvider's
+ * mousemove handler. This component only re-renders when cursorVariant
+ * changes (hover enter/leave — rare events).
+ */
 export function CustomCursor() {
-  const { mousePosition, cursorVariant } = useCursor();
+  const { cursorVariant, cursorRef } = useCursor();
+  const localRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const isHomepage = pathname === "/";
+
+  // Sync refs
+  useEffect(() => {
+    cursorRef.current = localRef.current;
+    return () => { cursorRef.current = null; };
+  }, [cursorRef]);
 
   useEffect(() => {
     if (isHomepage) {
@@ -23,45 +35,43 @@ export function CustomCursor() {
 
   if (!isHomepage) return null;
 
-  const cursorVariants = {
+  // Variant-specific styles — only visual properties, NO positional changes
+  const variantStyles: Record<string, React.CSSProperties> = {
     default: {
-      x: mousePosition.x - 20, y: mousePosition.y - 20,
-      height: 40, width: 40,
+      width: 40, height: 40,
       backgroundColor: "rgba(255, 230, 150, 0.6)",
       boxShadow: "0 0 40px 20px rgba(255, 200, 50, 0.3)",
       filter: "blur(8px)",
-      mixBlendMode: "screen" as const,
+      mixBlendMode: "screen",
     },
     hover: {
-      x: mousePosition.x - 40, y: mousePosition.y - 40,
-      height: 80, width: 80,
+      width: 80, height: 80,
       backgroundColor: "rgba(255, 230, 150, 0.9)",
       boxShadow: "0 0 60px 30px rgba(255, 200, 50, 0.6)",
       filter: "blur(12px)",
-      mixBlendMode: "screen" as const,
-      scale: 1.2,
+      mixBlendMode: "screen",
     },
     image: {
-      x: mousePosition.x - 40, y: mousePosition.y - 40,
-      height: 80, width: 80,
+      width: 80, height: 80,
       backgroundColor: "rgba(255, 255, 255, 0.9)",
       boxShadow: "0 0 60px 30px rgba(255, 255, 255, 0.6)",
       filter: "blur(12px)",
-      mixBlendMode: "screen" as const,
-      scale: 1.5,
+      mixBlendMode: "screen",
     },
   };
 
   return (
-    <motion.div
-      className="fixed top-0 left-0 rounded-full z-[100] pointer-events-none flex items-center justify-center text-xs font-bold uppercase tracking-widest"
-      variants={cursorVariants}
-      animate={cursorVariant}
-      transition={{ type: "tween", ease: "backOut", duration: 0.15 }}
+    <div
+      ref={localRef}
+      className="fixed top-0 left-0 rounded-full z-[100] pointer-events-none flex items-center justify-center text-xs font-bold uppercase tracking-widest will-change-transform"
+      style={{
+        ...variantStyles[cursorVariant],
+        transition: "width 0.15s ease-out, height 0.15s ease-out, background-color 0.15s, box-shadow 0.15s, filter 0.15s",
+      }}
     >
       {cursorVariant === "image" && (
         <span className="mix-blend-difference text-white">Смотреть</span>
       )}
-    </motion.div>
+    </div>
   );
 }

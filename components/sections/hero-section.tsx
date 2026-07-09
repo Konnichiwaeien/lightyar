@@ -11,6 +11,7 @@ export function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
   const shouldReduceMotion = useReducedMotion() && mounted;
@@ -20,6 +21,7 @@ export function HeroSection() {
   useEffect(() => {
     if (shouldReduceMotion && videoRef.current) {
       videoRef.current.pause();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsPlaying(false);
     }
   }, [shouldReduceMotion]);
@@ -69,7 +71,7 @@ export function HeroSection() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-hidden="true"
             onError={(e) => {
               e.currentTarget.style.display = "none";

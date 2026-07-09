@@ -73,7 +73,7 @@ export function Footer() {
               >
                 Светлый.
               </Link>
-              <p className="text-sm text-[#1c1c1c]/60 leading-relaxed font-light max-w-[280px]">
+              <p className="text-[15px] text-[#1c1c1c]/60 leading-relaxed font-light max-w-[300px]">
                 Благотворительный фонд помощи бездомным животным Ярославля. Лечим, стерилизуем, находим любящую семью. Каждый день — без выходных.
               </p>
             </div>
@@ -107,10 +107,10 @@ export function Footer() {
 
           {/* Column 2: Compact Contacts */}
           <div className="space-y-6 lg:pl-8">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
               Связаться с нами
             </h4>
-            <div className="space-y-4 text-sm text-[#1c1c1c]/80 font-light">
+            <div className="space-y-4 text-[15px] text-[#1c1c1c]/80 font-light">
               <a 
                 href="https://vk.com/im?sel=-228082117" 
                 target="_blank"
@@ -125,7 +125,7 @@ export function Footer() {
                 <span>Написать нам в ВК</span>
               </a>
               
-              <p className="text-xs text-[#1c1c1c]/50 leading-relaxed font-light pl-11">
+              <p className="text-[13px] text-[#1c1c1c]/50 leading-relaxed font-light pl-11">
                 По всем возникающим вопросам пишите в сообщения группы. Вам ответят при первой возможности.
               </p>
 
@@ -143,11 +143,11 @@ export function Footer() {
 
           {/* Column 3: Documents and Requisites Trigger */}
           <div className="space-y-6">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
               Документы и реквизиты
             </h4>
             
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2 text-sm">
               {DOCUMENTS.slice(0, 3).map((doc, idx) => (
                 <li key={idx}>
                   <a 
@@ -173,7 +173,7 @@ export function Footer() {
               onClick={() => setShowReq(!showReq)}
               aria-expanded={showReq}
               aria-controls="footer-requisites"
-              className={`w-full py-2.5 px-4 rounded-xl border border-[#1c1c1c]/10 text-xs font-semibold hover:border-amber-600 hover:text-amber-700 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden transition-all flex items-center justify-between group ${cursorClass}`}
+              className={`w-full py-2.5 px-4 rounded-xl border border-[#1c1c1c]/10 text-sm font-semibold hover:border-amber-600 hover:text-amber-700 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden transition-all flex items-center justify-between group ${cursorClass}`}
               onMouseEnter={textEnter}
               onMouseLeave={textLeave}
             >
@@ -227,7 +227,7 @@ export function Footer() {
         </AnimatePresence>
 
         {/* Bottom copyright row */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-[10px] font-semibold uppercase tracking-widest text-[#1c1c1c]/40">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold uppercase tracking-widest text-[#1c1c1c]/40">
           <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 gap-y-2">
             <span>© {new Date().getFullYear()} АНБО Светлый</span>
             <span className="hidden sm:inline">·</span>

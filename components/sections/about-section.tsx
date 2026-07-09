@@ -27,7 +27,7 @@ function LightParticles() {
 
     const timer = setTimeout(() => {
       setParticles(
-        Array.from({ length: 40 }, (_, i) => {
+        Array.from({ length: 18 }, (_, i) => {
           // Create depth of field effect: 3 layers
           const layer = i % 3; // 0: background (blurry), 1: midground (sharp), 2: foreground (very blurry)
           
@@ -118,6 +118,7 @@ function LightParticles() {
               opacity: 0, // Starts at 0, animation handles opacity
               zIndex: p.zIndex,
               animation: `cinematicFloat ${p.duration}s ${p.delay}s ease-in-out infinite`,
+              willChange: "transform, opacity",
               // @ts-expect-error CSS custom properties
               "--drift-x": `${p.driftX}vw`,
               "--drift-y": `${p.driftY}vh`,
@@ -133,10 +134,10 @@ function LightParticles() {
 export function AboutSection() {
   const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
   return (
-    <section className="relative py-24 md:py-32 w-full overflow-hidden" id="about">
+    <section className="relative py-20 md:py-28 px-6 md:px-12 w-full overflow-hidden" id="about">
       <LightParticles />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
         
         {/* Label (Semantic Span inside outline) */}
         <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] mb-10 text-[#F5A623] inline-block">
@@ -153,7 +154,7 @@ export function AboutSection() {
         </h2>
 
         {/* Subtitle / Description */}
-        <p className="text-lg md:text-2xl font-light opacity-60 text-center max-w-4xl leading-relaxed mb-16 md:mb-24">
+        <p className="text-lg md:text-2xl font-light opacity-60 text-center max-w-4xl leading-relaxed mb-12 md:mb-16">
           Мы — волонтёры из Ярославля с многолетним стажем. В октябре 2024 объединились в фонд, чтобы помогать системно. Сейчас на попечении 85 хвостиков — и каждому мы ищем свою семью.
         </p>
 

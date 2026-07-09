@@ -28,8 +28,8 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
   }
 
   return (
-    <section className="relative z-20 py-24 md:py-32" id="campaigns">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 mb-24">
+    <section className="relative z-20 py-20 md:py-28 px-6 md:px-12" id="campaigns">
+      <div className="max-w-7xl mx-auto mb-12 md:mb-16">
         <h2
           className="text-[10vw] md:text-[8vw] leading-none font-bold uppercase tracking-tighter text-white text-wrap: balance"
           onMouseEnter={textEnter}
@@ -40,7 +40,7 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
         </h2>
       </div>
 
-      <div className="relative px-6 md:px-12 max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto">
         <ul className="w-full" role="list">
           {initialCampaigns.map((fund, i) => (
             <li
@@ -130,7 +130,7 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
           ))}
         </ul>
 
-        <div className="mt-16 flex justify-center relative z-20">
+        <div className="mt-12 md:mt-16 flex justify-center relative z-20">
           <Link 
             href="/campaigns"
             className="group px-10 py-5 bg-white/5 border border-white/20 hover:border-white/50 hover:bg-white text-white hover:text-black rounded-full transition-all duration-300 pointer-events-auto cursor-none flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"

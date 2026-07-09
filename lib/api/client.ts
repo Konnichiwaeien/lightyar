@@ -3,7 +3,7 @@ export class StrapiClient {
   private apiToken?: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:1443/api";
+    this.baseUrl = process.env.STRAPI_API_URL || "http://localhost:1443/api";
     this.apiToken = process.env.REST_API_KEY;
   }
 

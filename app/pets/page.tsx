@@ -37,16 +37,29 @@ export default async function PetsPage({ searchParams }: PageProps) {
 
   const itemsPerPage = 12;
 
-  // Fetch real pets from Strapi API directly filtered by status and new controls
-  const realPetsRaw = await petsService.getPets({
-    status: status === "home" ? "home" : "shelter",
-    type,
-    sex,
-    size,
-    search,
-    limit: isFavorites ? 200 : undefined
-  });
-  
+  // Map UI sort values to Strapi sort parameters
+  const sortMap: Record<string, string> = {
+    name_asc: 'name:asc',
+    name_desc: 'name:desc',
+    age_asc: 'birthDate:desc',   // younger = later birthDate
+    age_desc: 'birthDate:asc',   // older = earlier birthDate
+  };
+  const strapiSort = sortMap[sort] || 'name:asc';
+
+  // Fetch filtered pets and all shelter pets for quiz in parallel
+  const [realPetsRaw, allShelterPetsRaw] = await Promise.all([
+    petsService.getPets({
+      status: status === "home" ? "home" : "shelter",
+      type,
+      sex,
+      size,
+      search,
+      sort: strapiSort,
+      limit: isFavorites ? 200 : undefined,
+    }),
+    petsService.getPets({ status: 'shelter', limit: 150 }),
+  ]);
+
   if (realPetsRaw === null) {
     return <CatalogUnavailable />;
   }
@@ -54,31 +67,17 @@ export default async function PetsPage({ searchParams }: PageProps) {
   // Normalize API data to clean flat structures
   const petsMapped = realPetsRaw.map(normalizePetData);
 
-  // Filter by favorites if active
+  // Filter by favorites if active; re-sort client-side since we filter by IDs locally
   const petsFiltered = isFavorites
     ? petsMapped.filter(pet => favoriteIds.includes(pet.id))
     : petsMapped;
 
-  // Sort
-  const sorted = [...petsFiltered].sort((a, b) => {
-    if (sort === "name_asc") return a.name.localeCompare(b.name, "ru");
-    if (sort === "name_desc") return b.name.localeCompare(a.name, "ru");
-    if (sort === "age_asc") return a.age - b.age;
-    if (sort === "age_desc") return b.age - a.age;
-    return 0;
-  });
-
   // Paginate
-  const totalPages = Math.ceil(sorted.length / itemsPerPage);
+  const totalPages = Math.ceil(petsFiltered.length / itemsPerPage);
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
-  const paginated = sorted.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
+  const paginated = petsFiltered.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
-  // Fetch all active shelter pets for matchmaking quiz (limit 150 items)
-  const allShelterPetsRaw = await petsService.getPets({
-    status: "shelter",
-    limit: 150
-  }) || [];
-  const allShelterPetsMapped = allShelterPetsRaw.map(normalizePetData);
+  const allShelterPetsMapped = (allShelterPetsRaw || []).map(normalizePetData);
 
   return (
     <div className="min-h-screen bg-[#e8e4dc] selection:bg-amber-500 selection:text-white">

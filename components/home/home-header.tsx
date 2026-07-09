@@ -1,6 +1,7 @@
 "use client";
 
 import { useCursor } from "@/components/ui/cursor-context";
+import { PawLogo } from "@/components/ui/paw-logo";
 import Link from "next/link";
 
 export function HomeHeader() {
@@ -16,10 +17,7 @@ export function HomeHeader() {
         onMouseLeave={textLeave}
         className="pointer-events-auto cursor-none w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white/80 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden transition-all duration-300"
       >
-        <svg viewBox="0 0 40 40" className="w-6 h-6 md:w-7 md:h-7" fill="none" aria-hidden="true">
-          <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M20 8 L20 32 M14 14 Q20 6 26 14 M14 26 Q20 34 26 26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        <PawLogo className="w-5 h-5 md:w-6 md:h-6" />
       </Link>
       {/* Round hamburger menu button */}
       <button

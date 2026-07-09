@@ -1,24 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { PawLogo } from "@/components/ui/paw-logo";
+import { MenuButton } from "@/components/ui/menu-button";
 
 export function InnerHeader() {
   return (
     <header className="w-full p-6 md:p-8 flex items-center justify-between">
-      <Link href="/" className="text-2xl font-serif text-[#1c1c1c] hover:text-amber-500 transition-colors">
-        Светлый.
+      {/* Paw logo — unified with home header and menu */}
+      <Link
+        href="/"
+        aria-label="Главная страница приюта Светлый"
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-[#1c1c1c]/20 flex items-center justify-center hover:border-[#d97706] transition-colors duration-300 text-[#1c1c1c]"
+      >
+        <PawLogo className="w-5 h-5 md:w-6 md:h-6" />
       </Link>
       
-      <button 
-        onClick={() => window.dispatchEvent(new Event("open-menu"))}
-        className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#1c1c1c]/20 text-[#1c1c1c] flex items-center justify-center hover:bg-[#1c1c1c] hover:text-white transition-colors duration-300"
-      >
-        <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="4" y1="7" x2="20" y2="7" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="17" x2="20" y2="17" />
-        </svg>
-      </button>
+      <MenuButton variant="light" />
     </header>
   );
 }

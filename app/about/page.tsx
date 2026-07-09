@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AboutNarrative } from "@/components/about/about-narrative";
+import { HomeHeader } from "@/components/home/home-header";
 
 export const metadata: Metadata = {
   title: "О нас | АНБО «Светлый» — Помощь бездомным животным Ярославль",
@@ -23,6 +24,11 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <AboutNarrative />;
+  return (
+    <>
+      <HomeHeader />
+      <AboutNarrative />
+    </>
+  );
 }
 
