@@ -10,8 +10,13 @@ interface CursorContextType {
   textLeave: () => void;
   imageEnter: () => void;
   imageLeave: () => void;
-  /** Ref to the cursor DOM node — cursor component reads this */
-  cursorRef: React.RefObject<HTMLDivElement | null>;
+  /**
+   * Callback ref for the cursor DOM node. Must be a callback (not a plain ref):
+   * CustomCursor renders null on inner pages without unmounting, so a
+   * ref-syncing effect would not re-run when the node is recreated on
+   * returning to the homepage — leaving the provider moving a detached node.
+   */
+  attachCursorNode: (node: HTMLDivElement | null) => void;
 }
 
 const CursorContext = createContext<CursorContextType | null>(null);
@@ -52,8 +57,19 @@ export function CursorProvider({ children }: { children: ReactNode }) {
   const imageEnter = useCallback(() => setCursorVariant("image"), []);
   const imageLeave = useCallback(() => setCursorVariant("default"), []);
 
+  const attachCursorNode = useCallback((node: HTMLDivElement | null) => {
+    cursorRef.current = node;
+    if (node) {
+      // Place the fresh node at the last known mouse position immediately,
+      // so it doesn't sit at the top-left corner until the next mousemove
+      const hw = node.offsetWidth / 2;
+      const hh = node.offsetHeight / 2;
+      node.style.transform = `translate3d(${posRef.current.x - hw}px, ${posRef.current.y - hh}px, 0)`;
+    }
+  }, []);
+
   return (
-    <CursorContext.Provider value={{ cursorVariant, textEnter, textLeave, imageEnter, imageLeave, cursorRef }}>
+    <CursorContext.Provider value={{ cursorVariant, textEnter, textLeave, imageEnter, imageLeave, attachCursorNode }}>
       {children}
     </CursorContext.Provider>
   );

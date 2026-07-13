@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useCursor } from "@/components/ui/cursor-context";
 import { usePathname } from "next/navigation";
 
@@ -11,16 +11,9 @@ import { usePathname } from "next/navigation";
  * changes (hover enter/leave — rare events).
  */
 export function CustomCursor() {
-  const { cursorVariant, cursorRef } = useCursor();
-  const localRef = useRef<HTMLDivElement | null>(null);
+  const { cursorVariant, attachCursorNode } = useCursor();
   const pathname = usePathname();
   const isHomepage = pathname === "/";
-
-  // Sync refs
-  useEffect(() => {
-    cursorRef.current = localRef.current;
-    return () => { cursorRef.current = null; };
-  }, [cursorRef]);
 
   useEffect(() => {
     if (isHomepage) {
@@ -62,7 +55,7 @@ export function CustomCursor() {
 
   return (
     <div
-      ref={localRef}
+      ref={attachCursorNode}
       className="fixed top-0 left-0 rounded-full z-[100] pointer-events-none flex items-center justify-center text-xs font-bold uppercase tracking-widest will-change-transform"
       style={{
         ...variantStyles[cursorVariant],
