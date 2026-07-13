@@ -9,6 +9,7 @@ import {
   useMotionValueEvent,
   type Variants,
 } from "framer-motion";
+import type { SiteMedia } from "@/lib/api/services/site-media";
 import "./about-narrative.css";
 
 /* ─── Data ───────────────────────────────────────────────── */
@@ -26,7 +27,7 @@ const chaptersData = [
     id: "2",
     nav: "Направления помощи",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#34d399",
     alt: "Заботливые волонтеры кормят и ласкают собак в приюте Светлый"
   },
@@ -34,7 +35,7 @@ const chaptersData = [
     id: "3",
     nav: "История проекта",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#a78bfa",
     alt: "Счастливая собака в вольере благотворительного приюта Светлый"
   },
@@ -42,7 +43,7 @@ const chaptersData = [
     id: "4",
     nav: "Марина Морозова",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#fbbf24",
     alt: "Марина Морозова — соучредитель и руководитель администрации АНБО Светлый"
   },
@@ -50,7 +51,7 @@ const chaptersData = [
     id: "5",
     nav: "Светлана Клюкина",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#e879a0",
     alt: "Светлана Клюкина — соучредитель, куратор медицинского и юридического контроля"
   },
@@ -58,7 +59,7 @@ const chaptersData = [
     id: "6",
     nav: "Андрей Синицын",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#34d399",
     alt: "Андрей Синицын — соучредитель, руководитель материально-технического обеспечения"
   },
@@ -66,7 +67,7 @@ const chaptersData = [
     id: "7",
     nav: "Наши результаты",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#60a5fa",
     alt: "Счастливый пес, успешно пристроенный в любящую семью"
   },
@@ -82,11 +83,43 @@ const chaptersData = [
     id: "9",
     nav: "Частые вопросы",
     mediaType: "image",
-    mediaSrc: "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=1600&q=80",
+    mediaSrc: "/photo-placeholder.jpg",
     accent: "#4ade80",
     alt: "Собака преданно смотрит в глаза волонтеру на прогулке"
   },
 ];
+
+/** Какое поле single type «Медиа сайта» подставляется в какую главу */
+const CHAPTER_IMAGE_KEYS: Record<string, keyof SiteMedia> = {
+  "2": "directions",
+  "3": "history",
+  "4": "marina",
+  "5": "svetlana",
+  "6": "andrey",
+  "7": "results",
+  "9": "faq",
+};
+
+/** Видео-главы: 1 — презентация, 8 — основной ролик (общий с hero главной) */
+const CHAPTER_VIDEO_KEYS: Record<string, keyof SiteMedia> = {
+  "1": "presentationVideo",
+  "8": "heroVideo",
+};
+
+const CHAPTER_POSTER_KEYS: Record<string, keyof SiteMedia> = {
+  "1": "presentationPoster",
+  "8": "heroPoster",
+};
+
+function chapterSrc(ch: (typeof chaptersData)[number], images?: SiteMedia): string {
+  const key = CHAPTER_IMAGE_KEYS[ch.id] ?? CHAPTER_VIDEO_KEYS[ch.id];
+  return (key && images?.[key]) || ch.mediaSrc;
+}
+
+function chapterPoster(ch: (typeof chaptersData)[number], images?: SiteMedia): string | undefined {
+  const key = CHAPTER_POSTER_KEYS[ch.id];
+  return key ? images?.[key] : undefined;
+}
 
 const faqData = [
   { q: "Как стать волонтёром?", a: "Напишите нам в социальных сетях или позвоните. Мы приглашаем на первую прогулку с собаками, где вы знакомитесь с командой и подопечными. Никакого специального опыта не нужно — мы всему научим." },
@@ -203,7 +236,7 @@ function Reveal({ children, className }: { children: React.ReactNode; className?
 
 /* ─── Video Player Helper for Stage ──────────────────────── */
 
-function StageVideo({ src, isActive, title }: { src: string; isActive: boolean; title?: string }) {
+function StageVideo({ src, poster, isActive, title }: { src: string; poster?: string; isActive: boolean; title?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -220,6 +253,7 @@ function StageVideo({ src, isActive, title }: { src: string; isActive: boolean; 
       ref={ref}
       className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1s] ease-out will-change-[opacity,transform] ${isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-[1.08] z-0"}`}
       src={src}
+      poster={poster}
       autoPlay={isActive}
       loop
       muted
@@ -231,19 +265,19 @@ function StageVideo({ src, isActive, title }: { src: string; isActive: boolean; 
 
 /* ─── Stage (sticky left panel) ──────────────────────────── */
 
-function Stage({ activeChapter }: { activeChapter: string }) {
+function Stage({ activeChapter, images }: { activeChapter: string; images?: SiteMedia }) {
   return (
     <aside className="hidden lg:block lg:sticky lg:top-0 lg:h-screen lg:w-full lg:overflow-hidden lg:bg-foreground lg:z-1" aria-hidden="true">
       {chaptersData.map((ch) => {
         const isActive = ch.id === activeChapter;
         return ch.mediaType === "video" ? (
-          <StageVideo key={ch.id} src={ch.mediaSrc} isActive={isActive} title={ch.alt} />
+          <StageVideo key={ch.id} src={chapterSrc(ch, images)} poster={chapterPoster(ch, images)} isActive={isActive} title={ch.alt} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={ch.id}
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1s] ease-out will-change-[opacity,transform] ${isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-[1.08] z-0"}`}
-            src={ch.mediaSrc}
+            src={chapterSrc(ch, images)}
             alt=""
           />
         );
@@ -264,7 +298,7 @@ function Stage({ activeChapter }: { activeChapter: string }) {
 
 /* ─── Chapter Media Helper for Mobile View ──────────────── */
 
-function ChapterMedia({ chId }: { chId: string }) {
+function ChapterMedia({ chId, images }: { chId: string; images?: SiteMedia }) {
   const ch = chaptersData.find((c) => c.id === chId);
   if (!ch) return null;
   const isDarkChapter = chId === "3";
@@ -272,7 +306,8 @@ function ChapterMedia({ chId }: { chId: string }) {
     <div className={`w-full aspect-[16/10] relative overflow-hidden mb-8 rounded-[1.75rem] shadow-[0_12px_36px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.02)] border lg:hidden ${isDarkChapter ? "border-white/10" : "border-foreground/6"}`}>
       {ch.mediaType === "video" ? (
         <video
-          src={ch.mediaSrc}
+          src={chapterSrc(ch, images)}
+          poster={chapterPoster(ch, images)}
           autoPlay
           loop
           muted
@@ -283,7 +318,7 @@ function ChapterMedia({ chId }: { chId: string }) {
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={ch.mediaSrc}
+          src={chapterSrc(ch, images)}
           alt={ch.alt}
           className="w-full h-full object-cover"
         />
@@ -522,7 +557,7 @@ function VolunteerBento() {
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════ */
 
-export function AboutNarrative() {
+export function AboutNarrative({ images }: { images?: SiteMedia }) {
   const [activeChapter, setActiveChapter] = useState("1");
   const activeChapterRef = useRef("1");
   const chapterEls = useRef<(HTMLElement | null)[]>([]);
@@ -615,13 +650,13 @@ export function AboutNarrative() {
 
       {/* ── Narrative ── */}
       <div className="relative lg:grid lg:grid-cols-2 lg:items-start">
-        <Stage activeChapter={activeChapter} />
+        <Stage activeChapter={activeChapter} images={images} />
 
         <div className="relative z-10 lg:z-[2]">
 
           {/* ═══ 1. HERO ═══ */}
           <article ref={setRef(0)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-paper transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="1">
-            <ChapterMedia chId="1" />
+            <ChapterMedia images={images} chId="1" />
             <Reveal>
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-[1.08] tracking-tight mb-7 text-balance text-foreground">
                 АНБО «Светлый»: помогаем <em className="font-serif italic text-amber">животным</em>
@@ -647,7 +682,7 @@ export function AboutNarrative() {
 
           {/* ═══ 2. MISSION ═══ */}
           <article ref={setRef(1)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-white rounded-[3rem_3rem_0_0] lg:rounded-none transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="2">
-            <ChapterMedia chId="2" />
+            <ChapterMedia images={images} chId="2" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Направления
@@ -681,7 +716,7 @@ export function AboutNarrative() {
 
           {/* ═══ 3. TIMELINE ═══ */}
           <article ref={setRef(2)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-[#121212] text-white rounded-[3rem] lg:rounded-none my-8 lg:my-0 transition-colors duration-800 js-pd-chapter pd-dark" data-chapter="3">
-            <ChapterMedia chId="3" />
+            <ChapterMedia images={images} chId="3" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/18 text-amber font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 История
@@ -699,7 +734,7 @@ export function AboutNarrative() {
 
           {/* ═══ 4. MARINA MOROZOVA ═══ */}
           <article ref={setRef(3)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-paper transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="4">
-            <ChapterMedia chId="4" />
+            <ChapterMedia images={images} chId="4" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Учредители
@@ -727,7 +762,7 @@ export function AboutNarrative() {
 
           {/* ═══ 5. SVETLANA KLYUKINA ═══ */}
           <article ref={setRef(4)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-white rounded-[3rem_3rem_0_0] lg:rounded-none transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="5">
-            <ChapterMedia chId="5" />
+            <ChapterMedia images={images} chId="5" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Учредители
@@ -755,7 +790,7 @@ export function AboutNarrative() {
 
           {/* ═══ 6. ANDREY SINITSYN ═══ */}
           <article ref={setRef(5)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-paper transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="6">
-            <ChapterMedia chId="6" />
+            <ChapterMedia images={images} chId="6" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Учредители
@@ -783,7 +818,7 @@ export function AboutNarrative() {
 
           {/* ═══ 7. STATS ═══ */}
           <article ref={setRef(6)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-white rounded-[3rem_3rem_0_0] lg:rounded-none transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="7">
-            <ChapterMedia chId="7" />
+            <ChapterMedia images={images} chId="7" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Результаты
@@ -804,7 +839,7 @@ export function AboutNarrative() {
 
           {/* ═══ 8. HELP ═══ */}
           <article ref={setRef(7)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-paper rounded-[3rem_3rem_0_0] lg:rounded-none transition-colors duration-800 rounded-none m-0 js-pd-chapter" data-chapter="8">
-            <ChapterMedia chId="8" />
+            <ChapterMedia images={images} chId="8" />
             <Reveal>
               <div className="inline-flex items-center bg-amber/12 text-amber-800 font-extrabold text-xs uppercase tracking-wider px-3.5 py-1 rounded-full mb-5">
                 Помощь
@@ -833,7 +868,7 @@ export function AboutNarrative() {
 
           {/* ═══ 9. FAQ ═══ */}
           <article ref={setRef(8)} className="relative px-6 py-16 sm:px-10 lg:px-[8vw] lg:py-[12vh] flex flex-col justify-center min-h-[50vh] lg:min-h-screen bg-white rounded-[3rem_3rem_0_0] lg:rounded-none transition-colors duration-800 js-pd-chapter" data-chapter="9">
-            <ChapterMedia chId="9" />
+            <ChapterMedia images={images} chId="9" />
             <Reveal>
               <div className="inline-flex items-center text-amber font-extrabold text-sm uppercase tracking-wider mb-5">
                 FAQ

@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Play, Pause } from "lucide-react";
 import { useCursor } from "@/components/ui/cursor-context";
 
-export function HeroSection() {
+export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; posterUrl?: string } = {}) {
   const { textEnter, textLeave } = useCursor();
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -72,12 +72,13 @@ export function HeroSection() {
             loop
             playsInline
             preload="metadata"
+            poster={posterUrl}
             aria-hidden="true"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           >
-            <source src="/hero-video-2.mp4" type="video/mp4" />
+            <source src={videoUrl || "/hero-video-2.mp4"} type="video/mp4" />
           </video>
           
           {/* Subtle warm overlay */}

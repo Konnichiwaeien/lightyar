@@ -58,8 +58,8 @@ export function normalizePetData(pet: StrapiPet): MappedPet {
     primaryImage = petsService.resolveMediaUrl(pet.photos[0].url);
     imagesList = pet.photos.map(photo => petsService.resolveMediaUrl(photo.url));
   } else {
-    primaryImage = "";
-    imagesList = [];
+    primaryImage = "/photo-placeholder.jpg";
+    imagesList = ["/photo-placeholder.jpg"];
   }
 
   // Resolve tag

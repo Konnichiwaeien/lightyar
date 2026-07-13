@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AboutNarrative } from "@/components/about/about-narrative";
 import { HomeHeader } from "@/components/home/home-header";
+import { siteMediaService } from "@/lib/api/services/site-media";
 
 export const metadata: Metadata = {
   title: "О нас | АНБО «Светлый» — Помощь бездомным животным Ярославль",
@@ -23,12 +24,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const images = await siteMediaService.getSiteMedia();
+
   return (
     <>
       <HomeHeader />
-      <AboutNarrative />
+      <AboutNarrative images={images} />
     </>
   );
 }
-

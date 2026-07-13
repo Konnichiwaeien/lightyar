@@ -8,9 +8,11 @@ import { PetsMatchQuiz } from "./pets-match-quiz";
 
 export interface PetsHeroProps {
   allPets?: MappedPet[];
+  videoUrl?: string;
+  posterUrl?: string;
 }
 
-export function PetsHero({ allPets = [] }: PetsHeroProps) {
+export function PetsHero({ allPets = [], videoUrl, posterUrl }: PetsHeroProps) {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   useEffect(() => {
@@ -149,11 +151,12 @@ export function PetsHero({ allPets = [] }: PetsHeroProps) {
               muted
               playsInline
               preload="auto"
+              poster={posterUrl}
               className="absolute inset-0 w-full h-full object-cover"
             >
-              <source 
-                src="/hero-video-2.mp4" 
-                type="video/mp4" 
+              <source
+                src={videoUrl || "/hero-video-2.mp4"}
+                type="video/mp4"
               />
               Ваш браузер не поддерживает видео.
             </video>

@@ -4,6 +4,7 @@ import { PetsPagination } from "@/components/pets/pets-pagination";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { Metadata } from "next";
 import { petsService } from "@/lib/api/services/pets";
+import { siteMediaService } from "@/lib/api/services/site-media";
 import { normalizePetData } from "@/lib/helpers/pets/normalize-pet-data";
 import { PetsHero } from "@/components/pets/pets-hero";
 import { PetsGrid } from "@/components/pets/pets-grid";
@@ -47,7 +48,7 @@ export default async function PetsPage({ searchParams }: PageProps) {
   const strapiSort = sortMap[sort] || 'name:asc';
 
   // Fetch filtered pets and all shelter pets for quiz in parallel
-  const [realPetsRaw, allShelterPetsRaw] = await Promise.all([
+  const [realPetsRaw, allShelterPetsRaw, siteMedia] = await Promise.all([
     petsService.getPets({
       status: status === "home" ? "home" : "shelter",
       type,
@@ -58,6 +59,7 @@ export default async function PetsPage({ searchParams }: PageProps) {
       limit: isFavorites ? 200 : undefined,
     }),
     petsService.getPets({ status: 'shelter', limit: 150 }),
+    siteMediaService.getSiteMedia(),
   ]);
 
   if (realPetsRaw === null) {
@@ -85,7 +87,7 @@ export default async function PetsPage({ searchParams }: PageProps) {
       <main className="text-[#1c1c1c] pt-12 px-4 sm:px-6 md:px-12 pb-24">
         <div className="max-w-[1400px] mx-auto relative">
           
-          <PetsHero allPets={allShelterPetsMapped} />
+          <PetsHero allPets={allShelterPetsMapped} videoUrl={siteMedia.heroVideo} posterUrl={siteMedia.heroPoster} />
 
           <Suspense fallback={null}>
             <PetsControls />

@@ -131,7 +131,7 @@ function LightParticles() {
   );
 }
 
-export function AboutSection() {
+export function AboutSection({ imageUrl }: { imageUrl?: string }) {
   const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
   return (
     <section className="relative py-20 md:py-28 px-6 md:px-12 w-full overflow-hidden" id="about">
@@ -200,7 +200,7 @@ export function AboutSection() {
             onMouseLeave={imageLeave}
           >
             <Image
-              src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=1800"
+              src={imageUrl || "/photo-placeholder.jpg"}
               alt="Собаки в приюте Светлый на прогулке"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"

@@ -158,5 +158,22 @@ export interface StrapiResponseSingle<T> {
   meta?: Record<string, unknown>;
 }
 
+export interface StrapiSiteMedia {
+  id: number;
+  documentId: string;
+  homeAboutImage?: StrapiMedia | null;
+  directionsImage?: StrapiMedia | null;
+  historyImage?: StrapiMedia | null;
+  marinaPhoto?: StrapiMedia | null;
+  svetlanaPhoto?: StrapiMedia | null;
+  andreyPhoto?: StrapiMedia | null;
+  resultsImage?: StrapiMedia | null;
+  faqImage?: StrapiMedia | null;
+  heroVideo?: StrapiMedia | null;
+  heroPoster?: StrapiMedia | null;
+  presentationVideo?: StrapiMedia | null;
+  presentationPoster?: StrapiMedia | null;
+}
+
 export type { StrapiNews as News, StrapiPet as Pet, StrapiCampaign as Campaign, StrapiDonation as Donation };
 

@@ -37,9 +37,9 @@ export function NewsCard({ article, isLarge = false }: NewsCardProps) {
   }, []);
   const shouldReduceMotion = useReducedMotion() && mounted;
   
-  const imageUrl = article.mainImage?.url 
+  const imageUrl = article.mainImage?.url
     ? strapiClient.resolveMediaUrl(article.mainImage.url)
-    : "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=800"; // fallback
+    : "/photo-placeholder.jpg"; // fallback
 
   const excerpt = article.excerpt || article.content;
 

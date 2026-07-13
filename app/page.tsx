@@ -12,6 +12,7 @@ import { newsService } from "@/lib/api/services/news";
 import { petsService } from "@/lib/api/services/pets";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { donationsService } from "@/lib/api/services/donations";
+import { siteMediaService, type SiteMedia } from "@/lib/api/services/site-media";
 import type { RecentDonation } from "@/components/sections/payment-section";
 import { normalizePetData } from "@/lib/helpers/pets/normalize-pet-data";
 import { normalizeCampaignData, MappedCampaign } from "@/lib/helpers/campaigns/normalize-campaign-data";
@@ -21,14 +22,18 @@ export default async function Home() {
   let petsInShelter: { id: string; name: string; tag: string; image: string }[] = [];
   let activeCampaigns: MappedCampaign[] = [];
   let recentDonations: RecentDonation[] = [];
+  let siteMedia: SiteMedia = {};
 
   try {
-    const [newsResult, realPetsRaw, campaignsRaw, donationsRaw] = await Promise.all([
+    const [newsResult, realPetsRaw, campaignsRaw, donationsRaw, siteMediaRaw] = await Promise.all([
       newsService.getLatestNews(5),
       petsService.getPets({ status: "shelter", limit: 5 }).then(r => r || []),
       campaignsService.getCampaigns({ status: "active", limit: 3 }),
       donationsService.getRecentDonations(20),
+      siteMediaService.getSiteMedia(),
     ]);
+
+    siteMedia = siteMediaRaw;
 
     news = newsResult;
 
@@ -57,8 +62,8 @@ export default async function Home() {
       lightZone={
         <>
           <HomeHeader />
-          <HeroSection />
-          <AboutSection />
+          <HeroSection videoUrl={siteMedia.heroVideo} posterUrl={siteMedia.heroPoster} />
+          <AboutSection imageUrl={siteMedia.homeAbout} />
           <DogsStoriesSection initialPets={petsInShelter} />
         </>
       }
