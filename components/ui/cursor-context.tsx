@@ -1,55 +1,77 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 type CursorVariant = "default" | "hover" | "image";
 
 interface CursorContextType {
   cursorVariant: CursorVariant;
+  isCustomCursorEnabled: boolean;
   textEnter: () => void;
   textLeave: () => void;
   imageEnter: () => void;
   imageLeave: () => void;
-  /**
-   * Callback ref for the cursor DOM node. Must be a callback (not a plain ref):
-   * CustomCursor renders null on inner pages without unmounting, so a
-   * ref-syncing effect would not re-run when the node is recreated on
-   * returning to the homepage — leaving the provider moving a detached node.
-   */
   attachCursorNode: (node: HTMLDivElement | null) => void;
 }
 
 const CursorContext = createContext<CursorContextType | null>(null);
 
 /**
- * PERF FIX: Mouse position is stored in a ref and applied via direct DOM
- * manipulation (transform), NOT via useState. This avoids re-rendering
- * the entire React tree on every mousemove event (~60-120 times/sec).
- * Only cursorVariant changes trigger re-renders (rare hover/leave events).
+ * Pointer position stays outside React state and DOM writes are batched to one
+ * per animation frame. Capability and variant changes are the only updates
+ * that re-render the provider tree.
  */
 export function CursorProvider({ children }: { children: ReactNode }) {
   const [cursorVariant, setCursorVariant] = useState<CursorVariant>("default");
+  const [isCustomCursorEnabled, setIsCustomCursorEnabled] = useState(false);
   const cursorRef = useRef<HTMLDivElement | null>(null);
-  const posRef = useRef({ x: 0, y: 0 });
+  const posRef = useRef({ x: 0, y: 0, hasPosition: false });
 
   useEffect(() => {
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
+    const capability = window.matchMedia("(any-hover: hover) and (any-pointer: fine)");
+    let animationFrameId = 0;
 
-    const handler = (e: MouseEvent) => {
-      posRef.current.x = e.clientX;
-      posRef.current.y = e.clientY;
-      // Direct DOM update — zero React re-renders
+    const renderPosition = () => {
+      animationFrameId = 0;
       const node = cursorRef.current;
-      if (node) {
-        const hw = node.offsetWidth / 2;
-        const hh = node.offsetHeight / 2;
-        node.style.transform = `translate3d(${e.clientX - hw}px, ${e.clientY - hh}px, 0)`;
+      const position = posRef.current;
+      if (!node || !position.hasPosition) return;
+
+      node.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`;
+      node.style.opacity = "1";
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+
+      posRef.current.x = event.clientX;
+      posRef.current.y = event.clientY;
+      posRef.current.hasPosition = true;
+      if (!animationFrameId) animationFrameId = requestAnimationFrame(renderPosition);
+    };
+
+    const syncCapability = () => {
+      const enabled = capability.matches;
+      setIsCustomCursorEnabled(enabled);
+      window.removeEventListener("pointermove", handlePointerMove);
+
+      if (enabled) {
+        window.addEventListener("pointermove", handlePointerMove, { passive: true });
+      } else {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animationFrameId = 0;
+        setCursorVariant("default");
       }
     };
 
-    window.addEventListener("mousemove", handler, { passive: true });
-    return () => window.removeEventListener("mousemove", handler);
+    syncCapability();
+    capability.addEventListener("change", syncCapability);
+
+    return () => {
+      capability.removeEventListener("change", syncCapability);
+      window.removeEventListener("pointermove", handlePointerMove);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   const textEnter = useCallback(() => setCursorVariant("hover"), []);
@@ -59,24 +81,24 @@ export function CursorProvider({ children }: { children: ReactNode }) {
 
   const attachCursorNode = useCallback((node: HTMLDivElement | null) => {
     cursorRef.current = node;
-    if (node) {
-      // Place the fresh node at the last known mouse position immediately,
-      // so it doesn't sit at the top-left corner until the next mousemove
-      const hw = node.offsetWidth / 2;
-      const hh = node.offsetHeight / 2;
-      node.style.transform = `translate3d(${posRef.current.x - hw}px, ${posRef.current.y - hh}px, 0)`;
+    if (!node) return;
+
+    const position = posRef.current;
+    node.style.opacity = position.hasPosition ? "1" : "0";
+    if (position.hasPosition) {
+      node.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`;
     }
   }, []);
 
   return (
-    <CursorContext.Provider value={{ cursorVariant, textEnter, textLeave, imageEnter, imageLeave, attachCursorNode }}>
+    <CursorContext.Provider value={{ cursorVariant, isCustomCursorEnabled, textEnter, textLeave, imageEnter, imageLeave, attachCursorNode }}>
       {children}
     </CursorContext.Provider>
   );
 }
 
 export function useCursor() {
-  const ctx = useContext(CursorContext);
-  if (!ctx) throw new Error("useCursor must be used within CursorProvider");
-  return ctx;
+  const context = useContext(CursorContext);
+  if (!context) throw new Error("useCursor must be used within CursorProvider");
+  return context;
 }
