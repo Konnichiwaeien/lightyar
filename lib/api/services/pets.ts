@@ -24,7 +24,7 @@ export class PetsService extends StrapiClient {
         query += `&filters[type][$eq]=${options.type}`;
       }
       if (options?.status) {
-        query += `&filters[status][$eq]=${options.status}`;
+        query += `&filters[petStatus][$eq]=${options.status}`;
       }
       if (options?.sex) {
         query += `&filters[sex][$eq]=${options.sex}`;

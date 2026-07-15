@@ -76,7 +76,7 @@ export interface StrapiPet {
   id: number;
   documentId: string;
   name: string;
-  status: 'shelter' | 'home';
+  petStatus: 'shelter' | 'home';
   sex: 'male' | 'female';
   type: 'cat' | 'dog';
   createdAt: string;

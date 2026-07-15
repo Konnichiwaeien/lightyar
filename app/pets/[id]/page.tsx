@@ -53,7 +53,7 @@ export default async function PetDetailPage({ params }: PageProps) {
   }
 
   // Determine pet status
-  const petStatus = pet.status || "shelter";
+  const petStatus = pet.petStatus || "shelter";
   const speciesText = pet.type === "dog" ? "Собака" : "Кошка";
   const genderText = pet.sex === "male" ? "Мальчик" : "Девочка";
   const breedText = pet.type === "dog" ? (pet.dogBreed?.name || "Метис") : (pet.catBreed?.name || "Метис");

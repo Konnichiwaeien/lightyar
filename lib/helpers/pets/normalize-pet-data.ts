@@ -31,7 +31,7 @@ export interface MappedPet {
  * @returns Normalized MappedPet object
  */
 export function normalizePetData(pet: StrapiPet): MappedPet {
-  const petStatus = pet.status || "shelter";
+  const petStatus = pet.petStatus || "shelter";
   const speciesText = pet.type === "dog" ? "Собака" : "Кошка";
   const genderText = pet.sex === "male" ? "Мальчик" : "Девочка";
   
