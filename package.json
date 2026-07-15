@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test lib/reports/report-domain.test.ts lib/reports/normalize-report.test.ts lib/about/about-content.test.ts lib/api/services/editorial-services.test.mjs components/reports/reports-structure.test.mjs components/ui/cursor-context.test.mjs"
+    "test": "node --experimental-strip-types --test lib/reports/report-domain.test.ts lib/reports/normalize-report.test.ts lib/about/about-content.test.ts lib/api/services/editorial-services.test.mjs components/reports/reports-structure.test.mjs components/about/about-structure.test.mjs components/ui/cursor-context.test.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
