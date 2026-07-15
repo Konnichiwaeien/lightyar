@@ -408,3 +408,415 @@
     transform: scaleY(1) !important;
   }
 }
+
+.report-cover {
+  position: relative;
+  min-height: min(780px, 84svh);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(3rem, 7vw, 7rem) clamp(1.5rem, 6vw, 6rem) clamp(4rem, 8vw, 8rem);
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.report-cover__meta {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(247, 244, 238, 0.46);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.report-cover__back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.report-cover__back:hover,
+.report-cover__back:focus-visible {
+  color: var(--amber);
+  outline: none;
+}
+
+.report-cover__year {
+  align-self: end;
+  color: rgba(247, 244, 238, 0.055);
+  font-size: clamp(9rem, 25vw, 25rem);
+  font-weight: 700;
+  letter-spacing: -0.1em;
+  line-height: 0.66;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-0.08em);
+}
+
+.report-cover__copy {
+  position: relative;
+  z-index: 1;
+  align-self: end;
+  padding-bottom: clamp(1rem, 4vw, 4rem);
+}
+
+.report-cover__copy h1,
+.financial-flow h2,
+.report-outcomes h2,
+.report-story h2,
+.document-archive h2 {
+  margin: 0;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(3.2rem, 6vw, 6.8rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.report-cover__copy > p:last-child {
+  max-width: 650px;
+  margin: 2rem 0 0;
+  color: rgba(247, 244, 238, 0.6);
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.report-detail__paper {
+  background: var(--paper);
+  color: var(--archive-black);
+}
+
+.financial-flow,
+.report-outcomes,
+.report-story,
+.document-archive,
+.report-neighbors {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(6rem, 11vw, 11rem) clamp(1.5rem, 5vw, 5rem);
+}
+
+.financial-flow__heading,
+.document-archive__heading {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: clamp(2rem, 8vw, 8rem);
+  align-items: end;
+}
+
+.financial-flow__heading > p,
+.document-archive__heading > p {
+  margin: 0;
+  color: rgba(10, 10, 10, 0.54);
+  line-height: 1.6;
+}
+
+.financial-flow__visual {
+  margin-top: clamp(4rem, 8vw, 8rem);
+}
+
+.financial-flow__visual svg {
+  width: 100%;
+  overflow: visible;
+  color: var(--amber);
+}
+
+.financial-flow__values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.25rem;
+  margin: -0.75rem 0 0;
+}
+
+.financial-flow__values div {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(10, 10, 10, 0.16);
+}
+
+.financial-flow__values dt {
+  color: rgba(10, 10, 10, 0.5);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.financial-flow__values dd {
+  margin: 0.65rem 0 0;
+  font-size: clamp(1.35rem, 2.2vw, 2.2rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.financial-flow__values [data-tone="balance"] dd {
+  color: var(--result-green);
+}
+
+.financial-flow__zero,
+.financial-flow__note {
+  max-width: 760px;
+  margin: 2.5rem 0 0;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--amber);
+  color: rgba(10, 10, 10, 0.62);
+  line-height: 1.65;
+}
+
+.financial-flow__note {
+  border-color: rgba(10, 10, 10, 0.24);
+}
+
+.report-outcomes {
+  border-top: 1px solid rgba(10, 10, 10, 0.1);
+}
+
+.report-outcomes ol {
+  margin: clamp(4rem, 8vw, 7rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-outcomes li {
+  display: grid;
+  grid-template-columns: 3rem minmax(9rem, 0.55fr) 1fr;
+  gap: 1.5rem;
+  align-items: baseline;
+  padding: 1.75rem 0;
+  border-top: 1px solid rgba(10, 10, 10, 0.14);
+}
+
+.report-outcomes__number {
+  color: rgba(10, 10, 10, 0.34);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.report-outcomes__value {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.8rem, 5vw, 5.5rem);
+  letter-spacing: -0.05em;
+}
+
+.report-outcomes__value small {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+}
+
+.report-outcomes__label {
+  font-size: clamp(1.1rem, 2vw, 1.55rem);
+}
+
+.report-outcomes li p {
+  grid-column: 3;
+  margin: 0;
+  color: rgba(10, 10, 10, 0.5);
+}
+
+.report-story {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: clamp(3rem, 8vw, 8rem);
+  border-top: 1px solid rgba(10, 10, 10, 0.1);
+}
+
+.report-story > div {
+  padding-top: 0.25rem;
+}
+
+.report-story > div p {
+  margin: 0 0 1.4rem;
+  color: rgba(10, 10, 10, 0.67);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.8;
+}
+
+.document-archive {
+  max-width: none;
+  background: #171716;
+  color: var(--sheet);
+}
+
+.document-archive__heading,
+.document-stack {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.document-archive__heading > p {
+  color: rgba(247, 244, 238, 0.48);
+}
+
+.document-stack {
+  margin-top: clamp(5rem, 10vw, 9rem);
+  padding: 0;
+  list-style: none;
+}
+
+.document-sheet {
+  position: relative;
+  z-index: calc(10 - var(--document-index));
+  min-height: 20rem;
+  margin-top: calc(var(--document-index) * -5.5rem);
+  padding: clamp(2rem, 5vw, 4.5rem);
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  border-radius: 0.5rem;
+  background: var(--sheet);
+  color: var(--archive-black);
+  box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.2);
+  transform: translateX(calc((var(--document-index) % 2) * 1.25rem));
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.document-sheet:first-child {
+  margin-top: 0;
+}
+
+.document-sheet:hover,
+.document-sheet:focus-within {
+  transform: translateX(calc((var(--document-index) % 2) * 1.25rem)) translateY(-1rem);
+}
+
+.document-sheet__topline,
+.document-sheet__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(10, 10, 10, 0.48);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.document-sheet__topline > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.document-sheet h3 {
+  max-width: 800px;
+  margin: clamp(3rem, 6vw, 6rem) 0 0;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.2rem, 4.5vw, 5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.document-sheet > p {
+  max-width: 620px;
+  color: rgba(10, 10, 10, 0.58);
+}
+
+.document-sheet__actions {
+  justify-content: flex-start;
+  margin-top: 3rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.document-sheet__actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.25);
+  color: var(--archive-black);
+  font-size: 0.84rem;
+}
+
+.report-neighbors {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.report-neighbors__years,
+.report-neighbors a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.report-neighbors a {
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.report-neighbors a:hover,
+.report-neighbors a:focus-visible {
+  color: #9a6400;
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  .report-cover {
+    min-height: 76svh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-cover__meta > span,
+  .report-cover__year {
+    display: none;
+  }
+
+  .report-cover__copy {
+    margin-top: auto;
+  }
+
+  .financial-flow__heading,
+  .document-archive__heading,
+  .report-story {
+    display: block;
+  }
+
+  .financial-flow__heading > p,
+  .document-archive__heading > p,
+  .report-story > div {
+    margin-top: 2rem;
+  }
+
+  .financial-flow__visual svg {
+    display: none;
+  }
+
+  .financial-flow__values {
+    margin-top: 3rem;
+    grid-template-columns: 1fr;
+  }
+
+  .report-outcomes li {
+    grid-template-columns: 2rem 1fr;
+  }
+
+  .report-outcomes__value,
+  .report-outcomes__label,
+  .report-outcomes li p {
+    grid-column: 2;
+  }
+
+  .document-sheet {
+    min-height: 24rem;
+    margin-top: calc(var(--document-index) * -3.25rem);
+    transform: none;
+  }
+
+  .document-sheet:hover,
+  .document-sheet:focus-within {
+    transform: translateY(-0.5rem);
+  }
+
+  .document-sheet__topline,
+  .report-neighbors {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
