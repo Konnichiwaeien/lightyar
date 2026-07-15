@@ -61,14 +61,11 @@ export function ReportArchive({ reports }: { reports: AnnualReport[] }) {
         </nav>
 
         <ol className="report-year-list" aria-label="Архив годовых отчётов">
-          {reports.map((report, index) => {
+          {reports.map((report) => {
             const facts = reportFacts(report);
             return (
               <li key={report.documentId} id={`report-${report.year}`} className="report-year-item">
                 <article className="report-year-card">
-                  <div className="report-year-card__index" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
                   <div className="report-year-card__year">{report.year}</div>
                   <div className="report-year-card__content">
                     <p className="reports-kicker">Годовой отчёт</p>

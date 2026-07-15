@@ -220,16 +220,6 @@
   border-top: 1px solid rgba(10, 10, 10, 0.16);
 }
 
-.report-year-card__index {
-  position: absolute;
-  top: 2.5rem;
-  left: -2.5rem;
-  color: rgba(10, 10, 10, 0.28);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
 .report-year-card__year {
   color: var(--archive-black);
   font-size: clamp(6rem, 14vw, 13.5rem);
@@ -379,10 +369,6 @@
 
   .report-year-card {
     display: block;
-  }
-
-  .report-year-card__index {
-    display: none;
   }
 
   .report-year-card__year {
