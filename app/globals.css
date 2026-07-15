@@ -29,6 +29,11 @@ body {
   color: white;
 }
 
+:focus-visible {
+  outline-color: #f59e0b;
+  outline-offset: 4px;
+}
+
 /* Hide scrollbar */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -99,6 +104,10 @@ body:not(.has-custom-cursor) [class*="cursor-none"] {
 
 /* Accessibility: respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
   .film-grain {
     display: none;
   }

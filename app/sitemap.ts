@@ -2,12 +2,13 @@ import type { MetadataRoute } from "next";
 import { petsService } from "@/lib/api/services/pets";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { newsService } from "@/lib/api/services/news";
+import { reportsService } from "@/lib/api/services/reports";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://lightyar.shdk.tech";
 
   // Dynamic routes
-  const [petIds, campaigns, newsSlugs] = await Promise.all([
+  const [petIds, campaigns, newsSlugs, reportYears] = await Promise.all([
     petsService.getAllPetIds().catch((err) => {
       console.error("[Sitemap] getAllPetIds failed:", err);
       return [];
@@ -18,6 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     newsService.getAllNewsSlugs().catch((err) => {
       console.error("[Sitemap] getAllNewsSlugs failed:", err);
+      return [];
+    }),
+    reportsService.getReportYears().catch((err) => {
+      console.error("[Sitemap] getReportYears failed:", err);
       return [];
     }),
   ]);
@@ -43,6 +48,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const reportRoutes = (reportYears || []).map((year) => ({
+    url: `${baseUrl}/reports/${year}`,
+    lastModified: new Date(),
+    changeFrequency: "yearly" as const,
+    priority: 0.65,
+  }));
+
   // Static routes
   const staticRoutes = [
     {
@@ -56,6 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/reports`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/campaigns`,
@@ -77,5 +95,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticRoutes, ...petRoutes, ...campaignRoutes, ...newsRoutes];
+  return [...staticRoutes, ...petRoutes, ...campaignRoutes, ...newsRoutes, ...reportRoutes];
 }

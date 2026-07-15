@@ -10,6 +10,7 @@ import { PawLogo } from "@/components/ui/paw-logo";
 const MENU_ITEMS = [
   { label: "Главная", href: "/" },
   { label: "О фонде", href: "/about" },
+  { label: "Отчётность", href: "/reports" },
   { label: "Сборы", href: "/campaigns" },
   { label: "Волонтеры", href: "/#volunteer" },
   { label: "Питомцы", href: "/pets" },
