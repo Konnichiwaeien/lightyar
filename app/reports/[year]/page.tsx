@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DarkInnerHeader } from "@/components/layout/dark-inner-header";
+import { InnerHeader } from "@/components/layout/inner-header";
 import { DocumentStack } from "@/components/reports/document-stack";
 import { FinancialFlow } from "@/components/reports/financial-flow";
 import { OutcomeList } from "@/components/reports/outcome-list";
-import { ReportBeam } from "@/components/reports/report-beam";
-import { ReportCover } from "@/components/reports/report-cover";
 import { ReportNeighbors } from "@/components/reports/report-neighbors";
+import { ReportOpening } from "@/components/reports/report-opening";
+import { ReportReveal } from "@/components/reports/report-reveal";
 import { reportsService } from "@/lib/api/services/reports";
 import "@/components/reports/reports.css";
 
@@ -43,27 +43,55 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
   const currentIndex = years.indexOf(year);
   const newerYear = currentIndex > 0 ? years[currentIndex - 1] : undefined;
   const olderYear = currentIndex >= 0 ? years[currentIndex + 1] : undefined;
+  const firstYear = years.length > 0 ? years[years.length - 1] : undefined;
   const paragraphs = report.body?.split(/\n\s*\n/).filter(Boolean) || [];
 
   return (
-    <div className="reports-experience report-detail selection:bg-amber-400 selection:text-[#0a0a0a]">
-      <DarkInnerHeader />
-      <ReportBeam />
+    <div className="reports-experience">
+      <InnerHeader />
       <main id="main-content">
-        <ReportCover report={report} />
-        <div className="report-detail__paper">
-          {report.financialSummary && <FinancialFlow financialSummary={report.financialSummary} />}
-          <OutcomeList outcomes={report.outcomes} customMetrics={report.customMetrics} />
-          {paragraphs.length > 0 && (
-            <section className="report-story" aria-labelledby="story-title">
-              <p className="reports-kicker">Контекст года</p>
-              <h2 id="story-title">Что стоит за документами</h2>
-              <div>{paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
-            </section>
-          )}
-          <DocumentStack documents={report.documents} year={report.year} />
-          <ReportNeighbors newerYear={newerYear} olderYear={olderYear} />
-        </div>
+        <ReportOpening report={report} />
+
+        {paragraphs.length > 0 ? (
+          <section className="reports-letter" aria-labelledby="story-title">
+            <div className="reports-wrap reports-letter-grid">
+              <ReportReveal>
+                <div>
+                  <h2 id="story-title" className="sr-only">
+                    Что стоит за документами
+                  </h2>
+                  <blockquote>{paragraphs[0]}</blockquote>
+                  {paragraphs.slice(1).map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  <div className="reports-signature">
+                    <b>Морозова Марина Владимировна</b>
+                    <span>директор АНБО «Светлый»</span>
+                  </div>
+                </div>
+              </ReportReveal>
+            </div>
+          </section>
+        ) : null}
+
+        <OutcomeList
+          outcomes={report.outcomes}
+          customMetrics={report.customMetrics}
+          heading={`Что произошло за ${report.year} год`}
+          note="Показатели считаются по датам поступления и пристройства в карточках подопечных. Пустая ячейка означала бы «нет данных» — ноль здесь подтверждённый."
+        />
+
+        {report.financialSummary ? (
+          <FinancialFlow
+            financialSummary={report.financialSummary}
+            heading={`Движение средств за ${report.year} год`}
+            note={report.financialSummary.note}
+          />
+        ) : null}
+
+        <DocumentStack documents={report.documents} heading={`Исходные документы за ${report.year} год`} />
+
+        <ReportNeighbors olderYear={olderYear} newerYear={newerYear} firstYear={firstYear} />
       </main>
     </div>
   );

@@ -1,48 +1,77 @@
-import { formatQualifiedValue } from "@/lib/reports/report-domain";
+import { PawPrint, Home, HeartPulse, Users, Dog, Cat, CircleDot } from "lucide-react";
 import type { ReportCustomMetric, ReportOutcome } from "@/lib/reports/normalize-report";
+import { formatQualifiedValue } from "@/lib/reports/report-domain";
 
-const labels: Record<ReportOutcome["kind"], string> = {
-  dogsInCare: "Собак на кураторстве",
-  catsInCare: "Кошек на кураторстве",
-  rescued: "Животных спасено",
-  treated: "Прошли лечение",
-  adopted: "Нашли новый дом",
-  volunteers: "Волонтёров в команде",
+const OUTCOME_LABEL: Record<ReportOutcome["kind"], string> = {
+  dogsInCare: "собак под опекой",
+  catsInCare: "кошек под опекой",
+  rescued: "животных попали под опеку фонда",
+  treated: "получили ветеринарную помощь",
+  adopted: "нашли постоянный дом",
+  volunteers: "учредителей и волонтёров в команде",
 };
 
-export function OutcomeList({ outcomes, customMetrics }: { outcomes: ReportOutcome[]; customMetrics: ReportCustomMetric[] }) {
+const OUTCOME_ICON: Record<ReportOutcome["kind"], typeof PawPrint> = {
+  dogsInCare: Dog,
+  catsInCare: Cat,
+  rescued: PawPrint,
+  treated: HeartPulse,
+  adopted: Home,
+  volunteers: Users,
+};
+
+/**
+ * Показатели года. Подтверждённый ноль подаётся отдельным цветом, а не прячется:
+ * для первого года фонда «ноль пристроенных» — это и есть главный честный факт.
+ */
+export function OutcomeList({
+  outcomes,
+  customMetrics,
+  heading,
+  note,
+}: {
+  outcomes: ReportOutcome[];
+  customMetrics: ReportCustomMetric[];
+  heading: string;
+  note?: string;
+}) {
   if (outcomes.length === 0 && customMetrics.length === 0) return null;
-  const items = [
-    ...outcomes.map((item) => ({
-      key: `outcome-${item.id ?? item.kind}`,
-      label: labels[item.kind],
-      value: formatQualifiedValue(item.value, item.qualifier),
-      unit: "",
-      note: item.note,
-    })),
-    ...customMetrics.map((item) => ({
-      key: `custom-${item.id ?? item.label}`,
-      label: item.label,
-      value: formatQualifiedValue(item.value, item.qualifier),
-      unit: item.unit || "",
-      note: item.note,
-    })),
-  ];
 
   return (
-    <section className="report-outcomes" aria-labelledby="outcomes-title">
-      <p className="reports-kicker">Результаты</p>
-      <h2 id="outcomes-title">То, что удалось сделать</h2>
-      <ol>
-        {items.map((item, index) => (
-          <li key={item.key}>
-            <span className="report-outcomes__number">{String(index + 1).padStart(2, "0")}</span>
-            <span className="report-outcomes__value">{item.value}{item.unit && <small> {item.unit}</small>}</span>
-            <span className="report-outcomes__label">{item.label}</span>
-            {item.note && <p>{item.note}</p>}
-          </li>
-        ))}
-      </ol>
+    <section className="reports-outcomes" aria-label="Показатели года">
+      <div className="reports-wrap">
+        <h2>{heading}</h2>
+        <ul className="reports-outcome-grid">
+          {outcomes.map((outcome) => {
+            const Icon = OUTCOME_ICON[outcome.kind];
+            return (
+              <li
+                key={`${outcome.kind}-${outcome.order}`}
+                className={`reports-outcome${outcome.value === 0 ? " reports-outcome--zero" : ""}`}
+              >
+                <Icon className="reports-pic" aria-hidden="true" />
+                <b className="reports-num">{formatQualifiedValue(outcome.value, outcome.qualifier)}</b>
+                <span>{outcome.note || OUTCOME_LABEL[outcome.kind]}</span>
+              </li>
+            );
+          })}
+
+          {customMetrics.map((metric) => (
+            <li
+              key={`${metric.label}-${metric.order}`}
+              className={`reports-outcome${metric.value === 0 ? " reports-outcome--zero" : ""}`}
+            >
+              <CircleDot className="reports-pic" aria-hidden="true" />
+              <b className="reports-num">
+                {formatQualifiedValue(metric.value, metric.qualifier)}
+                {metric.unit ? ` ${metric.unit}` : ""}
+              </b>
+              <span>{metric.note || metric.label}</span>
+            </li>
+          ))}
+        </ul>
+        {note ? <p className="reports-outcome-note">{note}</p> : null}
+      </div>
     </section>
   );
 }

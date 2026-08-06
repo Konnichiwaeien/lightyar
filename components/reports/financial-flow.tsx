@@ -1,69 +1,75 @@
-import type { FinancialSummary } from "@/lib/reports/normalize-report";
-import { FinancialFlowMotion } from "./financial-flow-motion";
+"use client";
 
-function formatMoney(value: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import type { FinancialSummary } from "@/lib/reports/normalize-report";
+
+const money = (value: number) =>
+  `${new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ₽`;
+
+interface Row {
+  label: string;
+  value: number;
+  soft?: boolean;
 }
 
-export function FinancialFlow({ financialSummary }: { financialSummary: FinancialSummary }) {
-  const steps: { key: string; label: string; value: number; tone: string }[] = [];
-  if (financialSummary.income !== undefined) {
-    steps.push({ key: "income", label: "Поступления", value: financialSummary.income, tone: "source" });
-  }
-  if (financialSummary.targetExpenses !== undefined && financialSummary.targetExpenses !== 0) {
-    steps.push({ key: "target", label: "Целевые расходы", value: financialSummary.targetExpenses, tone: "expense" });
-  }
-  if (financialSummary.operatingExpenses !== undefined && financialSummary.operatingExpenses !== 0) {
-    steps.push({ key: "operating", label: "Операционные расходы", value: financialSummary.operatingExpenses, tone: "expense" });
-  }
-  if (financialSummary.bankFees !== undefined) {
-    steps.push({ key: "fees", label: "Комиссия банка", value: financialSummary.bankFees, tone: "expense" });
-  }
-  if (financialSummary.closingBalance !== undefined) {
-    steps.push({ key: "balance", label: "Остаток", value: financialSummary.closingBalance, tone: "balance" });
-  }
+/**
+ * Движение средств. Ширина полосы — это данные, она выставляется сразу;
+ * появление рисуется clip-path, чтобы не анимировать раскладку.
+ *
+ * Ноль показывается как ноль: пустое поле означало бы «нет данных», а это разные вещи.
+ */
+export function FinancialFlow({
+  financialSummary,
+  heading,
+  note,
+}: {
+  financialSummary: FinancialSummary;
+  heading: string;
+  note?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+  const inView = useInView(ref, { once: true, amount: 0.25 });
+  const shown = reduced || inView;
 
-  if (steps.length === 0 && !financialSummary.note) return null;
-  const path = "M 20 92 C 150 20 255 164 390 92 S 620 20 780 92";
+  const rows: Row[] = [];
+  if (financialSummary.income !== undefined) rows.push({ label: "Поступило от граждан", value: financialSummary.income });
+  if (financialSummary.targetExpenses !== undefined)
+    rows.push({ label: "Целевые расходы", value: financialSummary.targetExpenses, soft: true });
+  if (financialSummary.operatingExpenses !== undefined)
+    rows.push({ label: "Административные расходы", value: financialSummary.operatingExpenses, soft: true });
+  if (financialSummary.bankFees !== undefined)
+    rows.push({ label: "Банковская комиссия", value: financialSummary.bankFees, soft: true });
+  if (financialSummary.closingBalance !== undefined)
+    rows.push({ label: "Остаток на счёте", value: financialSummary.closingBalance });
+
+  if (rows.length === 0) return null;
+
+  const scale = Math.max(...rows.map((row) => Math.abs(row.value)), 1);
 
   return (
-    <section className="financial-flow" aria-labelledby="financial-title" aria-label="Движение средств">
-      <div className="financial-flow__heading">
-        <div>
-          <p className="reports-kicker">Финансовая сводка</p>
-          <h2 id="financial-title">Движение средств</h2>
-        </div>
-        <p>Визуализируем только заполненные и подтверждённые значения.</p>
-      </div>
-
-      {steps.length > 0 && (
-        <div className="financial-flow__visual">
-          <svg viewBox="0 0 800 184" role="img" aria-label="Схема движения средств; точные суммы перечислены ниже">
-            <path d={path} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="3" />
-            <g className="financial-flow__path"><FinancialFlowMotion path={path} /></g>
-          </svg>
-          <dl className="financial-flow__values">
-            {steps.map((step) => (
-              <div key={step.key} data-tone={step.tone}>
-                <dt>{step.label}</dt>
-                <dd>{formatMoney(step.value)}</dd>
+    <section className="reports-money" aria-label="Движение средств">
+      <div className="reports-wrap" ref={ref}>
+        <h2>{heading}</h2>
+        <dl className="reports-flow">
+          {rows.map((row, index) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <div className={`reports-bar${row.soft ? " reports-bar--soft" : ""}`}>
+                <motion.i
+                  style={{ width: `${Math.max((Math.abs(row.value) / scale) * 100, row.value > 0 ? 1.5 : 0)}%` }}
+                  initial={false}
+                  animate={{ clipPath: shown ? "inset(0 0 0 0)" : "inset(0 100% 0 0)" }}
+                  transition={{ duration: 1.2, delay: reduced ? 0 : index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+                />
               </div>
-            ))}
-          </dl>
-        </div>
-      )}
-
-      {financialSummary.targetExpenses === 0 && (
-        <p className="financial-flow__zero">
-          Целевые расходы в проверенном отчёте не заявлены — показываем подтверждённый ноль, а не пустое значение.
-        </p>
-      )}
-      {financialSummary.note && <p className="financial-flow__note">{financialSummary.note}</p>}
+              <dd>{money(row.value)}</dd>
+            </div>
+          ))}
+        </dl>
+        {note ? <p className="reports-money-note">{note}</p> : null}
+      </div>
     </section>
   );
 }
