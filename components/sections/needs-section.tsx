@@ -1,93 +1,160 @@
 "use client";
 
-import { ShoppingCart, Package, Heart, Truck } from "lucide-react";
-import { useCursor } from "@/components/ui/cursor-context";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { Gift, HandHeart, Info, ChevronLeft, ChevronRight, CircleDollarSign } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, A11y } from "swiper/modules";
+import type { Swiper as SwiperClass } from "swiper";
+import { GiftOrderModal } from "@/components/wishlist/gift-order-modal";
+import type { WishlistItem, WishlistSettings } from "@/lib/api/services/wishlist";
+import "swiper/css";
+import "swiper/css/navigation";
+import "./needs-section.css";
 
-const ITEMS = [
-  { 
-    title: "Сухой корм", 
-    desc: "Для собак и щенков (Pedigree, Chappi, Сириус). Важен каждый килограмм.",
-    icon: Package,
-    color: "bg-amber-100 text-amber-600"
-  },
-  { 
-    title: "Консервы", 
-    desc: "Влажные корма для кошек, послеоперационных и стареньких животных.",
-    icon: Heart,
-    color: "bg-rose-100 text-rose-600"
-  },
-  { 
-    title: "Пеленки 60×90", 
-    desc: "Жизненно необходимы для щенков, спинальников и животных в стационаре.",
-    icon: ShoppingCart,
-    color: "bg-sky-100 text-sky-600"
-  },
-  { 
-    title: "Амуниция", 
-    desc: "Крепкие поводки от 3 метров, ошейники для средних и крупных собак, шлейки.",
-    icon: Truck,
-    color: "bg-emerald-100 text-emerald-600"
-  },
-];
+const price = (value: number) =>
+  `~${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value)} ₽`;
 
-export function NeedsSection() {
-  const { textEnter, textLeave } = useCursor();
+export function NeedsSection({
+  items = [],
+  settings = { marketplaceName: "Ozon" },
+}: {
+  items?: WishlistItem[];
+  settings?: WishlistSettings;
+}) {
+  const swiperRef = useRef<SwiperClass | null>(null);
+  const [active, setActive] = useState<WishlistItem | null>(null);
+  // стрелки гаснут на краях: кнопка, которая ничего не делает, врёт о своей роли
+  const [edges, setEdges] = useState({ start: true, end: false });
+
+  const syncEdges = (instance: SwiperClass) =>
+    setEdges({ start: instance.isBeginning, end: instance.isEnd });
+
+  // если CMS недоступна, секция молча исчезает: пустой вишлист хуже отсутствующего
+  if (items.length === 0) return null;
+
   return (
-    <section className="py-20 md:py-28 px-6 md:px-12 bg-[#f4f0eb] border-b border-stone-200" id="needs">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-12 justify-between items-start md:items-end mb-12 md:mb-16">
-          <div className="max-w-2xl">
-            <span className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-6 inline-block">[ Нужды приюта ]</span>
-            <h2
-              className="text-4xl md:text-5xl lg:text-7xl font-serif text-stone-900 leading-[1.05] text-wrap: balance"
-              onMouseEnter={textEnter}
-              onMouseLeave={textLeave}
+    <section className="wishlist" id="needs">
+      <div className="wishlist-inner">
+        <div className="wishlist-head">
+          <h2>
+            <span className="wishlist-mark" aria-hidden="true">
+              <Gift size={26} />
+            </span>
+            Вишлист
+          </h2>
+          <div className="wishlist-nav">
+            <button
+              type="button"
+              onClick={() => swiperRef.current?.slidePrev()}
+              disabled={edges.start}
+              aria-label="Предыдущие позиции"
             >
-              Вы можете помочь <br />
-              <span className="italic font-light text-stone-500">вещами</span>
-            </h2>
-          </div>
-          <div className="max-w-md">
-            <p className="text-stone-600 font-light text-lg">
-              Закажите необходимое на пункты выдачи WB или Ozon, и наши волонтеры заберут посылку. Мы рады любой, даже самой маленькой баночке корма.
-            </p>
+              <ChevronLeft size={20} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => swiperRef.current?.slideNext()}
+              disabled={edges.end}
+              aria-label="Следующие позиции"
+            >
+              <ChevronRight size={20} aria-hidden="true" />
+            </button>
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="list">
-          {ITEMS.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <li
-                key={i}
-                className="bg-white rounded-3xl p-8 flex flex-col shadow-xl shadow-stone-200/50 hover:-translate-y-2 transition-transform duration-500"
-                onMouseEnter={textEnter}
-                onMouseLeave={textLeave}
-              >
-                <div className={`w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center mb-8`}>
-                  <Icon size={24} aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-stone-900">{item.title}</h3>
-                <p className="text-stone-500 font-light text-sm flex-1 mb-8">{item.desc}</p>
-                <div className="flex gap-2 mt-auto">
-                  <button
-                    type="button"
-                    className="flex-1 text-center bg-stone-100 text-stone-600 hover:bg-fuchsia-600 hover:text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors focus-visible:ring-2 focus-visible:ring-fuchsia-500 focus-visible:outline-hidden pointer-events-auto cursor-none"
-                  >
-                    Wildberries
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 text-center bg-stone-100 text-stone-600 hover:bg-blue-500 hover:text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-hidden pointer-events-auto cursor-none"
-                  >
-                    Ozon
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <p className="wishlist-lead">
+          Это то, что нужно приюту прямо сейчас. Вы заказываете покупку на маркетплейсе с доставкой в наш пункт
+          выдачи — мы забираем и показываем в отчёте.
+        </p>
+
+        <Swiper
+          modules={[Navigation, A11y]}
+          onSwiper={(instance) => {
+            swiperRef.current = instance;
+            syncEdges(instance);
+          }}
+          onSlideChange={syncEdges}
+          onResize={syncEdges}
+          spaceBetween={24}
+          slidesPerView={1.15}
+          breakpoints={{
+            560: { slidesPerView: 2.1 },
+            900: { slidesPerView: 3.1 },
+            1200: { slidesPerView: 4 },
+          }}
+          a11y={{ prevSlideMessage: "Предыдущие позиции", nextSlideMessage: "Следующие позиции" }}
+          className="wishlist-track"
+        >
+          {items.map((item) => (
+            <SwiperSlide key={item.documentId} className="wishlist-card">
+              <div className="wishlist-card__media">
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 700px) 80vw, 300px"
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <span className="wishlist-card__placeholder" aria-hidden="true">
+                    <Gift size={40} />
+                  </span>
+                )}
+                {item.urgent ? <span className="wishlist-urgent">Срочно</span> : null}
+              </div>
+
+              <div className="wishlist-card__title">
+                <b>{item.title}</b>
+                {item.approxPrice !== undefined ? (
+                  <span className="wishlist-price">
+                    {price(item.approxPrice)}
+                    {item.note ? (
+                      <span className="wishlist-info" title={item.note}>
+                        <Info size={14} aria-hidden="true" />
+                        <span className="sr-only">{item.note}</span>
+                      </span>
+                    ) : null}
+                  </span>
+                ) : null}
+              </div>
+
+              {item.brand || item.specs ? (
+                <p className="wishlist-specs">{[item.brand, item.specs].filter(Boolean).join(", ")}</p>
+              ) : null}
+
+              <button type="button" className="wishlist-btn" onClick={() => setActive(item)}>
+                <Gift size={16} aria-hidden="true" />
+                Подарить
+              </button>
+
+              <a className="wishlist-btn wishlist-btn--quiet" href="#donate">
+                <CircleDollarSign size={15} aria-hidden="true" />
+                Или оплатить пожертвованием
+              </a>
+            </SwiperSlide>
+          ))}
+
+          <SwiperSlide className="wishlist-card wishlist-card--own">
+            <span className="wishlist-own-icon" aria-hidden="true">
+              <HandHeart size={44} />
+            </span>
+            <b>Свой вариант</b>
+            <p>Хотите передать вещи лично? Мы будем рады любой помощи!</p>
+            <a
+              className="wishlist-btn wishlist-btn--light"
+              href={settings.contactUrl || "#footer"}
+              target={settings.contactUrl ? "_blank" : undefined}
+              rel={settings.contactUrl ? "noopener noreferrer" : undefined}
+            >
+              Связаться
+            </a>
+          </SwiperSlide>
+        </Swiper>
       </div>
+
+      <GiftOrderModal item={active} settings={settings} open={active !== null} onClose={() => setActive(null)} />
     </section>
   );
 }

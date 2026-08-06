@@ -4,6 +4,7 @@ import { DogsStoriesSection } from "@/components/sections/dogs-stories-section";
 import { CampaignsSection } from "@/components/sections/campaigns-section";
 import { PaymentSection } from "@/components/sections/payment-section";
 import { NeedsSection } from "@/components/sections/needs-section";
+import { wishlistService, type WishlistItem, type WishlistSettings } from "@/lib/api/services/wishlist";
 import { VolunteerSection } from "@/components/sections/volunteer-section";
 import { NewsSection } from "@/components/sections/news-section";
 import { HomeHeader } from "@/components/home/home-header";
@@ -23,17 +24,24 @@ export default async function Home() {
   let activeCampaigns: MappedCampaign[] = [];
   let recentDonations: RecentDonation[] = [];
   let siteMedia: SiteMedia = {};
+  let wishlistItems: WishlistItem[] = [];
+  let wishlistSettings: WishlistSettings = { marketplaceName: "Ozon" };
 
   try {
-    const [newsResult, realPetsRaw, campaignsRaw, donationsRaw, siteMediaRaw] = await Promise.all([
-      newsService.getLatestNews(5),
-      petsService.getPets({ status: "shelter", limit: 5 }).then(r => r || []),
-      campaignsService.getCampaigns({ status: "active", limit: 3 }),
-      donationsService.getRecentDonations(20),
-      siteMediaService.getSiteMedia(),
-    ]);
+    const [newsResult, realPetsRaw, campaignsRaw, donationsRaw, siteMediaRaw, wishlistRaw, wishlistSettingsRaw] =
+      await Promise.all([
+        newsService.getLatestNews(5),
+        petsService.getPets({ status: "shelter", limit: 5 }).then(r => r || []),
+        campaignsService.getCampaigns({ status: "active", limit: 3 }),
+        donationsService.getRecentDonations(20),
+        siteMediaService.getSiteMedia(),
+        wishlistService.getItems(),
+        wishlistService.getSettings(),
+      ]);
 
     siteMedia = siteMediaRaw;
+    wishlistItems = wishlistRaw;
+    wishlistSettings = wishlistSettingsRaw;
 
     news = newsResult;
 
@@ -73,7 +81,7 @@ export default async function Home() {
       darkZone={
         <>
           <PaymentSection recentDonations={recentDonations} />
-          <NeedsSection />
+          <NeedsSection items={wishlistItems} settings={wishlistSettings} />
           <VolunteerSection />
           <NewsSection initialNews={news} />
         </>

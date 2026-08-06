@@ -1,0 +1,620 @@
+/*
+ * Вишлист приюта.
+ * Палитра и скругления те же, что в остальном проекте: тёплая бумага, чернила,
+ * янтарь как единственный акцент. Заголовки — Playfair, набор — Golos Text.
+ */
+
+.wishlist {
+  --w-paper: #e8e4dc;
+  --w-sheet: #f4f1eb;
+  --w-card: #ffffff;
+  --w-ink: #1c1c1c;
+  --w-muted: #8c857b;
+  --w-rule: #d8d1c4;
+  --w-amber: #f59e0b;
+  --w-amber-deep: #d97706;
+  --w-danger: #b0603a;
+
+  --w-r-sm: 16px;
+  --w-r-md: 24px;
+  --w-r-lg: 36px;
+  --w-lift: 0 18px 50px -24px rgba(28, 28, 28, 0.4);
+
+  background: var(--w-sheet);
+  padding: clamp(3.5rem, 9vh, 6rem) 0;
+}
+
+.wishlist-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+}
+
+.wishlist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.wishlist-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--w-ink);
+}
+
+.wishlist-mark {
+  display: grid;
+  place-items: center;
+  width: clamp(46px, 5vw, 60px);
+  height: clamp(46px, 5vw, 60px);
+  border-radius: 50%;
+  background: var(--w-amber);
+  color: var(--w-ink);
+  flex: none;
+}
+
+.wishlist-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.wishlist-nav button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--w-rule);
+  background: var(--w-card);
+  color: var(--w-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.wishlist-nav button:hover:not(:disabled) {
+  background: var(--w-ink);
+  border-color: var(--w-ink);
+  color: var(--w-sheet);
+  transform: translateY(-2px);
+}
+
+.wishlist-nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.wishlist-lead {
+  color: var(--w-muted);
+  max-width: 62ch;
+  margin-bottom: 2.5rem;
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+/* карусель на Swiper — как в новостях; ширину слайда считает он сам */
+.wishlist-track {
+  /* тень карточек не должна срезаться границей слайдера */
+  padding: 0.5rem 0 1.5rem !important;
+  margin: 0 -0.5rem !important;
+  overflow: visible !important;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 0.5rem, #000 calc(100% - 0.5rem), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 0.5rem, #000 calc(100% - 0.5rem), transparent 100%);
+}
+
+.wishlist-track .swiper-wrapper {
+  align-items: stretch;
+}
+
+.wishlist-card {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background: var(--w-card);
+  border-radius: var(--w-r-lg);
+  padding: 1.1rem;
+  box-shadow: var(--w-lift);
+  transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.wishlist-card:hover {
+  transform: translateY(-6px);
+}
+
+.wishlist-card__media {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: var(--w-r-md);
+  overflow: hidden;
+  background: var(--w-paper);
+  display: grid;
+  place-items: center;
+}
+
+.wishlist-card__placeholder {
+  color: var(--w-rule);
+}
+
+.wishlist-urgent {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 2;
+  background: var(--w-danger);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+}
+
+.wishlist-card__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.wishlist-card__title b {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--w-ink);
+}
+
+.wishlist-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--w-amber-deep);
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wishlist-info {
+  color: var(--w-muted);
+  display: inline-flex;
+  cursor: help;
+}
+
+.wishlist-specs {
+  font-size: 0.86rem;
+  color: var(--w-muted);
+  margin-bottom: 0.4rem;
+}
+
+.wishlist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--w-ink);
+  color: var(--w-sheet);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1), background 0.3s;
+}
+
+.wishlist-btn:hover {
+  background: var(--w-amber-deep);
+  transform: translateY(-2px);
+}
+
+.wishlist-btn--quiet {
+  background: transparent;
+  color: var(--w-muted);
+  border: 1px solid var(--w-rule);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.wishlist-btn--quiet:hover {
+  background: var(--w-paper);
+  color: var(--w-ink);
+}
+
+.wishlist-btn--light {
+  background: var(--w-card);
+  color: var(--w-ink);
+}
+
+.wishlist-btn--light:hover {
+  background: var(--w-ink);
+  color: var(--w-sheet);
+}
+
+.wishlist-card--own {
+  background: var(--w-amber);
+  color: var(--w-ink);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2.25rem 1.5rem;
+}
+
+.wishlist-card--own b {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.wishlist-card--own p {
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: rgba(28, 28, 28, 0.75);
+}
+
+.wishlist :focus-visible,
+.gift-panel :focus-visible {
+  outline: 3px solid var(--w-amber-deep, #d97706);
+  outline-offset: 3px;
+}
+
+/* ---------------- диалог заказа ---------------- */
+
+.gift-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(28, 28, 28, 0.6);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+/* оболочка держит позицию и вход, панель — внешний вид и перетаскивание */
+.gift-shell {
+  width: min(540px, 100%);
+  display: flex;
+}
+
+.gift-shell--drawer {
+  width: 100%;
+  align-self: end;
+}
+
+.gift-panel {
+  --w-paper: #e8e4dc;
+  --w-sheet: #f4f1eb;
+  --w-ink: #1c1c1c;
+  --w-muted: #8c857b;
+  --w-rule: #d8d1c4;
+  --w-amber: #f59e0b;
+  --w-amber-deep: #d97706;
+  --w-danger: #b0603a;
+
+  position: relative;
+  background: var(--w-sheet);
+  color: var(--w-ink);
+  border-radius: 36px;
+  width: 100%;
+  max-height: min(88vh, 880px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 40px 90px -40px rgba(28, 28, 28, 0.7);
+}
+
+/* на мобильном — шторка снизу: возврат к списку остаётся в одном движении */
+.gift-panel--drawer {
+  border-radius: 32px 32px 0 0;
+  max-height: 92vh;
+}
+
+.gift-grabber {
+  display: block;
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--w-rule);
+  margin: 0.85rem auto 0;
+  flex: none;
+}
+
+.gift-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.6rem 1.75rem 1rem;
+  flex: none;
+}
+
+.gift-head h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 4vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.gift-head button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--w-rule);
+  background: transparent;
+  color: var(--w-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.3s, color 0.3s;
+}
+
+.gift-head button:hover {
+  background: var(--w-ink);
+  color: var(--w-sheet);
+}
+
+.gift-body {
+  padding: 0 1.75rem 2rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 1.1rem;
+  align-content: start;
+}
+
+.gift-lead {
+  line-height: 1.55;
+  color: var(--w-ink);
+}
+
+.gift-lead b {
+  font-weight: 600;
+}
+
+.gift-lead--quiet {
+  color: var(--w-muted);
+  font-size: 0.93rem;
+}
+
+.gift-address {
+  background: var(--w-card, #fff);
+  border-radius: var(--w-r-md, 24px);
+  padding: 1.25rem 1.35rem;
+}
+
+.gift-address__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--w-muted);
+  margin-bottom: 0.55rem;
+}
+
+.gift-address__value {
+  font-weight: 600;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+}
+
+.gift-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--w-rule);
+  background: transparent;
+  color: var(--w-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.gift-copy:hover {
+  background: var(--w-paper);
+}
+
+.gift-note {
+  color: var(--w-danger);
+  font-size: 0.84rem;
+  margin-top: 0.85rem;
+}
+
+.gift-external {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--w-amber-deep);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.2rem;
+  justify-self: start;
+}
+
+.gift-divider {
+  height: 1px;
+  background: var(--w-rule);
+  margin: 0.4rem 0;
+}
+
+.gift-subhead {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.gift-form {
+  display: grid;
+  gap: 1.05rem;
+}
+
+.gift-form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.gift-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--w-ink);
+}
+
+.gift-label i {
+  font-style: normal;
+  color: var(--w-danger);
+}
+
+.gift-form input {
+  font: inherit;
+  padding: 0.95rem 1.15rem;
+  border-radius: var(--w-r-sm, 16px);
+  border: 1px solid transparent;
+  background: var(--w-card, #fff);
+  color: var(--w-ink);
+  transition: border-color 0.3s;
+}
+
+.gift-form input::placeholder {
+  color: var(--w-muted);
+}
+
+.gift-form input:hover {
+  border-color: var(--w-rule);
+}
+
+.gift-form input[type="file"] {
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+}
+
+.gift-hint {
+  font-size: 0.8rem;
+  color: var(--w-muted);
+}
+
+.gift-consent {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.75rem !important;
+  font-size: 0.88rem;
+  color: var(--w-muted);
+  cursor: pointer;
+}
+
+.gift-consent input {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  padding: 0;
+  accent-color: var(--w-amber-deep);
+}
+
+.gift-error {
+  color: var(--w-danger);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.gift-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 1rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--w-ink);
+  color: var(--w-sheet);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1), background 0.3s;
+}
+
+.gift-submit:hover:not(:disabled) {
+  background: var(--w-amber-deep);
+  transform: translateY(-2px);
+}
+
+.gift-submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.gift-done {
+  display: grid;
+  gap: 1.25rem;
+  justify-items: start;
+  padding-top: 0.5rem;
+}
+
+.gift-done__mark {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: var(--w-amber);
+  color: var(--w-ink);
+}
+
+.gift-done p {
+  line-height: 1.55;
+}
+
+.gift-spin {
+  animation: gift-spin 1s linear infinite;
+}
+
+@keyframes gift-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-spin {
+    animation-duration: 3s;
+  }
+
+  .wishlist-card:hover,
+  .wishlist-btn:hover,
+  .wishlist-nav button:hover,
+  .gift-submit:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .gift-scrim {
+    padding: 0;
+    place-items: end stretch;
+  }
+
+  .gift-head {
+    padding-top: 1rem;
+  }
+}
+
