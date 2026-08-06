@@ -42,8 +42,13 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
           .news-swiper .swiper-pagination-bullet-active {
             opacity: 1;
           }
+          /* точки живут в собственной полосе под карточками, а не поверх них */
+          .news-swiper {
+            padding-bottom: 3.25rem !important;
+          }
           .news-swiper .swiper-pagination {
-            bottom: 4px !important;
+            bottom: 0 !important;
+            line-height: 1;
           }
         `}} />
 

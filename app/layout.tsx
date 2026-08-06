@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Golos_Text, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Наборный шрифт: кириллица родная, рисовалась под русский язык,
+// а не пририсовывалась к латинице — для ярославского фонда это уместнее нейтрального гротеска
+const golos = Golos_Text({
+  variable: "--font-golos",
   subsets: ["latin", "cyrillic"],
   display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
   adjustFontFallback: true,
 });
 
@@ -60,7 +63,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ru" className={`${inter.variable} ${playfair.variable} antialiased`}>
+    <html lang="ru" className={`${golos.variable} ${playfair.variable} antialiased`}>
       <body className="min-h-screen overflow-x-hidden">
         <CursorProvider>
           <SmoothScroll>
