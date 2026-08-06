@@ -1,62 +1,45 @@
-import type { CSSProperties } from "react";
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { ReportDocument } from "@/lib/reports/normalize-report";
 
-const documentTypeLabels: Record<ReportDocument["documentType"], string> = {
+const TYPE_LABEL: Record<ReportDocument["documentType"], string> = {
   ministryReport: "Отчёт в Минюст",
-  charityReport: "Благотворительная деятельность",
-  financialStatement: "Финансовая отчётность",
+  charityReport: "Отчёт о благотворительной деятельности",
+  financialStatement: "Бухгалтерская отчётность",
   audit: "Аудиторское заключение",
   other: "Документ",
 };
 
-export function DocumentStack({ documents, year }: { documents: ReportDocument[]; year: number }) {
+/**
+ * Исходные документы отчёта. Каждый лист — прямая ссылка на файл:
+ * без файла запись до сюда не доходит, её отсеивает нормализатор.
+ */
+export function DocumentStack({ documents, heading }: { documents: ReportDocument[]; heading: string }) {
   if (documents.length === 0) return null;
-  return (
-    <section className="document-archive" aria-labelledby="documents-title">
-      <div className="document-archive__heading">
-        <div>
-          <p className="reports-kicker">Исходные материалы</p>
-          <h2 id="documents-title">Документы {year}</h2>
-        </div>
-        <p>{documents.length} {documents.length === 1 ? "проверяемый файл" : "проверяемых файла"}</p>
-      </div>
 
-      <ol className="document-stack">
-        {documents.map((document, index) => (
-          <li
-            key={`${document.title}-${document.url}`}
-            className="document-sheet"
-            style={{ "--document-index": index } as CSSProperties}
-          >
-            <div className="document-sheet__topline">
-              <span><FileText aria-hidden="true" size={17} /> {documentTypeLabels[document.documentType]}</span>
-              <span>{document.format}{document.sizeLabel ? ` · ${document.sizeLabel}` : ""}</span>
-            </div>
-            <h3>{document.title}</h3>
-            {document.note && <p>{document.note}</p>}
-            <div className="document-sheet__actions">
-              <a
-                href={document.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Открыть документ «${document.title}» в новой вкладке`}
-                className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600"
-              >
-                Открыть <ExternalLink aria-hidden="true" size={17} />
+  return (
+    <section className="reports-docs" id="dokumenty">
+      <div className="reports-wrap">
+        <h2>{heading}</h2>
+        <ul className="reports-doc-grid">
+          {documents.map((document) => (
+            <li key={`${document.title}-${document.order}`}>
+              <a className="reports-doc" href={document.url} download>
+                <div className="reports-doc-sheet">
+                  <FileText className="reports-pic" aria-hidden="true" />
+                </div>
+                <div>
+                  <b>{document.title}</b>
+                  <small>
+                    {document.format}
+                    {document.sizeLabel ? ` · ${document.sizeLabel}` : ""} · {TYPE_LABEL[document.documentType]}
+                  </small>
+                  {document.note ? <small>{document.note}</small> : null}
+                </div>
               </a>
-              <a
-                href={document.url}
-                download
-                aria-label={`Скачать документ «${document.title}»`}
-                className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600"
-              >
-                Скачать <Download aria-hidden="true" size={17} />
-              </a>
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

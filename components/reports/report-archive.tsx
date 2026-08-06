@@ -1,105 +1,113 @@
-import Link from "next/link";
-import { ArrowUpRight, FileText } from "lucide-react";
-import { formatQualifiedValue } from "@/lib/reports/report-domain";
+import Image from "next/image";
+import { Banknote, Wallet, FileText, ShieldCheck } from "lucide-react";
 import type { AnnualReport } from "@/lib/reports/normalize-report";
+import { formatQualifiedValue } from "@/lib/reports/report-domain";
 
-const outcomeLabels: Record<string, string> = {
-  dogsInCare: "собак на кураторстве",
-  catsInCare: "кошек на кураторстве",
-  rescued: "животных спасено",
-  treated: "животных прошли лечение",
-  adopted: "питомцев нашли дом",
-  volunteers: "волонтёров в команде",
-};
+const money = (value: number) =>
+  `${new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ₽`;
 
-function formatMoney(value: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function reportFacts(report: AnnualReport): { label: string; value: string }[] {
-  const facts: { label: string; value: string }[] = [];
-  const finance = report.financialSummary;
-  if (finance?.income !== undefined) facts.push({ label: "поступления", value: formatMoney(finance.income) });
-  if (finance?.closingBalance !== undefined) facts.push({ label: "остаток", value: formatMoney(finance.closingBalance) });
-  for (const outcome of report.outcomes.slice(0, 2)) {
-    facts.push({
-      label: outcomeLabels[outcome.kind] || outcome.kind,
-      value: formatQualifiedValue(outcome.value, outcome.qualifier),
-    });
-  }
-  return facts.slice(0, 3);
-}
-
-export function ReportArchive({ reports }: { reports: AnnualReport[] }) {
+/**
+ * Архив годовых отчётов. Семантически это упорядоченный список, а не таблица:
+ * каждый год — самостоятельная запись со своей обложкой и цифрами.
+ */
+export function ReportArchive({
+  reports,
+  pendingYears = [],
+}: {
+  reports: AnnualReport[];
+  pendingYears?: number[];
+}) {
   return (
-    <section id="report-archive" className="report-archive" aria-labelledby="archive-title">
-      <div className="report-archive__intro">
-        <div>
-          <p className="reports-kicker">Архив по годам</p>
-          <h2 id="archive-title">Проверяемое важнее впечатляющего</h2>
-        </div>
-        <p>
-          Каждый год — отдельная открытая история. Показываем только заполненные показатели и прикладываем исходные документы.
-        </p>
-      </div>
-
-      <div className="report-archive__layout">
-        <nav className="report-year-nav" aria-label="Быстрый переход по годам">
-          <span>Годы</span>
-          <ul>
-            {reports.map((report) => (
-              <li key={report.documentId}>
-                <a href={`#report-${report.year}`}>{report.year}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <ol className="report-year-list" aria-label="Архив годовых отчётов">
+    <section className="reports-archive" id="arhiv">
+      <div className="reports-wrap">
+        <h2>Годовой отчёт на каждый год работы</h2>
+        <ol aria-label="Архив годовых отчётов">
           {reports.map((report) => {
-            const facts = reportFacts(report);
+            const rescued = report.outcomes.find((outcome) => outcome.kind === "rescued");
+            const finance = report.financialSummary;
             return (
-              <li key={report.documentId} id={`report-${report.year}`} className="report-year-item">
-                <article className="report-year-card">
-                  <div className="report-year-card__year">{report.year}</div>
-                  <div className="report-year-card__content">
-                    <p className="reports-kicker">Годовой отчёт</p>
+              <li key={report.documentId}>
+                <article className="reports-year">
+                  <div>
+                    <p className="reports-year-no reports-num">{report.year}</p>
                     <h3>{report.title}</h3>
-                    <p className="report-year-card__summary">{report.summary}</p>
+                    <p className="reports-year-desc">{report.summary}</p>
 
-                    {facts.length > 0 && (
-                      <dl className="report-year-card__facts">
-                        {facts.map((fact) => (
-                          <div key={fact.label}>
-                            <dt>{fact.label}</dt>
-                            <dd>{fact.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    )}
+                    <dl className="reports-year-facts">
+                      {finance?.income !== undefined ? (
+                        <div>
+                          <Banknote className="reports-pic" aria-hidden="true" />
+                          <dt>Поступило от граждан</dt>
+                          <dd>
+                            <b>{money(finance.income)}</b>
+                          </dd>
+                        </div>
+                      ) : null}
+                      {finance?.closingBalance !== undefined ? (
+                        <div>
+                          <Wallet className="reports-pic" aria-hidden="true" />
+                          <dt>Остаток на счёте</dt>
+                          <dd>
+                            <b>{money(finance.closingBalance)}</b>
+                          </dd>
+                        </div>
+                      ) : null}
+                      {rescued ? (
+                        <div>
+                          <ShieldCheck className="reports-pic" aria-hidden="true" />
+                          <dt>Поступили под опеку</dt>
+                          <dd>
+                            <b>{formatQualifiedValue(rescued.value, rescued.qualifier)}</b>
+                          </dd>
+                        </div>
+                      ) : null}
+                      {report.documents.length > 0 ? (
+                        <div>
+                          <FileText className="reports-pic" aria-hidden="true" />
+                          <dt>Приложенных документов</dt>
+                          <dd>
+                            <b>{report.documents.length}</b>
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
 
-                    <div className="report-year-card__actions">
-                      <span className="report-year-card__documents">
-                        <FileText aria-hidden="true" size={17} />
-                        {report.documents.length} {report.documents.length === 1 ? "документ" : "документа"}
-                      </span>
-                      <Link
-                        href={`/reports/${report.year}`}
-                        className="report-year-card__link focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500"
-                      >
-                        Открыть год <ArrowUpRight aria-hidden="true" size={18} />
-                      </Link>
-                    </div>
+                    <a className="reports-year-cta" href={`/reports/${report.year}`}>
+                      Открыть отчёт за {report.year} →
+                    </a>
                   </div>
+                  <figure>
+                    {report.coverImage ? (
+                      <Image
+                        src={report.coverImage}
+                        alt={`Обложка отчёта за ${report.year} год`}
+                        width={900}
+                        height={620}
+                        sizes="(max-width: 900px) 100vw, 50vw"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : null}
+                  </figure>
                 </article>
               </li>
             );
           })}
+
+          {pendingYears.map((year) => (
+            <li key={year}>
+              <article className="reports-year reports-year--pending">
+                <div>
+                  <p className="reports-year-no reports-num">{year}</p>
+                  <h3>Отчёт готовится</h3>
+                  <p className="reports-year-desc">
+                    Сводка появится после закрытия финансового года и сверки документов.
+                  </p>
+                  <span className="reports-year-cta">Появится позже</span>
+                </div>
+                <figure />
+              </article>
+            </li>
+          ))}
         </ol>
       </div>
     </section>
