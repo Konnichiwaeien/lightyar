@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp, rateLimit } from "@/lib/security/rate-limit";
 
 /**
  * Приём заявки дарителя.
@@ -9,6 +10,11 @@ import { NextResponse } from "next/server";
  */
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
+
+// пять заявок за десять минут: живой даритель столько не отправит,
+// а скрипт, забивающий хранилище файлами, упрётся сразу
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"];
 
 const strapiBase = () => (process.env.STRAPI_API_URL || "http://localhost:1443/api").replace(/\/api$/, "");
@@ -24,6 +30,14 @@ export async function POST(request: Request) {
     return bad("Приём заявок временно недоступен. Напишите нам, пожалуйста, в сообщения группы.", 503);
   }
 
+  const limit = rateLimit({ key: clientIp(request), limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS });
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Слишком много заявок подряд. Попробуйте через несколько минут или напишите нам в сообщения группы." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -37,7 +51,15 @@ export async function POST(request: Request) {
   const comment = String(form.get("comment") || "").trim();
   const wishlistItemId = String(form.get("wishlistItemId") || "").trim();
   const consent = form.get("consent");
+  const honeypot = String(form.get("website") || "").trim();
   const barcode = form.get("barcode");
+
+  // поле скрыто от людей: если оно заполнено, форму отправил бот.
+  // Отвечаем успехом, чтобы не подсказывать ему, что именно распознано.
+  if (honeypot) {
+    console.warn("[gift-orders] honeypot triggered");
+    return NextResponse.json({ ok: true });
+  }
 
   if (donorName.length < 2) return bad("Укажите, как вас зовут.");
   if (phone.replace(/\D/g, "").length < 10) return bad("Проверьте номер телефона — в нём не хватает цифр.");

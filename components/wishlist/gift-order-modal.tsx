@@ -246,7 +246,17 @@ export function GiftOrderModal({
                       <span className="gift-hint">{fileName || "Фотография или PDF, до 8 МБ"}</span>
                     </label>
 
-                    <label className="gift-consent">
+                    {/* ловушка для ботов: людям поле не показывается и в таб-порядок не попадает */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+              />
+
+              <label className="gift-consent">
                       <input type="checkbox" name="consent" required />
                       <span>Соглашаюсь на обработку персональных данных</span>
                     </label>

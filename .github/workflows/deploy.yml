@@ -8,7 +8,35 @@ permissions:
   contents: read
 
 jobs:
+  # Проверки идут до деплоя: без них сломанный контракт доезжает до прода,
+  # потому что next build падает только на ошибке компиляции, а не на упавшем тесте.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lightyar/package-lock.json
+
+      - name: Install
+        working-directory: lightyar
+        run: npm ci
+
+      - name: Lint
+        working-directory: lightyar
+        run: npx eslint app components lib
+
+      - name: Tests
+        working-directory: lightyar
+        run: npm test
+
   deploy:
+    needs: verify
     runs-on: ubuntu-latest
     environment: prod
 
