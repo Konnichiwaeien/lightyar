@@ -9,10 +9,11 @@
   --w-sheet: #f4f1eb;
   --w-card: #ffffff;
   --w-ink: #1c1c1c;
-  --w-muted: #8c857b;
+  --w-muted: #6c655b;
   --w-rule: #d8d1c4;
   --w-amber: #f59e0b;
   --w-amber-deep: #d97706;
+  --w-amber-text: #a85406;
   --w-danger: #b0603a;
 
   --w-r-sm: 16px;
@@ -177,7 +178,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: var(--w-amber-deep);
+  color: var(--w-amber-text);
   font-weight: 700;
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
@@ -300,10 +301,11 @@
   --w-paper: #e8e4dc;
   --w-sheet: #f4f1eb;
   --w-ink: #1c1c1c;
-  --w-muted: #8c857b;
+  --w-muted: #6c655b;
   --w-rule: #d8d1c4;
   --w-amber: #f59e0b;
   --w-amber-deep: #d97706;
+  --w-amber-text: #a85406;
   --w-danger: #b0603a;
 
   position: relative;
@@ -441,7 +443,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--w-amber-deep);
+  color: var(--w-amber-text);
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;

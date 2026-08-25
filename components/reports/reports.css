@@ -9,7 +9,9 @@
   --sheet: #f4f1eb;
   --card: #ffffff;
   --ink: #211d18;
-  --muted: #7d766a;
+  --muted: #6c655b;
+  /* янтарь для текста на светлом: брендовый #f59e0b даёт 2.15 на белом и как надпись нечитаем */
+  --amber-text: #a85406;
   --rule: #d8d1c4;
   --amber: #d98510;
   --clay: #b0603a;
@@ -228,7 +230,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(200deg, rgba(23, 20, 15, 0.15) 0%, rgba(23, 20, 15, 0.55) 55%, rgba(23, 20, 15, 0.85) 100%);
+  background: linear-gradient(to top, rgba(23, 20, 15, 0.92) 0%, rgba(23, 20, 15, 0.62) 32%, rgba(23, 20, 15, 0.12) 68%);
 }
 
 .reports-tile-body {
@@ -353,6 +355,11 @@
 .reports-trust em {
   font-style: normal;
   font-weight: 600;
+  color: var(--amber-text);
+}
+
+/* на тёмной карточке тот же акцент читается только в брендовом янтаре */
+.reports-trust article:nth-child(2) em {
   color: var(--amber);
 }
 
@@ -442,11 +449,14 @@
   opacity: 0.22;
 }
 
+/* кольцо рисуем внутри границ и поверх фотографии: inset-тень уходит под содержимое,
+   а всё, что за границей кружка, срезает overflow: hidden */
 .reports-face--marked::after {
   content: "";
   position: absolute;
-  inset: -3px;
-  border: 2.5px solid var(--amber);
+  inset: 0;
+  z-index: 2;
+  border: 3px solid var(--amber);
   border-radius: 50%;
 }
 
