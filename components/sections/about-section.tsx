@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCursor } from "@/components/ui/cursor-context";
 import Image from "next/image";
+import { Dog, Cat, HeartHandshake } from "lucide-react";
 
 interface Particle {
   size: number;
@@ -131,6 +132,13 @@ function LightParticles() {
   );
 }
 
+/** Показатели фонда для витрины на главной. Значения согласуются с CMS вручную. */
+const STATS = [
+  { icon: Dog, value: 60, plus: true, label: "Собак на кураторстве", accent: false },
+  { icon: Cat, value: 25, plus: false, label: "Кошек в безопасности", accent: false },
+  { icon: HeartHandshake, value: 100, plus: true, label: "Спасённых жизней", accent: true },
+] as const;
+
 export function AboutSection({ imageUrl }: { imageUrl?: string }) {
   const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
   return (
@@ -162,35 +170,38 @@ export function AboutSection({ imageUrl }: { imageUrl?: string }) {
         <div className="w-full relative flex flex-col items-center">
           
           {/* Overlapping Floating Stats - Semantic list */}
-          <ul className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 px-4 md:px-12 mb-8 md:-mb-12 relative z-20 text-center">
-            
-            <li className="bg-[#FDFBF7]/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-4 rounded-3xl">
-              <div className="text-5xl md:text-6xl lg:text-[5.5rem] font-serif mb-2 text-stone-800 tabular-nums">
-                60<span className="text-[#F5A623] font-light">+</span>
-              </div>
-              <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] opacity-50">
-                Собак на кураторстве
-              </div>
-            </li>
-
-            <li className="bg-[#FDFBF7]/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-4 rounded-3xl">
-              <div className="text-5xl md:text-6xl lg:text-[5.5rem] font-serif mb-2 text-stone-800 tabular-nums">
-                25
-              </div>
-              <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] opacity-50">
-                Кошек в безопасности
-              </div>
-            </li>
-
-            <li className="bg-[#FDFBF7]/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-4 rounded-3xl">
-              <div className="text-5xl md:text-6xl lg:text-[5.5rem] font-serif mb-2 text-[#F5A623] tabular-nums">
-                100<span className="text-stone-800 font-light">+</span>
-              </div>
-              <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] text-[#F5A623]">
-                Спасенных жизней
-              </div>
-            </li>
-
+          {/*
+            На мобильном карточка — строка: значок слева, число и подпись справа.
+            Раньше на узком экране каждая растягивалась во всю ширину вокруг
+            одинокой цифры по центру и выглядела пустой.
+          */}
+          <ul className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 px-4 md:px-12 mb-8 md:-mb-12 relative z-20">
+            {STATS.map(({ icon: Icon, value, plus, label, accent }) => (
+              <li
+                key={label}
+                className="flex items-center gap-4 rounded-3xl bg-[#FDFBF7]/70 p-4 backdrop-blur-md md:flex-col md:justify-center md:gap-1 md:bg-transparent md:p-4 md:text-center md:backdrop-blur-none"
+              >
+                <span
+                  className={`grid size-12 shrink-0 place-items-center rounded-2xl md:size-14 md:rounded-full ${accent ? "bg-[#F5A623] text-stone-900" : "bg-stone-900/5 text-stone-700"}`}
+                  aria-hidden="true"
+                >
+                  <Icon className="size-6 md:size-7" strokeWidth={1.75} />
+                </span>
+                <span className="flex min-w-0 flex-col md:items-center">
+                  <span
+                    className={`font-serif text-4xl leading-none tabular-nums md:text-6xl lg:text-[5.5rem] ${accent ? "text-[#F5A623]" : "text-stone-800"}`}
+                  >
+                    {value}
+                    {plus ? <span className={accent ? "font-light text-stone-800" : "font-light text-[#F5A623]"}>+</span> : null}
+                  </span>
+                  <span
+                    className={`mt-1 text-[11px] font-bold uppercase tracking-[0.16em] md:mt-2 md:text-xs md:tracking-[0.2em] ${accent ? "text-[#F5A623]" : "opacity-50"}`}
+                  >
+                    {label}
+                  </span>
+                </span>
+              </li>
+            ))}
           </ul>
 
           {/* Panoramic Image Container */}

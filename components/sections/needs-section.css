@@ -19,7 +19,7 @@
   --w-r-sm: 16px;
   --w-r-md: 24px;
   --w-r-lg: 36px;
-  --w-lift: 0 18px 50px -24px rgba(28, 28, 28, 0.4);
+  --w-lift: 0 1px 2px rgba(28, 28, 28, 0.05), 0 8px 20px -14px rgba(28, 28, 28, 0.25);
 
   background: var(--w-sheet);
   padding: clamp(3.5rem, 9vh, 6rem) 0;
@@ -105,8 +105,7 @@
   padding: 0.5rem 0 1.5rem !important;
   margin: 0 -0.5rem !important;
   overflow: visible !important;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 0.5rem, #000 calc(100% - 0.5rem), transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 0.5rem, #000 calc(100% - 0.5rem), transparent 100%);
+
 }
 
 .wishlist-track .swiper-wrapper {

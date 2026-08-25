@@ -6,10 +6,10 @@ import {
   Download, 
   MapPin, 
   ChevronDown, 
-  Heart,
   Send
 } from "lucide-react";
 import Link from "next/link";
+import { ShdkTerminal } from "@/components/ui/shdk-terminal";
 import { useCursor } from "@/components/ui/cursor-context";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -226,16 +226,28 @@ export function Footer() {
           )}
         </AnimatePresence>
 
-        {/* Bottom copyright row */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-semibold uppercase tracking-widest text-[#1c1c1c]/40">
-          <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 gap-y-2">
-            <span>© {new Date().getFullYear()} АНБО Светлый</span>
-            <span className="hidden sm:inline">·</span>
-            <span>Лицензированная помощь животным</span>
+        {/* Нижняя строка: юридическое имя фонда слева, подпись разработчика справа */}
+        <div className="pt-8 border-t border-[#1c1c1c]/10 flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col items-center lg:items-start gap-2 text-center lg:text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1c1c1c]/45">
+            <div className="flex flex-col sm:flex-row items-center gap-x-6 gap-y-1">
+              <span>© {new Date().getFullYear()} АНБО «Светлый»</span>
+              <span>Все права защищены</span>
+            </div>
+            <span className="normal-case tracking-normal text-[12px] text-[#1c1c1c]/40">
+              Ярославль · помощь бездомным животным
+            </span>
           </div>
-          <div className="flex items-center gap-1 select-none">
-            Сделано с <Heart size={10} className="text-red-500 fill-red-500 animate-pulse" /> для хвостатых
-          </div>
+
+          <a
+            href="https://www.shdk.tech/ru"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Разработано SHDK"
+            className="flex items-center gap-2 whitespace-nowrap text-sm text-[#1a7a0a] transition-colors duration-500 hover:text-[#39ff14] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#39ff14] rounded-md"
+          >
+            <span>Разработано с❤️и☕</span>
+            <ShdkTerminal />
+          </a>
         </div>
 
       </div>
