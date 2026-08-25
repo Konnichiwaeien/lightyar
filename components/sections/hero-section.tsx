@@ -39,11 +39,11 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
   // Animation durations
   const BLUR_DURATION = 4;
   const BLUR_DELAY = 0.6;
-  const TEXT_START = 0.3;
+  const TEXT_START = 0.1;
 
   // Stagger delays for text lines
   const line2Delay = TEXT_START + 0.3;
-  const svetDelay = TEXT_START + 0.7;
+  const svetDelay = TEXT_START + 0.25;
 
   // Text shadow for readability
   const textShadow = "0 2px 20px rgba(0,0,0,0.6), 0 4px 40px rgba(0,0,0,0.4)";
@@ -118,9 +118,9 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
 
           {/* Main heading — "Светлый" as dramatic centerpiece */}
           <motion.h1 
-            initial={shouldReduceMotion ? { opacity: 1, scale: 1, filter: "blur(0px)" } : { opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+            initial={shouldReduceMotion ? { opacity: 1, scale: 1, filter: "blur(0px)" } : { opacity: 1, scale: 0.86, filter: "blur(14px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.4, delay: svetDelay, ease: [0.16, 1, 0.3, 1] }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.1, delay: svetDelay, ease: [0.16, 1, 0.3, 1] }}
             className="font-serif italic font-bold text-amber-300 tracking-[-0.03em] text-[17vw] md:text-[16vw] xl:text-[13vw] leading-[0.85] drop-shadow-2xl uppercase text-wrap: balance"
             style={{ textShadow: svetShadow }}
           >
