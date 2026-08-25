@@ -217,7 +217,7 @@
 }
 
 .wishlist-btn:hover {
-  background: var(--w-amber-deep);
+  background: var(--w-amber-text);
   transform: translateY(-2px);
 }
 
@@ -269,7 +269,7 @@
 
 .wishlist :focus-visible,
 .gift-panel :focus-visible {
-  outline: 3px solid var(--w-amber-deep, #d97706);
+  outline: 3px solid var(--w-amber-text, #a85406);
   outline-offset: 3px;
 }
 
@@ -558,7 +558,7 @@
 }
 
 .gift-submit:hover:not(:disabled) {
-  background: var(--w-amber-deep);
+  background: var(--w-amber-text);
   transform: translateY(-2px);
 }
 

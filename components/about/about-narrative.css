@@ -133,7 +133,9 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.46);
+  /* рейка висит поверх светлой бумаги: белый давал контраст 1.27,
+     неактивные главы были практически не видны */
+  color: rgba(28, 28, 28, 0.55);
   cursor: pointer;
   font: inherit;
   transition: color 200ms ease, background 200ms ease;

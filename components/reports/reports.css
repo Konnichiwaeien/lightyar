@@ -15,7 +15,7 @@
   /* янтарь для текста на светлом: брендовый #f59e0b даёт 2.15 на белом и как надпись нечитаем */
   --amber-text: #a85406;
   --rule: #d8d1c4;
-  --amber: #d98510;
+  --amber: var(--color-amber, #f59e0b);
   --clay: #b0603a;
   --moss: #6f7355;
   --stone: #bcb3a5;
@@ -63,7 +63,7 @@
 
 .reports-experience a:focus-visible,
 .reports-experience button:focus-visible {
-  outline: 3px solid var(--amber);
+  outline: 3px solid var(--amber-text);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -193,7 +193,7 @@
 
 .reports-scribble path {
   fill: none;
-  stroke: var(--amber);
+  stroke: var(--amber-text);
   stroke-width: 4;
   stroke-linecap: round;
 }
@@ -294,7 +294,7 @@
 .reports-chips .reports-pic {
   width: 17px;
   height: 17px;
-  color: var(--amber);
+  color: var(--amber-text);
 }
 
 /* ---------------- блоки доверия ---------------- */
@@ -581,7 +581,7 @@
 
 .reports-curve .reports-curve-line {
   fill: none;
-  stroke: var(--amber);
+  stroke: var(--amber-text);
   stroke-width: 3;
   stroke-linecap: round;
 }
@@ -733,7 +733,7 @@
 .reports-year-facts .reports-pic {
   width: 22px;
   height: 22px;
-  color: var(--amber);
+  color: var(--amber-text);
 }
 
 .reports-year-facts span {
@@ -891,7 +891,7 @@
 .reports-doc-sheet .reports-pic {
   width: 46px;
   height: 46px;
-  color: var(--amber);
+  color: var(--amber-text);
 }
 
 .reports-doc b {
@@ -1090,7 +1090,7 @@
 
 .reports-letter blockquote em {
   font-style: italic;
-  color: var(--amber);
+  color: var(--amber-text);
 }
 
 .reports-letter p {
@@ -1149,7 +1149,7 @@
 .reports-outcome .reports-pic {
   width: 30px;
   height: 30px;
-  color: var(--amber);
+  color: var(--amber-text);
 }
 
 .reports-outcome b {

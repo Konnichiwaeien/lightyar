@@ -99,7 +99,7 @@ function AdoptionCurve({ stats, shown }: { stats: PetStats; shown: boolean }) {
         animate={{ pathLength: shown ? 1 : 0 }}
         transition={{ duration: 1.6, ease: [0.4, 0, 0.2, 1] }}
       />
-      <circle cx={right} cy={top} r="5" fill="var(--amber)" />
+      <circle cx={right} cy={top} r="5" fill="var(--amber-text)" />
       <text x={left} y="172">
         {monthLabel(points[0].month, true)}
       </text>
@@ -126,7 +126,7 @@ export function ReportCharts({ stats }: { stats: PetStats }) {
           shown={shown}
           segments={[
             { color: "var(--moss)", value: stats.inCare },
-            { color: "var(--amber)", value: stats.adopted },
+            { color: "var(--amber-text)", value: stats.adopted },
           ]}
           centerValue={String(stats.total)}
           centerLabel="всего"
@@ -138,7 +138,7 @@ export function ReportCharts({ stats }: { stats: PetStats }) {
             <b>{stats.inCare}</b>
           </div>
           <div className="reports-key">
-            <i style={{ background: "var(--amber)" }} />
+            <i style={{ background: "var(--amber-text)" }} />
             <span>Нашли дом</span>
             <b>{stats.adopted}</b>
           </div>
@@ -156,7 +156,7 @@ export function ReportCharts({ stats }: { stats: PetStats }) {
           shown={shown}
           segments={[
             { color: "var(--ink)", value: stats.dogs },
-            { color: "var(--amber)", value: stats.cats },
+            { color: "var(--amber-text)", value: stats.cats },
           ]}
           centerValue={String(stats.dogs)}
           centerLabel="собак"
@@ -168,7 +168,7 @@ export function ReportCharts({ stats }: { stats: PetStats }) {
             <b>{stats.dogs}</b>
           </div>
           <div className="reports-key">
-            <i style={{ background: "var(--amber)" }} />
+            <i style={{ background: "var(--amber-text)" }} />
             <span>Кошки</span>
             <b>{stats.cats}</b>
           </div>
@@ -181,7 +181,7 @@ export function ReportCharts({ stats }: { stats: PetStats }) {
           <AdoptionCurve stats={stats} shown={shown} />
           <div className="reports-keys">
             <div className="reports-key">
-              <i style={{ background: "var(--amber)" }} />
+              <i style={{ background: "var(--amber-text)" }} />
               <span>Первое пристройство — {monthLabel(stats.adoptionTimeline[0].month)}</span>
               <b>+{stats.adopted}</b>
             </div>
