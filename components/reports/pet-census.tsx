@@ -69,8 +69,11 @@ export function PetCensus({ pets }: { pets: CensusPet[] }) {
       </div>
 
       <ul className="reports-field">
-        {pets.map((pet) => {
+        {pets.map((pet, index) => {
           const highlighted = isHighlighted(pet);
+          // первые тридцать кружков грузим сразу, остальные по мере прокрутки:
+          // восемь десятков одновременных запросов забивают очередь браузера
+          const eager = index < 30;
           return (
             <li key={pet.documentId}>
               <a
@@ -85,7 +88,14 @@ export function PetCensus({ pets }: { pets: CensusPet[] }) {
                 title={`${pet.name}${pet.intakeYear ? ` · под опекой с ${pet.intakeYear}` : ""}`}
               >
                 {pet.photo ? (
-                  <Image src={pet.photo} alt={pet.name} fill sizes="80px" style={{ objectFit: "cover" }} />
+                  <Image
+                    src={pet.photo}
+                    alt={pet.name}
+                    fill
+                    sizes="80px"
+                    loading={eager ? "eager" : "lazy"}
+                    style={{ objectFit: "cover" }}
+                  />
                 ) : (
                   <span className="reports-face-initial" aria-hidden="true">
                     {pet.name.slice(0, 1)}

@@ -35,7 +35,7 @@ export function PetsGrid({ pets }: PetsGridProps) {
   return (
     <ul 
       aria-label="Список подопечных приюта"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start list-none p-0 m-0 relative min-h-[400px]"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start list-none p-0 m-0 relative min-h-[400px] [&>li]:[content-visibility:auto] [&>li]:[contain-intrinsic-size:auto_420px]"
     >
       <AnimatePresence mode="popLayout">
         {displayedPets.length > 0 ? (

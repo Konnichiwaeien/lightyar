@@ -5,13 +5,13 @@
  */
 
 .wishlist {
-  --w-paper: #e8e4dc;
+  --w-paper: var(--color-paper, #e8e4dc);
   --w-sheet: #f4f1eb;
   --w-card: #ffffff;
-  --w-ink: #1c1c1c;
+  --w-ink: var(--color-foreground, #1c1c1c);
   --w-muted: #6c655b;
   --w-rule: #d8d1c4;
-  --w-amber: #f59e0b;
+  --w-amber: var(--color-amber, #f59e0b);
   --w-amber-deep: #d97706;
   --w-amber-text: #a85406;
   --w-danger: #b0603a;
@@ -353,8 +353,8 @@
 }
 
 .gift-head button {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--w-rule);
   background: transparent;
@@ -416,7 +416,9 @@
 .gift-copy {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  min-height: 44px;
   padding: 0.6rem 1.1rem;
   border-radius: 999px;
   border: 1px solid var(--w-rule);
