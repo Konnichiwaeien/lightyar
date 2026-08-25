@@ -105,13 +105,32 @@
   transform: rotate(8deg);
 }
 
+/*
+ * Рейка глав висит поверх светлой бумаги, поэтому ей нужна собственная
+ * поверхность: раньше активный пункт был почти чёрной полупрозрачной плашкой
+ * и читался как случайное пятно, а не как элемент управления.
+ */
 .about-chapter-nav {
   position: fixed;
   z-index: 40;
   top: 50%;
   left: 1rem;
-  color: #fff;
   transform: translateY(-50%);
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: rgba(244, 241, 235, 0.92);
+  border: 1px solid rgba(28, 28, 28, 0.08);
+  box-shadow: 0 8px 28px -18px rgba(28, 28, 28, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* на телефоне рейка уходит к правому краю — под большой палец, а не под текст */
+@media (max-width: 768px) {
+  .about-chapter-nav {
+    left: auto;
+    right: 0.5rem;
+    padding: 0.25rem;
+  }
 }
 
 .about-chapter-nav ol {
@@ -119,7 +138,7 @@
   margin: 0;
   padding: 0;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
   list-style: none;
 }
 
@@ -159,17 +178,45 @@
 }
 
 .about-chapter-nav button:hover,
-.about-chapter-nav button:focus-visible,
+.about-chapter-nav button:focus-visible {
+  background: rgba(28, 28, 28, 0.06);
+  color: #1c1c1c;
+}
+
 .about-chapter-nav button[aria-current="location"] {
-  background: rgba(10, 10, 10, 0.58);
-  color: var(--about-amber);
-  outline: none;
+  background: var(--about-amber);
+  color: #1c1c1c;
+}
+
+.about-chapter-nav button:focus-visible {
+  outline: 3px solid #a85406;
+  outline-offset: 2px;
 }
 
 .about-chapter-nav button:hover span:last-child,
 .about-chapter-nav button:focus-visible span:last-child {
   max-width: 10rem;
   opacity: 1;
+}
+
+/* на сенсорном экране наведения нет, подпись раскрыть нечем — остаются номера */
+@media (max-width: 768px) {
+  .about-chapter-nav button {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0.3rem;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .about-chapter-nav button span:last-child {
+    display: none;
+  }
+
+  .about-chapter-nav button span:first-child {
+    width: auto;
+    font-size: 0.66rem;
+  }
 }
 
 .about-story {
@@ -602,20 +649,25 @@
     display: none;
   }
 
+  /*
+   * Раньше на планшете и телефоне рейка превращалась в липкую тёмную полосу
+   * во всю ширину сверху: она перекрывала шапку и читалась как чужеродное пятно.
+   * Оставляем вертикальную рейку у правого края — под большой палец.
+   */
   .about-chapter-nav {
-    position: sticky;
-    top: 0;
+    position: fixed;
+    top: 50%;
+    left: auto;
+    right: 0.5rem;
     z-index: 30;
-    overflow-x: auto;
-    padding: 0.5rem 1rem;
-    background: rgba(17, 17, 16, 0.92);
-    transform: none;
-    scrollbar-width: none;
+    overflow: visible;
+    padding: 0.25rem;
+    transform: translateY(-50%);
   }
 
   .about-chapter-nav ol {
-    width: max-content;
-    flex-direction: row;
+    width: auto;
+    flex-direction: column;
   }
 
   .about-chapter-nav button span:last-child {
