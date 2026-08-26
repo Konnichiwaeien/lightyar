@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" viewBox="0 0 256 256">
+  <title>Светлый — микрознак, mono</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <circle cx="128" cy="128" r="116" fill="#111111" stroke="#111111" stroke-width="8"/>
+    <path d="M35 116 C38 76 67 58 99 72 C116 80 119 104 106 122 C93 139 61 138 45 125 C39 121 36 118 35 116 Z" fill="#111111" stroke="none"/>
+    <path d="M150 72 C153 47 164 35 175 57 C186 37 198 43 195 70 C215 91 212 125 190 142 C169 157 145 140 145 114 C145 96 152 85 150 72 Z" fill="#111111" stroke="none"/>
+    <path d="M74 181 C76 151 96 137 124 151 C148 136 175 150 179 181 C178 210 155 226 126 226 C96 226 74 210 74 181 Z M91 153 L86 132 L111 148 M145 148 L169 131 L164 158" fill="#111111" stroke="none"/>
+    <circle cx="76" cy="103" r="5" fill="#111111" stroke="none"/>
+    <circle cx="173" cy="103" r="5" fill="#111111" stroke="none"/>
+    <circle cx="111" cy="181" r="4" fill="#111111" stroke="none"/>
+    <circle cx="145" cy="181" r="4" fill="#111111" stroke="none"/>
+  </g>
+</svg>

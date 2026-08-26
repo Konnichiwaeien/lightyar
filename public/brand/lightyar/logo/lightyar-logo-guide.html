@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Система логотипа «Светлый»</title>
+  <style>
+    @page { size: A4 landscape; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #F7F3EB; color: #1C1C1B; font-family: Arial, sans-serif; }
+    body { width: 297mm; min-height: 210mm; padding: 12mm 14mm; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1.2px solid rgba(28,28,27,.22); padding-bottom: 5mm; }
+    h1 { margin: 0; font-size: 27pt; letter-spacing: -.04em; }
+    header p { margin: 0; max-width: 88mm; color: #5c574f; line-height: 1.45; font-size: 9.5pt; }
+    main { display: grid; grid-template-columns: 1.1fr .9fr; gap: 9mm; padding-top: 8mm; }
+    .panel { background: rgba(255,255,255,.62); border: 1px solid rgba(28,28,27,.11); border-radius: 6mm; padding: 6mm; }
+    .hero { display: grid; grid-template-columns: 74mm 1fr; gap: 7mm; align-items: center; }
+    .hero img { width: 74mm; height: 74mm; display: block; }
+    h2 { margin: 0 0 3mm; font-size: 13pt; }
+    h3 { margin: 0 0 1.5mm; font-size: 9.5pt; }
+    p, li { font-size: 8.2pt; line-height: 1.42; }
+    .hero p { margin: 0; color: #5c574f; }
+    .lockups { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; margin-top: 5mm; }
+    .lockup { min-height: 27mm; display: grid; place-items: center; border-radius: 4mm; background: #fff; padding: 2.5mm; }
+    .lockup.dark { background: #1C1C1B; }
+    .lockup img { max-width: 100%; max-height: 22mm; }
+    .lockup.square img { width: 22mm; height: 22mm; }
+    .caption { display: block; margin-top: 1mm; color: #6c675f; font-size: 6.5pt; }
+    .swatches { display: grid; grid-template-columns: repeat(3,1fr); gap: 3mm; }
+    .swatch { border-radius: 4mm; overflow: hidden; border: 1px solid rgba(28,28,27,.12); }
+    .swatch-color { height: 23mm; }
+    .swatch-copy { padding: 2.5mm 3mm 3mm; background: white; }
+    .swatch-copy strong { display: block; font-size: 8pt; }
+    .swatch-copy span { font-size: 7pt; color: #6c675f; }
+    .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-top: 5mm; }
+    ul { margin: 0; padding-left: 4.5mm; }
+    .micro-row { display: flex; align-items: flex-end; gap: 5mm; margin-top: 3mm; }
+    .micro-row div { display: grid; justify-items: center; gap: 1.5mm; font-size: 7pt; color: #6c675f; }
+    .footer { margin-top: 5mm; font-size: 7pt; color: #777168; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Светлый — система логотипа</h1>
+    <p>Живая линия сохраняет узнаваемое трио животных, а адаптивные версии позволяют использовать знак от favicon до печатного плаката.</p>
+  </header>
+
+  <main>
+    <section>
+      <div class="panel hero">
+        <img src="svg/lightyar-primary-color.svg" alt="Основной логотип Светлый">
+        <div>
+          <h2>Основная эмблема</h2>
+          <p>Собака, лошадь и кошка остаются центральным образом. Название собрано собственными геометрическими буквами, поэтому SVG не зависит от внешнего шрифта.</p>
+          <span class="caption">Минимальная ширина: 160 px</span>
+        </div>
+      </div>
+
+      <div class="lockups">
+        <div>
+          <div class="lockup"><img src="svg/lightyar-horizontal-color.svg" alt="Горизонтальный логотип"></div>
+          <span class="caption">Горизонтальная версия · от 220 px</span>
+        </div>
+        <div>
+          <div class="lockup dark"><img src="svg/lightyar-primary-inverse.svg" alt="Инверсный логотип"></div>
+          <span class="caption">Инверсия для тёмных фонов</span>
+        </div>
+        <div>
+          <div class="lockup square"><img src="svg/lightyar-symbol-color.svg" alt="Знак без надписи"></div>
+          <span class="caption">Знак без надписи · от 64 px</span>
+        </div>
+        <div>
+          <div class="lockup"><img src="svg/lightyar-official-color.svg" alt="Официальная версия"></div>
+          <span class="caption">Официальная версия с АНБО</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Палитра</h2>
+        <div class="swatches">
+          <div class="swatch"><div class="swatch-color" style="background:#E9A91B"></div><div class="swatch-copy"><strong>Янтарь</strong><span>#E9A91B</span></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#1C1C1B"></div><div class="swatch-copy"><strong>Мягкий чёрный</strong><span>#1C1C1B</span></div></div>
+          <div class="swatch"><div class="swatch-color" style="background:#F7F3EB"></div><div class="swatch-copy"><strong>Тёплая бумага</strong><span>#F7F3EB</span></div></div>
+        </div>
+
+        <div class="rules">
+          <div>
+            <h3>Используйте</h3>
+            <ul>
+              <li>SVG как основной формат.</li>
+              <li>Монохром для штампа и гравировки.</li>
+              <li>Спокойную подложку на фотографии.</li>
+              <li>Охранное поле вокруг знака.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Не используйте</h3>
+            <ul>
+              <li>Растяжение и наклон.</li>
+              <li>Случайные цвета и градиенты.</li>
+              <li>Тени и дополнительные обводки.</li>
+              <li>Детальный знак в favicon.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 style="margin-top:5mm">Микрознак</h3>
+        <div class="micro-row">
+          <div><img src="svg/lightyar-micro-color.svg" width="64" height="64" alt="64 пикселя"><span>64 px</span></div>
+          <div><img src="svg/lightyar-micro-color.svg" width="32" height="32" alt="32 пикселя"><span>32 px</span></div>
+          <div><img src="svg/lightyar-micro-color.svg" width="16" height="16" alt="16 пикселей"><span>16 px</span></div>
+        </div>
+
+        <p class="footer">Исходники: `svg/` · готовые растровые версии: `png/` · основной цвет: #E9A91B</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
