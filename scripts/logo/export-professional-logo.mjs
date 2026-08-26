@@ -120,7 +120,7 @@ const centeredCircle = await sharp({
 
 const centeredCircleMask = Buffer.from(`
   <svg width="${circleMasterSize}" height="${circleMasterSize}" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${circleMasterSize / 2}" cy="${circleMasterSize / 2}" r="${circleDiameter / 2 - 5}" fill="#fff"/>
+    <circle cx="${circleMasterSize / 2}" cy="${circleMasterSize / 2}" r="${circleDiameter / 2 - 12}" fill="#fff"/>
   </svg>
 `);
 
