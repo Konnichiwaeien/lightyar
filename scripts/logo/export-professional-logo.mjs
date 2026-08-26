@@ -53,12 +53,6 @@ const alphaMask = Buffer.from(`
   </svg>
 `);
 
-const circleCutMask = Buffer.from(`
-  <svg width="${info.width}" height="${info.height}" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="${centerX}" cy="${centerY}" rx="${radiusX - 3}" ry="${radiusY - 3}" fill="#fff"/>
-  </svg>
-`);
-
 await mkdir(outputRoot, { recursive: true });
 
 const masterPath = path.join(
@@ -89,9 +83,49 @@ const circleCutMasterPath = path.join(
   "lightyar-logo-circle-cut-master.png",
 );
 
-await sharp(inputPath)
+const circleMasterSize = 1200;
+const circleDiameter = 1160;
+const circleMargin = (circleMasterSize - circleDiameter) / 2;
+const ellipseCrop = {
+  left: Math.round(centerX - radiusX),
+  top: Math.round(centerY - radiusY),
+  width: Math.round(radiusX * 2),
+  height: Math.round(radiusY * 2),
+};
+
+const normalizedCircle = await sharp(inputPath)
+  .extract(ellipseCrop)
+  .resize(circleDiameter, circleDiameter, { fit: "fill" })
   .ensureAlpha()
-  .composite([{ input: circleCutMask, blend: "dest-in" }])
+  .png()
+  .toBuffer();
+
+const centeredCircle = await sharp({
+  create: {
+    width: circleMasterSize,
+    height: circleMasterSize,
+    channels: 4,
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+  },
+})
+  .composite([
+    {
+      input: normalizedCircle,
+      left: circleMargin,
+      top: circleMargin,
+    },
+  ])
+  .png()
+  .toBuffer();
+
+const centeredCircleMask = Buffer.from(`
+  <svg width="${circleMasterSize}" height="${circleMasterSize}" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${circleMasterSize / 2}" cy="${circleMasterSize / 2}" r="${circleDiameter / 2 - 5}" fill="#fff"/>
+  </svg>
+`);
+
+await sharp(centeredCircle)
+  .composite([{ input: centeredCircleMask, blend: "dest-in" }])
   .png({ compressionLevel: 9, adaptiveFiltering: true })
   .toFile(circleCutMasterPath);
 
@@ -106,6 +140,7 @@ console.log(
   JSON.stringify({
     outputRoot,
     detectedEllipse: { centerX, centerY, radiusX, radiusY },
+    normalizedCircle: { circleMasterSize, circleDiameter, circleMargin },
     files: [
       "lightyar-logo-professional-transparent-master.png",
       "lightyar-logo-professional-transparent-1024.png",
