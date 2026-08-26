@@ -53,6 +53,12 @@ const alphaMask = Buffer.from(`
   </svg>
 `);
 
+const circleCutMask = Buffer.from(`
+  <svg width="${info.width}" height="${info.height}" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="${centerX}" cy="${centerY}" rx="${radiusX - 3}" ry="${radiusY - 3}" fill="#fff"/>
+  </svg>
+`);
+
 await mkdir(outputRoot, { recursive: true });
 
 const masterPath = path.join(
@@ -78,6 +84,24 @@ for (const size of [1024, 300]) {
     );
 }
 
+const circleCutMasterPath = path.join(
+  outputRoot,
+  "lightyar-logo-circle-cut-master.png",
+);
+
+await sharp(inputPath)
+  .ensureAlpha()
+  .composite([{ input: circleCutMask, blend: "dest-in" }])
+  .png({ compressionLevel: 9, adaptiveFiltering: true })
+  .toFile(circleCutMasterPath);
+
+for (const size of [1024, 300]) {
+  await sharp(circleCutMasterPath)
+    .resize(size, size, { fit: "fill" })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toFile(path.join(outputRoot, `lightyar-logo-circle-cut-${size}.png`));
+}
+
 console.log(
   JSON.stringify({
     outputRoot,
@@ -86,6 +110,9 @@ console.log(
       "lightyar-logo-professional-transparent-master.png",
       "lightyar-logo-professional-transparent-1024.png",
       "lightyar-logo-professional-transparent-300.png",
+      "lightyar-logo-circle-cut-master.png",
+      "lightyar-logo-circle-cut-1024.png",
+      "lightyar-logo-circle-cut-300.png",
     ],
   }),
 );
