@@ -104,7 +104,13 @@ export default async function ReportsPage() {
         <section className="reports-total" id="itogi">
           <div className="reports-wrap">
             <h2>Сколько животных и на какие <span className="reports-mark">деньги</span></h2>
-            <span className="reports-scribble" aria-hidden="true" />
+            {/* Следы появляются по одному, пока читатель прокручивает заголовок:
+                одной картинкой это была полоска, а по одному читается как шаги. */}
+            <span className="reports-scribble" aria-hidden="true">
+              {Array.from({ length: 7 }, (_, index) => (
+                <i key={index} style={{ "--i": index } as React.CSSProperties} />
+              ))}
+            </span>
           </div>
           <ReportReveal>
             <div className="reports-wrap">
