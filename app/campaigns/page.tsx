@@ -1,174 +1,198 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
 import { InnerHeader } from "@/components/layout/inner-header";
-import { Heart, CheckCircle2 } from "lucide-react";
-import { Metadata } from "next";
-import Link from "next/link";
 import { ResilientImage } from "@/components/ui/resilient-image";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
+import { firstAlive } from "@/lib/media/alive";
+import "@/components/reports/reports.css";
+import "@/components/campaigns/campaigns.css";
 
 export const metadata: Metadata = {
   title: "Все сборы",
+  description: "Открытые и закрытые сборы АНБО «Светлый»: на что собираем, сколько уже есть и сколько осталось.",
+  alternates: { canonical: "/campaigns" },
 };
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function CampaignsPage({ searchParams }: PageProps) {
-  const resolvedSearchParams = await searchParams;
-  // Параметры из URL
-  const status = typeof resolvedSearchParams.status === "string" ? resolvedSearchParams.status : "active";
-  const sort = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : "date_desc";
-  const page = typeof resolvedSearchParams.page === "string" ? parseInt(resolvedSearchParams.page, 10) : 1;
-  const itemsPerPage = 12;
+const ITEMS_PER_PAGE = 12;
 
-  // Map sort option to Strapi API sort query
-  let strapiSort = "createdAt:desc";
-  if (sort === "date_asc") strapiSort = "createdAt:asc";
-  else if (sort === "collected_desc") strapiSort = "current:desc";
-  else if (sort === "collected_asc") strapiSort = "current:asc";
+/** Рубли без копеек: у сборов суммы круглые, копейки только шумят. */
+const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
+
+/** Сортировка из адреса в запрос к CMS. Неизвестное значение не ломает страницу. */
+const SORTS: Record<string, string> = {
+  date_desc: "createdAt:desc",
+  date_asc: "createdAt:asc",
+  collected_desc: "current:desc",
+  collected_asc: "current:asc",
+};
+
+function plural(count: number, one: string, few: string, many: string): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
+export default async function CampaignsPage({ searchParams }: PageProps) {
+  const resolved = await searchParams;
+  const status = resolved.status === "closed" ? "closed" : "active";
+  const sort = typeof resolved.sort === "string" ? resolved.sort : "date_desc";
+  const parsedPage = typeof resolved.page === "string" ? Number.parseInt(resolved.page, 10) : 1;
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
 
   const campaignsData = await campaignsService.getCampaigns({
-    status: status === "closed" ? "closed" : "active",
-    sort: strapiSort,
-    limit: itemsPerPage,
-    start: (page - 1) * itemsPerPage
+    status,
+    sort: SORTS[sort] ?? SORTS.date_desc,
+    limit: ITEMS_PER_PAGE,
+    start: (page - 1) * ITEMS_PER_PAGE,
   });
 
-  const campaignsList = campaignsData.data || [];
-  const pagination = campaignsData.meta?.pagination;
-  const totalItems = pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  // Обложки сборов переживают свои файлы: запись в CMS есть, объекта в
+  // бакете нет. Спрашиваем хранилище и при пропаже ставим портрет подопечного.
+  const list = await Promise.all(
+    (campaignsData.data || []).map(normalizeCampaignData).map(async (fund) => ({
+      ...fund,
+      image: (await firstAlive([fund.image, fund.petImage])) ?? "/photo-placeholder.jpg",
+    })),
+  );
+  const total = campaignsData.meta?.pagination?.total || 0;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
-  const paginated = campaignsList.map(normalizeCampaignData);
+
+  // Сводка считается по показанной странице: это честно, потому что других
+  // сумм у нас на руках нет, и подпись говорит ровно это.
+  const collected = list.reduce((sum, item) => sum + item.current, 0);
+  const goal = list.reduce((sum, item) => sum + item.total, 0);
+  const openNow = list.filter((item) => item.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-[#e8e4dc] selection:bg-amber-500 selection:text-white pb-24">
+    <div className="surface">
       <InnerHeader />
-      <main className="text-[#1c1c1c] pt-12 px-6 md:px-12">
-        <div className="max-w-[1400px] mx-auto relative">
-
-          {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-[#1c1c1c] leading-none mb-6">
-              Все <span className="italic text-amber-500">сборы</span>
+      <main id="main-content">
+        <section className="camp-head">
+          <div className="reports-wrap">
+            <h1>
+              Все <span className="reports-mark">сборы</span>
             </h1>
-            <p className="text-[#1c1c1c]/60 max-w-xl text-lg md:text-xl font-light">
-              Каждая сумма дарит надежду. Здесь вы можете найти кому нужна помощь прямо сейчас, или посмотреть архивы завершенных сборов.
+            <p className="camp-lead">
+              {total > 0 ? (
+                <>
+                  Сейчас в работе <strong>{total}</strong> {plural(total, "сбор", "сбора", "сборов")}. Каждый закрывает
+                  конкретную нужду приюта: корм, лечение, тёплые вольеры. Видно, сколько уже собрано и сколько осталось.
+                </>
+              ) : (
+                <>Здесь появятся сборы на корм, лечение и содержание приюта. Сейчас открытых сборов нет.</>
+              )}
             </p>
+
+            {list.length > 0 ? (
+              <ul className="camp-totals">
+                <li data-tone="amber">
+                  <b className="reports-num">{money(collected)}</b>
+                  <span>уже собрано на этой странице</span>
+                </li>
+                <li>
+                  <b className="reports-num">{money(Math.max(0, goal - collected))}</b>
+                  <span>осталось до цели</span>
+                </li>
+                <li>
+                  <b className="reports-num">{openNow}</b>
+                  <span>{plural(openNow, "сбор идёт", "сбора идут", "сборов идут")}</span>
+                </li>
+              </ul>
+            ) : null}
           </div>
+        </section>
 
-          {/* URL Controller Components */}
-          <Suspense fallback={null}><CampaignsControls /></Suspense>
+        <section className="camp-list" aria-label="Список сборов">
+          <div className="reports-wrap">
+            <Suspense fallback={null}>
+              <CampaignsControls />
+            </Suspense>
 
-          {/* Bento Grid */}
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start" role="list">
-            {paginated.length > 0 ? (
-              paginated.map((fund, index) => {
-                // Bento styling logic:
-                const isLarge = index === 0 || index === 5;
-                const colSpanClass = isLarge ? "sm:col-span-2 lg:col-span-2" : "col-span-1";
+            {list.length > 0 ? (
+              <ul className="camp-grid">
+                {list.map((fund, index) => {
+                  const share = fund.total > 0 ? Math.min(1, fund.current / fund.total) : 0;
+                  const left = Math.max(0, fund.total - fund.current);
 
-                return (
-                  <li key={fund.id} className={`${colSpanClass} h-full`}>
-                    <Link
-                      href={`/campaigns/${fund.id}`}
-                      className="group relative bg-white border border-[#1c1c1c]/5 rounded-[2rem] overflow-hidden flex flex-col shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 pointer-events-auto h-full min-h-[460px] cursor-pointer block focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"
-                    >
-                      <div className={`w-full ${isLarge ? 'h-64' : 'h-48'} shrink-0 overflow-hidden relative`}>
-                        <ResilientImage
-                          src={fund.image} 
-                          alt={fund.title} 
-                          fill
-                          sizes={isLarge ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
-                          className={`object-cover transition-transform duration-1000 ${fund.status === 'closed' ? 'grayscale opacity-70' : 'group-hover:scale-105'}`} 
-                          fallbackLabel="Обложка сбора временно недоступна"
-                        />
-                        <div className="absolute inset-0 bg-linear-to-t from-white via-white/20 to-transparent opacity-80" />
-                        
-                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]">
-                          {fund.tag}
-                        </div>
-                      </div>
+                  return (
+                    <li key={fund.id}>
+                      <Link
+                        className="camp"
+                        href={`/campaigns/${fund.id}`}
+                        data-status={fund.status}
+                        style={{ "--i": index } as React.CSSProperties}
+                      >
+                        <span className="camp-shot">
+                          <span className="camp-tag">{fund.tag}</span>
+                          <ResilientImage
+                            src={fund.image}
+                            alt=""
+                            fill
+                            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                            className="object-cover"
+                            fallbackLabel="Обложка сбора появится позже"
+                          />
+                        </span>
 
-                      <div className="p-6 md:p-8 flex flex-col flex-1 bg-white relative z-10 w-full h-full justify-between">
-                        <div className="mb-8">
-                          {fund.petName && (
-                            <div className="text-amber-500 text-[10px] font-bold uppercase tracking-widest mb-1.5">
-                              Сбор для питомца: {fund.petName}
-                            </div>
-                          )}
-                          <h3 className={`font-serif leading-tight mb-3 text-[#1c1c1c] ${fund.status === 'closed' ? 'text-black/60' : 'group-hover:text-amber-500'} transition-colors duration-300 ${isLarge ? 'text-3xl md:text-4xl' : 'text-xl'}`}>
-                            {fund.title}
-                          </h3>
-                          <p className={`text-[#1c1c1c]/50 text-sm font-light ${isLarge ? 'line-clamp-4' : 'line-clamp-2'}`}>
-                            {fund.desc}
-                          </p>
-                        </div>
+                        <span className="camp-body">
+                          {fund.petName ? <span className="camp-pet">Сбор для {fund.petName}</span> : null}
+                          <h2>{fund.title}</h2>
+                          {fund.desc ? <p className="camp-desc">{fund.desc}</p> : null}
 
-                        {/* Progress Section */}
-                        <div className="mt-auto">
-                          <div className="flex justify-between items-end mb-3">
-                            <div>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 block mb-1">Собрано</span>
-                              <span className="text-xl font-serif text-[#1c1c1c] flex items-center gap-1">
-                                {fund.current.toLocaleString()} <span className="font-sans font-light text-amber-500">₽</span>
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/30 block mb-1">Цель</span>
-                              <span className="text-sm font-serif text-[#1c1c1c]/60 flex items-center justify-end gap-1">
-                                {fund.total.toLocaleString()} <span className="font-sans font-light text-[#1c1c1c]/30">₽</span>
-                              </span>
-                            </div>
-                          </div>
+                          <span className="camp-money">
+                            <b className="reports-num">{money(fund.current)}</b>
+                            <span className="reports-num">из {money(fund.total)}</span>
+                          </span>
 
-                          <div 
-                            className="w-full h-2 md:h-3 bg-[#e8e4dc] rounded-full relative overflow-hidden mb-6"
+                          <span
+                            className="camp-bar"
                             role="progressbar"
                             aria-valuenow={fund.current}
                             aria-valuemin={0}
                             aria-valuemax={fund.total}
-                            aria-label={`Прогресс сбора: собрано ${fund.current} рублей из ${fund.total}`}
+                            aria-label={`Собрано ${fund.current} рублей из ${fund.total}`}
                           >
-                            <div
-                              className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ${fund.status === 'closed' ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                              style={{ width: `${Math.min(100, (fund.current / fund.total) * 100)}%` }}
-                            />
-                          </div>
+                            <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                          </span>
 
-                          {fund.status === 'active' ? (
-                            <div className="w-full bg-[#1c1c1c] text-white py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] sm:text-xs hover:bg-amber-500 transition-colors flex items-center justify-center gap-2">
-                              <Heart size={16} /> Помочь
-                            </div>
-                          ) : (
-                            <div className="w-full bg-emerald-50 text-emerald-700 border border-emerald-100 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] sm:text-xs flex items-center justify-center gap-2">
-                              <CheckCircle2 size={16} /> Сбор закрыт
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })
+                          <span className="camp-state">
+                            {fund.status === "active"
+                              ? left > 0
+                                ? `Осталось ${money(left)}`
+                                : "Цель собрана"
+                              : "Сбор закрыт"}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             ) : (
-              <li className="col-span-full py-24 text-center">
-                <span className="inline-block p-6 bg-white rounded-full mx-auto mb-6">
-                  <Heart size={48} className="text-[#1c1c1c]/10" />
-                </span>
-                <h3 className="text-2xl font-serif text-[#1c1c1c] mb-2">Сборов не найдено</h3>
-                <p className="text-[#1c1c1c]/50">Попробуйте изменить параметры фильтрации.</p>
-              </li>
+              <p className="camp-empty">
+                {status === "closed"
+                  ? "Закрытых сборов пока нет. Посмотрите те, что идут сейчас."
+                  : "Открытых сборов сейчас нет. Помочь приюту можно на главной странице."}
+              </p>
             )}
-          </ul>
 
-          <Suspense fallback={null}><CampaignsPagination currentPage={safePage} totalPages={totalPages} /></Suspense>
-          
-        </div>
+            <Suspense fallback={null}>
+              <CampaignsPagination currentPage={safePage} totalPages={totalPages} />
+            </Suspense>
+          </div>
+        </section>
       </main>
     </div>
   );

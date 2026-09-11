@@ -139,7 +139,7 @@ export default async function ReportsPage() {
 
   if (reports.length === 0 && stats.total === 0) {
     return (
-      <div className="reports-experience">
+      <div className="surface">
         <InnerHeader />
         <main id="main-content">
           <ReportEmptyState unavailable />
@@ -149,7 +149,7 @@ export default async function ReportsPage() {
   }
 
   return (
-    <div className="reports-experience">
+    <div className="surface">
       <InnerHeader />
       <main id="main-content">
         <ReportsHero />

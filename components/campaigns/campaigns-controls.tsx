@@ -3,6 +3,14 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
+/**
+ * Фильтр и сортировка сборов. Состояние живёт в адресе, поэтому ссылку на
+ * отфильтрованный список можно переслать, а кнопка «назад» возвращает
+ * прежний набор.
+ *
+ * Вкладки те же, что в переписи подопечных: выбор взаимоисключающий,
+ * поэтому это переключатель, а не пара независимых кнопок.
+ */
 export function CampaignsControls() {
   const router = useRouter();
   const pathname = usePathname();
@@ -11,55 +19,47 @@ export function CampaignsControls() {
   const currentStatus = searchParams.get("status") || "active";
   const currentSort = searchParams.get("sort") || "date_desc";
 
-  const createQueryString = useCallback(
+  const go = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set(name, value);
-      if (name !== 'page') params.set('page', '1'); // reset page on filter change
-      return params.toString();
+      // Смена фильтра возвращает на первую страницу: иначе выборка из двух
+      // сборов открывалась бы на четвёртой и выглядела пустой.
+      if (name !== "page") params.set("page", "1");
+      router.push(`${pathname}?${params.toString()}`);
     },
-    [searchParams]
+    [pathname, router, searchParams],
   );
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 relative z-10">
-      {/* Status Tabs */}
-      <div className="flex w-full max-w-full md:w-auto bg-white rounded-full p-1 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
-        <button
-          onClick={() => router.push(pathname + "?" + createQueryString("status", "active"))}
-          aria-pressed={currentStatus === "active"}
-          className={`flex-1 min-w-0 px-3 sm:px-6 py-3 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
-            currentStatus === "active" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
-          }`}
-        >
-          Актуальные
-        </button>
-        <button
-          onClick={() => router.push(pathname + "?" + createQueryString("status", "closed"))}
-          aria-pressed={currentStatus === "closed"}
-          className={`flex-1 min-w-0 px-3 sm:px-6 py-3 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
-            currentStatus === "closed" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
-          }`}
-        >
-          Закрытые
-        </button>
+    <div className="camp-controls">
+      <div className="reports-tabs" role="radiogroup" aria-label="Какие сборы показывать">
+        {[
+          { key: "active", label: "Идут сейчас" },
+          { key: "closed", label: "Закрытые" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            role="radio"
+            aria-checked={currentStatus === tab.key}
+            aria-pressed={currentStatus === tab.key}
+            onClick={() => go("status", tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Sorting */}
-      <div className="flex items-center gap-4 w-full md:w-auto bg-white rounded-full px-6 py-3 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
-        <label htmlFor="campaigns-sort-select" className="text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 cursor-pointer">Сортировка:</label>
-        <select
-          id="campaigns-sort-select"
-          value={currentSort}
-          onChange={(e) => router.push(pathname + "?" + createQueryString("sort", e.target.value))}
-          className="bg-transparent border-none text-[#1c1c1c] font-medium text-sm focus:ring-0 cursor-none outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden rounded-md px-1"
-        >
+      <label className="camp-sort">
+        <span>Сортировка</span>
+        <select value={currentSort} onChange={(event) => go("sort", event.target.value)}>
           <option value="date_desc">Сначала новые</option>
           <option value="date_asc">Сначала старые</option>
           <option value="collected_desc">Больше собрано</option>
           <option value="collected_asc">Меньше собрано</option>
         </select>
-      </div>
+      </label>
     </div>
   );
 }

@@ -12,6 +12,8 @@ export interface MappedCampaign {
   date: string;
   tag: string;
   petName: string;
+  /** Портрет подопечного: подменяет обложку, если та пропала из хранилища. */
+  petImage?: string;
 }
 
 /**
@@ -22,15 +24,13 @@ export interface MappedCampaign {
  * @returns Normalized MappedCampaign object
  */
 export function normalizeCampaignData(camp: StrapiCampaign): MappedCampaign {
-  let imageUrl = "";
-  if (camp.images && camp.images.length > 0) {
-    imageUrl = campaignsService.resolveMediaUrl(camp.images[0].url);
-  } else if (camp.pet?.photos && camp.pet.photos.length > 0) {
-    // У сбора нет своих картинок — показываем фото питомца, для которого он открыт
-    imageUrl = campaignsService.resolveMediaUrl(camp.pet.photos[0].url);
-  } else {
-    imageUrl = "/photo-placeholder.jpg";
-  }
+  const petImage = camp.pet?.photos?.[0]?.url
+    ? campaignsService.resolveMediaUrl(camp.pet.photos[0].url)
+    : undefined;
+  // Своя обложка, а без неё портрет подопечного, ради которого сбор открыт.
+  const imageUrl = camp.images?.[0]?.url
+    ? campaignsService.resolveMediaUrl(camp.images[0].url)
+    : petImage ?? "/photo-placeholder.jpg";
 
   return {
     id: camp.documentId,
@@ -42,6 +42,7 @@ export function normalizeCampaignData(camp: StrapiCampaign): MappedCampaign {
     status: camp.status || "active",
     date: camp.createdAt || "",
     tag: camp.tag || "Срочно",
-    petName: camp.pet?.name || ""
+    petName: camp.pet?.name || "",
+    petImage,
   };
 }

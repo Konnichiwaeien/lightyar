@@ -139,12 +139,17 @@ test("page metadata relies on the root title template without repeating the bran
 
 test("known narrow-screen grids and controls can shrink to the viewport", async () => {
   const reports = await read("../components/reports/reports.css");
-  const controls = await read("../components/campaigns/campaigns-controls.tsx");
+  const campaigns = await read("../components/campaigns/campaigns.css");
   const about = await read("../components/about/about-narrative.css");
 
   assert.match(reports, /minmax\(min\(100%,\s*290px\),\s*1fr\)/);
-  assert.match(controls, /w-full max-w-full/);
-  assert.match(controls, /flex-1 min-w-0/);
+  // Сетка считает колонку от ширины экрана: на 320 она схлопывается в одну,
+  // а не выпирает наружу.
+  assert.match(campaigns, /minmax\(min\(100%,\s*20rem\),\s*1fr\)/);
+  // Фильтр и сортировка переносятся, и вкладки внутри фильтра тоже:
+  // раньше это держали служебные классы прямо в разметке.
+  assert.match(campaigns, /\.camp-controls \{[^}]*flex-wrap:\s*wrap/);
+  assert.match(reports, /\.reports-tabs \{[^}]*flex-wrap:\s*wrap/);
   assert.match(about, /hyphens:\s*auto/);
   assert.doesNotMatch(about, /\.about-chapter-nav/);
 });

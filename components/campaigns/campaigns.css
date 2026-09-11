@@ -1,0 +1,321 @@
+/*
+ * Страница сборов на общей поверхности .surface: те же токены, та же
+ * типографика и тот же вертикальный шаг, что в отчётности.
+ *
+ * Здесь только то, чего в отчётах нет: шапка со сводкой, мозаика сборов и
+ * шкала собранного. Всё остальное приходит из reports.css вместе с оболочкой.
+ */
+
+.camp-head {
+  padding: var(--section-gap) 0 0;
+}
+
+.camp-head h1 {
+  max-width: 14ch;
+  margin: 0 0 1rem;
+  font-size: clamp(2.8rem, 6.5vw, 6.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.camp-lead {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.camp-lead strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Сводка: сколько собрано и сколько сборов идёт. Цифра ведёт, подпись служит. */
+.camp-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: clamp(1rem, 2.5vw, 2rem);
+  margin: var(--block-gap) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.camp-totals li {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.camp-totals b {
+  color: var(--ink);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.camp-totals li[data-tone="amber"] b {
+  color: var(--amber-text);
+}
+
+.camp-totals span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Полоса со сборами: белая, во весь экран, как панели в отчётах. */
+.camp-list {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--card);
+}
+
+.camp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin: var(--block-gap) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.camp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--sheet);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    translate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(4% + var(--i, 0) * 2%) entry calc(26% + var(--i, 0) * 2%);
+}
+
+.camp:hover,
+.camp:focus-visible {
+  translate: 0 -4px;
+  box-shadow: var(--lift);
+}
+
+/* Кадр сбора. Обложки в хранилище пропадают, поэтому под ним всегда лежит
+   плашка цвета бумаги: пустой серый прямоугольник читался как поломка. */
+.camp-shot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--stone);
+}
+
+.camp-shot img {
+  transition: scale 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.camp:hover .camp-shot img {
+  scale: 1.04;
+}
+
+.camp[data-status="closed"] .camp-shot img {
+  filter: grayscale(1);
+  opacity: 0.75;
+}
+
+/* Метка сбора поверх кадра: тег из CMS, а под ним имя подопечного. */
+.camp-tag {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  z-index: 2;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #17140f;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.camp[data-status="closed"] .camp-tag {
+  background: var(--moss);
+  color: var(--dark-text);
+}
+
+.camp-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: clamp(1.1rem, 2vw, 1.6rem);
+}
+
+.camp-pet {
+  color: var(--amber-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.camp-body h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  line-height: 1.2;
+}
+
+.camp-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* Итог сбора прижат к низу карточки: у соседей по ряду шкалы на одной линии. */
+.camp-money {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 1rem;
+  margin-top: auto;
+  padding-top: clamp(0.9rem, 2vh, 1.4rem);
+}
+
+.camp-money b {
+  color: var(--ink);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.3rem, 1.9vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.camp-money span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.camp-bar {
+  position: relative;
+  height: 6px;
+  margin-top: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--rule);
+}
+
+.camp-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill);
+  border-radius: inherit;
+  background: var(--amber);
+  transform-origin: 0 50%;
+  animation: camp-fill 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 20% entry 60%;
+}
+
+.camp[data-status="closed"] .camp-bar i {
+  background: var(--moss);
+}
+
+@keyframes camp-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.camp-state {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.camp[data-status="active"] .camp-state {
+  color: var(--amber-text);
+}
+
+/* Пусто: страница объясняет словами, а не показывает серое поле. */
+.camp-empty {
+  margin: var(--block-gap) 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camp,
+  .camp-bar i {
+    animation: none;
+  }
+
+  .camp-bar i {
+    transform: none;
+  }
+
+  .camp:hover {
+    translate: none;
+  }
+}
+
+/* Фильтр и сортировка стоят в одну строку и расходятся по краям полосы;
+   на телефоне сортировка уходит под вкладки. */
+.camp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.camp-controls .reports-tabs {
+  margin-bottom: 0;
+}
+
+.camp-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--sheet);
+}
+
+.camp-sort > span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.camp-sort select {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.camp-sort select:focus-visible {
+  outline: 3px solid var(--amber-text);
+  outline-offset: 4px;
+}

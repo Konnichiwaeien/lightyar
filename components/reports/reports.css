@@ -1,10 +1,13 @@
 /*
- * Визуальная система раздела отчётности.
- * Тёплая бумага, скруглённые поверхности, фотография ведёт, данные подписывают.
- * Тёмная поверхность зарезервирована за финансами и финальным призывом.
+ * Визуальная система раздела: тёплая бумага, скруглённые поверхности,
+ * фотография ведёт, данные подписывают. Тёмная поверхность зарезервирована
+ * за финансами и финальным призывом.
+ *
+ * Оболочка называется .surface, потому что живёт не только в отчётах:
+ * на ней же стоит страница сборов.
  */
 
-.reports-experience {
+.surface {
   /* поверхности наследуем из общей темы: раньше здесь лежали почти те же
      значения своими литералами, и палитра расходилась при любой правке */
   /* Единый вертикальный шаг: между разделами и между сценами внутри раздела. */
@@ -36,7 +39,7 @@
   font-variant-numeric: normal;
 }
 
-.reports-experience img {
+.surface img {
   display: block;
   width: 100%;
   height: 100%;
@@ -44,9 +47,9 @@
   object-position: 50% 40%;
 }
 
-.reports-experience h1,
-.reports-experience h2,
-.reports-experience h3 {
+.surface h1,
+.surface h2,
+.surface h3 {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 600;
   line-height: 1.06;
@@ -64,8 +67,8 @@
   padding: 0 clamp(1.25rem, 4vw, 4rem);
 }
 
-.reports-experience a:focus-visible,
-.reports-experience button:focus-visible {
+.surface a:focus-visible,
+.surface button:focus-visible {
   outline: 3px solid var(--amber-text);
   outline-offset: 3px;
   border-radius: 4px;
@@ -85,7 +88,7 @@
 
 /* Шапка остаётся в потоке, герой уходит под неё и начинается от верха
    страницы; кнопке меню нужен слой выше героя. */
-.reports-experience > header {
+.surface > header {
   position: relative;
   z-index: 30;
 }
@@ -3316,7 +3319,7 @@
   background: var(--card);
 }
 
-.reports-experience[data-page="year"] > header {
+.surface[data-page="year"] > header {
   background: var(--card);
 }
 
@@ -3889,11 +3892,11 @@
 /* Общая страница и страницы лет живут по одному шагу: между секциями
    --section-gap, между заголовком и лидом 1rem, между лидом и
    содержимым --block-gap. Полосы во весь экран несут тот же шаг внутри. */
-.reports-experience {
+.surface {
   --block-gap: clamp(2rem, 5vh, 3rem);
 }
 
-.reports-experience h2 {
+.surface h2 {
   max-width: 18ch;
   margin: 0 0 var(--block-gap);
   font-size: clamp(2.6rem, 4.6vw, 4.8rem);
@@ -3902,11 +3905,11 @@
   text-wrap: balance;
 }
 
-.reports-experience h2:has(+ p) {
+.surface h2:has(+ p) {
   margin-bottom: 1rem;
 }
 
-.reports-experience h2 + p {
+.surface h2 + p {
   max-width: 56ch;
   margin: 0 0 var(--block-gap);
   color: var(--muted);
@@ -3914,7 +3917,7 @@
   line-height: 1.55;
 }
 
-.reports-experience h2 + p strong {
+.surface h2 + p strong {
   color: var(--ink);
   font-weight: 600;
 }
@@ -3942,7 +3945,7 @@
 
 /* Разрез на странице года идёт полосой на листе: белые карточки диаграмм
    на бумаге сливались с фоном. */
-.reports-experience[data-page="year"] .reports-charts {
+.surface[data-page="year"] .reports-charts {
   margin: var(--section-gap) 0 0;
   padding: var(--section-gap) 0;
   background: var(--sheet);

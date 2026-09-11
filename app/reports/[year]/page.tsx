@@ -81,7 +81,7 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
   const firstYear = years.length > 0 ? years[years.length - 1] : undefined;
 
   return (
-    <div className="reports-experience" data-page="year">
+    <div className="surface" data-page="year">
       <InnerHeader />
       <main id="main-content">
         <ReportOpening report={report} faces={faces} video={siteMedia.heroVideo} poster={siteMedia.heroPoster} />
