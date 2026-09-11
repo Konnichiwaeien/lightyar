@@ -24,9 +24,9 @@ function bad(message: string, status = 400) {
 }
 
 export async function POST(request: Request) {
-  const token = process.env.REST_API_KEY;
+  const token = process.env.STRAPI_GIFT_WRITE_TOKEN;
   if (!token) {
-    console.error("[gift-orders] REST_API_KEY отсутствует");
+    console.error("[gift-orders] STRAPI_GIFT_WRITE_TOKEN отсутствует");
     return bad("Приём заявок временно недоступен. Напишите нам, пожалуйста, в сообщения группы.", 503);
   }
 

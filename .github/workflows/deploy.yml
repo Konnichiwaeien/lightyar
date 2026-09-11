@@ -21,19 +21,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: lightyar/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        working-directory: lightyar
         run: npm ci
 
       - name: Lint
-        working-directory: lightyar
         run: npx eslint app components lib
 
       - name: Tests
-        working-directory: lightyar
         run: npm test
+
+      - name: Build
+        run: npm run build
 
   deploy:
     needs: verify
@@ -117,3 +117,15 @@ jobs:
             # ==============================================================================
             echo "✅ Деплой завершен! Текущий статус:"
             pm2 status lightyar
+
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent --show-error http://127.0.0.1:3003/ >/dev/null; then
+                echo "✅ Frontend health check пройден"
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "❌ Frontend не ответил после перезапуска"
+            pm2 logs lightyar --lines 80 --nostream
+            exit 1

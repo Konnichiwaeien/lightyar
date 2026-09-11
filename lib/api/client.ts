@@ -1,10 +1,13 @@
+const GET_RETRY_DELAYS_MS = [0, 250, 750] as const;
+const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
+
 export class StrapiClient {
   protected baseUrl: string;
   private apiToken?: string;
 
   constructor() {
     this.baseUrl = process.env.STRAPI_API_URL || "http://localhost:1443/api";
-    this.apiToken = process.env.REST_API_KEY;
+    this.apiToken = process.env.STRAPI_READ_TOKEN || process.env.REST_API_KEY;
   }
 
   /**
@@ -37,17 +40,49 @@ export class StrapiClient {
       ...options,
       headers,
     };
+    const method = (config.method || "GET").toUpperCase();
+    const retryDelays = method === "GET" ? GET_RETRY_DELAYS_MS : [0];
+    let lastError: unknown;
 
-    try {
-      const response = await fetch(url, config);
-      if (!response.ok) {
-        throw new Error(`Strapi API Error: ${response.status} ${response.statusText} for ${url}`);
+    for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+      const delay = retryDelays[attempt];
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-      return await response.json() as T;
-    } catch (error) {
-      console.error(`[StrapiClient] Request failed for ${url}:`, error);
-      throw error;
+
+      try {
+        const response = await fetch(url, config);
+        if (!response.ok) {
+          const error = new Error(`Strapi API Error: ${response.status} ${response.statusText} for ${url}`);
+          const canRetry = method === "GET"
+            && RETRYABLE_STATUS_CODES.has(response.status)
+            && attempt < retryDelays.length - 1;
+
+          if (canRetry) {
+            lastError = error;
+            console.warn(`[StrapiClient] Transient response for ${url}; retrying (${attempt + 1}/${retryDelays.length - 1}).`);
+            continue;
+          }
+
+          throw error;
+        }
+        return await response.json() as T;
+      } catch (error) {
+        const isHttpError = error instanceof Error && error.message.startsWith("Strapi API Error:");
+        const canRetry = method === "GET" && !isHttpError && attempt < retryDelays.length - 1;
+
+        if (canRetry) {
+          lastError = error;
+          console.warn(`[StrapiClient] Connection failed for ${url}; retrying (${attempt + 1}/${retryDelays.length - 1}).`);
+          continue;
+        }
+
+        console.error(`[StrapiClient] Request failed for ${url}:`, error);
+        throw error;
+      }
     }
+
+    throw lastError instanceof Error ? lastError : new Error(`Strapi request failed for ${url}`);
   }
 }
 
