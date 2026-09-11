@@ -125,9 +125,15 @@
   position: relative;
   z-index: 2;
   display: flex;
+  /* safe: когда строка шире полосы, центровка не выдавливает её за левый
+     край окна, а прижимает к началу. */
+  justify-content: safe center;
+  max-width: none;
   min-height: var(--hero-h);
   padding-top: calc(var(--header-h) + var(--gap-y));
   padding-bottom: var(--gap-y);
+  padding-left: clamp(1.25rem, 4vw, 4rem);
+  padding-right: calc(var(--fig-right) + var(--fig-w) + clamp(1rem, 3vw, 3rem));
 }
 
 /* Текст не заходит под портрет: ширина колонки считается от него. */
@@ -135,7 +141,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: calc(100vw - var(--fig-right) - var(--fig-w) - var(--edge) - 1rem);
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Заголовок тем же Playfair, что и заголовки секций, только крупнее:
@@ -145,7 +152,7 @@
   flex-direction: column;
   align-items: flex-start;
   margin: 0;
-  font-size: clamp(3rem, 7.4vw, 10rem);
+  font-size: clamp(3rem, 7.4vw, 7.4rem);
   font-weight: 600;
   line-height: 0.98;
   letter-spacing: -0.035em;
@@ -3923,4 +3930,13 @@
    задан точнее общего правила, поэтому шаг держит сама сумма. */
 .reports-till-sum {
   margin-top: var(--block-gap);
+}
+
+/* Ниже 1200 портрет встаёт под текст, и правое поле под фигуру мешает:
+   заголовок ломался на три строки посреди пустого экрана. */
+@media (max-width: 1200px) {
+  .reports-hero-layout {
+    justify-content: flex-start;
+    padding-right: clamp(1.25rem, 4vw, 4rem);
+  }
 }
