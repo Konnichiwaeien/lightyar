@@ -17,6 +17,8 @@ export interface StrapiMedia {
   caption: string | null;
   width: number;
   height: number;
+  mime?: string | null;
+  ext?: string | null;
   formats?: {
     thumbnail?: StrapiImageFormat;
     small?: StrapiImageFormat;
@@ -24,6 +26,24 @@ export interface StrapiMedia {
     large?: StrapiImageFormat;
   };
   url: string;
+}
+
+export type StrapiNewsAttachmentKind = "video" | "audio" | "file";
+export type StrapiNewsAttachmentProvider = "upload" | "direct" | "vk" | "other";
+
+export interface StrapiNewsAttachment {
+  id?: number;
+  kind: StrapiNewsAttachmentKind;
+  provider: StrapiNewsAttachmentProvider;
+  title: string;
+  description?: string | null;
+  transcript?: string | null;
+  media?: StrapiMedia | null;
+  externalUrl?: string | null;
+  poster?: StrapiMedia | null;
+  captions?: StrapiMedia | null;
+  duration?: number | null;
+  order?: number | null;
 }
 
 export interface StrapiTag {
@@ -50,6 +70,7 @@ export interface StrapiNews {
   vkUrl?: string;
   mainImage: StrapiMedia;
   gallery?: StrapiMedia[];
+  attachments?: StrapiNewsAttachment[];
   tags?: StrapiTag[];
 }
 

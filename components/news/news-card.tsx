@@ -8,6 +8,7 @@ import { ArrowRight, Calendar, Tag } from "lucide-react";
 import { useCursor } from "@/components/ui/cursor-context";
 import { StrapiNews } from "@/lib/api/types";
 import { strapiClient } from "@/lib/api/client";
+import "./news-card.css";
 
 interface NewsCardProps {
   article: StrapiNews;
@@ -60,7 +61,7 @@ export function NewsCard({ article, isLarge = false }: NewsCardProps) {
         onMouseLeave={textLeave}
       >
         {/* Card Image Wrapper: No margins, touches the borders, but has symmetric rounding-[2rem] on all sides */}
-        <div className={`relative shrink-0 overflow-hidden rounded-[2rem] ${
+        <div className={`news-card__media ${isLarge ? "news-card__media--large" : ""} relative shrink-0 overflow-hidden rounded-[2rem] ${
           isLarge 
             ? "w-full h-64 sm:h-80 md:h-auto md:w-[45%] min-h-[320px]" 
             : "w-full h-72 sm:h-80"
@@ -71,7 +72,8 @@ export function NewsCard({ article, isLarge = false }: NewsCardProps) {
             fill
             sizes={isLarge ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"}
             className="object-cover group-hover:scale-103 transition-transform duration-1000 ease-out"
-            priority={isLarge}
+            loading={isLarge ? "eager" : "lazy"}
+            fetchPriority={isLarge ? "high" : "auto"}
           />
           <div className="absolute inset-0 bg-linear-to-t from-black/10 to-transparent" />
           

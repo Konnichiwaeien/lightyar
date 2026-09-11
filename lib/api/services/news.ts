@@ -85,8 +85,16 @@ export class NewsService extends StrapiClient {
    */
   async getNewsBySlug(slug: string): Promise<StrapiNews | null> {
     try {
+      const populate = [
+        "populate[mainImage]=true",
+        "populate[gallery]=true",
+        "populate[tags]=true",
+        "populate[attachments][populate][media]=true",
+        "populate[attachments][populate][poster]=true",
+        "populate[attachments][populate][captions]=true",
+      ].join("&");
       const response = await this.fetchJson<StrapiResponseCollection<StrapiNews>>(
-        `/news?filters[slug][$eq]=${slug}&populate=*`,
+        `/news?filters[slug][$eq]=${encodeURIComponent(slug)}&${populate}`,
         {
           next: { revalidate: 3600 } // Cache and revalidate every hour
         }
@@ -120,4 +128,3 @@ export class NewsService extends StrapiClient {
 
 export const newsService = new NewsService();
 export default newsService;
-

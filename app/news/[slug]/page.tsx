@@ -5,6 +5,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { newsService } from "@/lib/api/services/news";
 import { NewsSlider } from "@/components/news/news-slider";
+import { NewsAttachments } from "@/components/news/news-attachments";
+import {
+  buildNewsSlides,
+  getSupplementaryNewsAttachments,
+} from "@/lib/news/news-media";
 
 export const revalidate = 3600; // Enable ISR, revalidate every hour
 
@@ -19,12 +24,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!article) {
     return {
-      title: "Новость не найдена | Светлый",
+      title: "Новость не найдена",
     };
   }
 
   return {
-    title: `${article.title} | Новости приюта «Светлый»`,
+    title: `${article.title} | Новости`,
     description: article.excerpt || "Читайте последние новости и истории спасения в нашем приюте.",
   };
 }
@@ -143,20 +148,12 @@ export default async function NewsDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const imageUrls: string[] = [];
-  if (article.mainImage?.url) {
-    imageUrls.push(newsService.resolveMediaUrl(article.mainImage.url));
-  }
-  if (article.gallery && article.gallery.length > 0) {
-    article.gallery.forEach((img) => {
-      if (img?.url) {
-        const resolved = newsService.resolveMediaUrl(img.url);
-        if (resolved && !imageUrls.includes(resolved)) {
-          imageUrls.push(resolved);
-        }
-      }
-    });
-  }
+  const resolveMediaUrl = (url: string) => newsService.resolveMediaUrl(url);
+  const mediaSlides = buildNewsSlides(article, resolveMediaUrl);
+  const supplementaryAttachments = getSupplementaryNewsAttachments(
+    article.attachments,
+    resolveMediaUrl,
+  );
 
   return (
     <div className="min-h-screen bg-[#e8e4dc] selection:bg-amber-500 selection:text-white font-sans text-[#1c1c1c]">
@@ -196,13 +193,15 @@ export default async function NewsDetailPage({ params }: PageProps) {
               )}
             </header>
 
-            {/* Image Slider */}
-            <NewsSlider images={imageUrls} title={article.title} />
+            {/* Image and video slider */}
+            <NewsSlider items={mediaSlides} title={article.title} />
 
             {/* Article Content */}
             <div className="prose prose-lg max-w-3xl mx-auto text-[#1c1c1c]/80 font-sans mt-12">
               {renderContent(article.content)}
             </div>
+
+            <NewsAttachments items={supplementaryAttachments} />
 
             {/* VK Call-To-Action (if imported from VK) */}
             {article.vkUrl && (

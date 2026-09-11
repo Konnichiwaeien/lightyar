@@ -1,0 +1,28 @@
+.news-card__media {
+  min-height: 18rem;
+}
+
+@media (max-width: 1023px) {
+  .news-card__media {
+    height: clamp(25rem, 58svh, 38rem) !important;
+    min-height: clamp(25rem, 58svh, 38rem) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .news-card__media {
+    height: clamp(22rem, 52.7svh, 30.6rem) !important;
+    min-height: clamp(22rem, 52.7svh, 30.6rem) !important;
+  }
+}
+
+/* На планшете большая карточка уже горизонтальная. Её медиа-слой должен
+   растягиваться по высоте текстовой половины, а не сохранять высоту
+   вертикальной мобильной карточки. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .news-card__media--large {
+    align-self: stretch;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
