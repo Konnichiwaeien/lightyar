@@ -24,11 +24,11 @@ export function CampaignsControls() {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 relative z-10">
       {/* Status Tabs */}
-      <div className="flex bg-white rounded-full p-1 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
+      <div className="flex w-full max-w-full md:w-auto bg-white rounded-full p-1 shadow-sm border border-[#1c1c1c]/5 pointer-events-auto cursor-none">
         <button
           onClick={() => router.push(pathname + "?" + createQueryString("status", "active"))}
           aria-pressed={currentStatus === "active"}
-          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
+          className={`flex-1 min-w-0 px-3 sm:px-6 py-3 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
             currentStatus === "active" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
           }`}
         >
@@ -37,7 +37,7 @@ export function CampaignsControls() {
         <button
           onClick={() => router.push(pathname + "?" + createQueryString("status", "closed"))}
           aria-pressed={currentStatus === "closed"}
-          className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
+          className={`flex-1 min-w-0 px-3 sm:px-6 py-3 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest transition-all focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-hidden ${
             currentStatus === "closed" ? "bg-[#1c1c1c] text-white" : "text-[#1c1c1c]/50 hover:text-[#1c1c1c]"
           }`}
         >

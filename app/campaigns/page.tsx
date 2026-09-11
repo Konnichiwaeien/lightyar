@@ -5,12 +5,12 @@ import { InnerHeader } from "@/components/layout/inner-header";
 import { Heart, CheckCircle2 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import { ResilientImage } from "@/components/ui/resilient-image";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 
 export const metadata: Metadata = {
-  title: "Все сборы | Светлый",
+  title: "Все сборы",
 };
 
 interface PageProps {
@@ -79,12 +79,13 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                       className="group relative bg-white border border-[#1c1c1c]/5 rounded-[2rem] overflow-hidden flex flex-col shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 pointer-events-auto h-full min-h-[460px] cursor-pointer block focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"
                     >
                       <div className={`w-full ${isLarge ? 'h-64' : 'h-48'} shrink-0 overflow-hidden relative`}>
-                        <Image 
+                        <ResilientImage
                           src={fund.image} 
                           alt={fund.title} 
                           fill
                           sizes={isLarge ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
                           className={`object-cover transition-transform duration-1000 ${fund.status === 'closed' ? 'grayscale opacity-70' : 'group-hover:scale-105'}`} 
+                          fallbackLabel="Обложка сбора временно недоступна"
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-white via-white/20 to-transparent opacity-80" />
                         

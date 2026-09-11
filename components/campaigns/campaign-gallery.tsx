@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ResilientImage } from "@/components/ui/resilient-image";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -54,13 +54,14 @@ export function CampaignGallery({ images, title, petName }: CampaignGalleryProps
           {images.map((src, idx) => (
             <SwiperSlide key={idx}>
               <div className="relative h-full w-full">
-                <Image
+                <ResilientImage
                   src={src}
                   alt={`${altText} — фото ${idx + 1} из ${images.length}`}
                   fill
                   sizes="(max-width: 1024px) 100vw, 58vw"
                   className="object-cover"
-                  priority={idx === 0}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  fetchPriority={idx === 0 ? "high" : "low"}
                 />
               </div>
             </SwiperSlide>
@@ -110,7 +111,7 @@ export function CampaignGallery({ images, title, petName }: CampaignGalleryProps
           watchSlidesProgress
           slidesPerView="auto"
           spaceBetween={12}
-          className="w-full !overflow-visible"
+          className="w-full max-w-full !overflow-hidden"
         >
           {images.map((src, idx) => (
             <SwiperSlide
@@ -127,12 +128,14 @@ export function CampaignGallery({ images, title, petName }: CampaignGalleryProps
                   hover:border-white hover:shadow-md
                 `}
               >
-                <Image
+                <ResilientImage
                   src={src}
                   alt={`Миниатюра ${idx + 1} — ${altText}`}
                   fill
                   sizes="80px"
                   className="object-cover"
+                  loading="lazy"
+                  fetchPriority="low"
                 />
               </div>
             </SwiperSlide>

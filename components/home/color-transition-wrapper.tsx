@@ -22,11 +22,11 @@ export function ColorTransitionWrapper({ lightZone, darkZoneTrigger, darkZone }:
   const textColor = useTransform(colorProgress, [0, 1], ["#1c1c1c", "#ffffff"]);
 
   return (
-    <motion.div
+    <motion.main
       id="main-content"
       tabIndex={-1}
       style={{ backgroundColor: bgColor, color: textColor }}
-      className="relative font-sans pt-0 min-h-screen cursor-none outline-none"
+      className="relative min-h-screen overflow-x-clip pt-0 font-sans cursor-none outline-none"
     >
       {/* Film grain */}
       <div className="film-grain" aria-hidden="true" />
@@ -39,6 +39,6 @@ export function ColorTransitionWrapper({ lightZone, darkZoneTrigger, darkZone }:
         {darkZoneTrigger}
       </div>
       {darkZone}
-    </motion.div>
+    </motion.main>
   );
 }

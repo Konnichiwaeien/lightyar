@@ -8,7 +8,7 @@ interface Props {
   campaignId: string;
 }
 
-export function CampaignShare({ title, campaignId }: Props) {
+export function CampaignShare({ title }: Props) {
   const [copied, setCopied] = useState(false);
 
   const getUrl = () =>

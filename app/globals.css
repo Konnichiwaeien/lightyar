@@ -44,9 +44,11 @@ body {
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.04;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("/texture/paper-grain.png");
+  background-repeat: repeat;
+  background-size: 512px 512px;
 }
 
 /* Hero — animated gradient fallback for video */
@@ -90,10 +92,23 @@ body {
   mix-blend-mode: multiply;
 }
 
+/* Меню блокирует прокрутку через position:fixed на body. Без этого полоса
+   прокрутки исчезает, окно становится шире, и вся страница вместе с круглой
+   кнопкой в шапке дёргается вбок на её ширину. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Restore standard cursors on pages where the custom cursor is not loaded */
 body:not(.has-custom-cursor) .cursor-none,
 body:not(.has-custom-cursor) [class*="cursor-none"] {
   cursor: revert !important;
+}
+
+/* Controls that keep a real pointer everywhere, and give it up only where the
+   glowing custom cursor actually renders. */
+body.has-custom-cursor [data-cursor-glow] {
+  cursor: none;
 }
 
 /* Shimmer animation for progress bars */
@@ -135,4 +150,298 @@ body:not(.has-custom-cursor) [class*="cursor-none"] {
 /* Apply custom cursor only on devices with hover capability */
 @media (hover: none) {
   .cursor-none { cursor: auto !important; }
+}
+
+/* Мазок маркера. Скругления неровные — так полоса читается как след от
+   руки, а не как подложка из редактора. Фон задан прямо на элементе, а не
+   псевдоэлементом: псевдоэлемент не умеет разрываться по строкам и на
+   переносе схлопывался в вертикальную черту. */
+.about-ul {
+  background: var(--color-amber, #f59e0b);
+  position: relative;
+  color: #1c1c1c;
+  padding-inline: 0.2em;
+  border-radius: 0.75em 0.3em 0.65em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* On phones the full-screen blur and fixed blend layer are expensive paint
+   work. The same composition stays intact with a static, lightly scaled hero. */
+@media (max-width: 767px) {
+  .film-grain {
+    display: none;
+  }
+
+  .hero-media-layer {
+    filter: brightness(88%) !important;
+    transform: scale(1.02) !important;
+    will-change: auto !important;
+  }
+
+  .hero-video-fallback {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
+/* Homepage geometry that must exist independently from Tailwind's generated
+   utility cache. These classes protect media and controls from collapsing
+   during dev hot reloads when a newly introduced arbitrary utility has not
+   been emitted yet. */
+.hero-actions {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.75rem;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.hero-action {
+  gap: 0.5rem;
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
+.hero-action__icon {
+  flex: 0 0 auto;
+}
+
+.hero-action--primary {
+  flex: 0 0 auto;
+}
+
+.hero-actions__secondary-group {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-inline-size: 0;
+  white-space: nowrap;
+}
+
+.hero-action--secondary {
+  flex: 0 0 auto;
+}
+
+.hero-actions__play {
+  flex: 0 0 2.75rem;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+}
+
+.hero-footer {
+  flex-wrap: wrap;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 1.5rem;
+}
+
+.about-section {
+  background: #fff;
+}
+
+.about-light-particle {
+  background: rgba(245, 158, 11, 0.54);
+  border: 1px solid rgba(255, 226, 168, 0.72);
+}
+
+.about-stat:nth-child(1) .about-stat__halo { background: rgba(245, 166, 35, 0.2); }
+.about-stat:nth-child(2) .about-stat__halo { background: rgba(209, 226, 199, 0.72); }
+.about-stat:nth-child(3) .about-stat__halo { background: rgba(240, 215, 198, 0.78); }
+
+.about-stat {
+  justify-content: center;
+  gap: 1rem;
+  inline-size: min(100%, 28rem);
+  min-block-size: 11rem;
+  padding: 0.7rem;
+}
+
+.about-stat__portrait {
+  flex: 0 0 clamp(9rem, 42vw, 12rem);
+  inline-size: clamp(9rem, 42vw, 12rem);
+  block-size: clamp(9rem, 42vw, 12rem);
+  animation: about-stat-breathe 7s ease-in-out infinite;
+}
+
+.about-stat:nth-child(2) .about-stat__portrait {
+  animation-delay: -2.2s;
+}
+
+.about-stat:nth-child(3) .about-stat__portrait {
+  animation-delay: -4.4s;
+}
+
+.about-stat__value {
+  font-size: clamp(3.25rem, 12vw, 5rem);
+}
+
+.about-stat__copy {
+  align-items: flex-start;
+}
+
+.about-panorama {
+  aspect-ratio: 24 / 17;
+  inline-size: 100%;
+}
+
+.about-panorama__image {
+  object-position: 50% 72%;
+}
+
+@keyframes about-stat-breathe {
+  0%, 100% { transform: translateY(0) rotate(-0.4deg); }
+  50% { transform: translateY(-0.4rem) rotate(0.4deg); }
+}
+
+.pet-stories__stage {
+  box-sizing: border-box;
+  block-size: 100svh;
+  min-block-size: 32rem;
+  padding-block: clamp(3rem, 6svh, 5rem);
+  background: #fff;
+}
+
+.pet-story-card {
+  inline-size: 82vw;
+  block-size: clamp(22rem, 64svh, 52rem);
+}
+
+@media (max-width: 47.99rem) {
+  .pet-stories__stage {
+    padding-block: 2rem;
+  }
+}
+
+@media (min-width: 36rem) and (max-width: 53.99rem) {
+  .about-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .about-stat {
+    justify-content: flex-start;
+    gap: 0.7rem;
+    inline-size: 100%;
+    min-block-size: 10rem;
+    padding-inline: 0.3rem;
+  }
+
+  .about-stat__portrait {
+    flex-basis: clamp(8.75rem, 22vw, 10rem);
+    inline-size: clamp(8.75rem, 22vw, 10rem);
+    block-size: clamp(8.75rem, 22vw, 10rem);
+  }
+
+  .about-stat__value {
+    font-size: clamp(2.8rem, 7vw, 4.25rem);
+  }
+
+  .about-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    justify-content: center;
+    inline-size: min(100%, 22rem);
+  }
+}
+
+@media (min-width: 40rem) {
+  .pet-story-card {
+    inline-size: 55vw;
+  }
+}
+
+@media (min-width: 48rem) {
+  .hero-actions {
+    flex: 0 0 auto;
+    inline-size: fit-content;
+    justify-content: flex-end;
+    margin-inline-start: auto;
+  }
+
+  .hero-footer > p {
+    flex: 1 1 18rem;
+  }
+
+  .about-panorama {
+    aspect-ratio: 12 / 5;
+  }
+
+  .about-panorama__image {
+    object-position: 50% 70%;
+  }
+
+  .pet-story-card {
+    inline-size: 32vw;
+    block-size: clamp(22rem, 68svh, 52rem);
+  }
+}
+
+@media (min-width: 54rem) {
+  .about-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .about-stat__portrait {
+    flex-basis: clamp(8.5rem, 11vw, 10rem);
+    inline-size: clamp(8.5rem, 11vw, 10rem);
+    block-size: clamp(8.5rem, 11vw, 10rem);
+  }
+
+  .about-stat__value {
+    font-size: clamp(3rem, 4.8vw, 4.5rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .about-stats {
+    gap: 1.25rem;
+  }
+
+  .about-stat {
+    gap: 1rem;
+  }
+
+  .about-stat__portrait {
+    flex-basis: 8.5rem;
+    inline-size: 8.5rem;
+    block-size: 8.5rem;
+  }
+
+  .pet-story-card {
+    inline-size: 28vw;
+    block-size: clamp(26rem, 55svh, 34rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-stat__portrait {
+    animation: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  .about-stats {
+    gap: 2.5rem;
+  }
+
+  .about-stat {
+    gap: 1.5rem;
+  }
+
+  .about-stat__portrait {
+    flex-basis: 10rem;
+    inline-size: 10rem;
+    block-size: 10rem;
+  }
 }

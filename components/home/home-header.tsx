@@ -1,40 +1,31 @@
 "use client";
 
 import { useCursor } from "@/components/ui/cursor-context";
-import { PawLogo } from "@/components/ui/paw-logo";
-import Link from "next/link";
+
+const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 export function HomeHeader() {
   const { textEnter, textLeave } = useCursor();
 
   return (
-    <header className="fixed top-0 w-full z-40 p-6 md:p-8 flex justify-between items-center mix-blend-difference text-white pointer-events-none">
-      {/* Round logo Link */}
-      <Link
-        href="/"
-        aria-label="Главная страница приюта Светлый"
-        onMouseEnter={textEnter}
-        onMouseLeave={textLeave}
-        className="pointer-events-auto cursor-none w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white/80 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden transition-all duration-300"
-      >
-        <PawLogo className="w-5 h-5 md:w-6 md:h-6" />
-      </Link>
+    <header className="fixed top-0 w-full z-40 p-6 md:p-8 flex justify-end items-center pointer-events-none">
       {/* Round hamburger menu button */}
       <button
+        type="button"
         onClick={() => window.dispatchEvent(new Event("open-menu"))}
         onMouseEnter={textEnter}
         onMouseLeave={textLeave}
         aria-label="Открыть меню навигации"
         aria-haspopup="dialog"
-        className="pointer-events-auto cursor-none w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-hidden transition-colors duration-500 group"
+        data-cursor-glow
+        className={`pointer-events-auto cursor-pointer group size-12 md:size-14 rounded-full border border-[#1c1c1c]/15 bg-[#f7f3eb] text-[#1c1c1c] shadow-[0_8px_24px_rgba(28,28,28,0.14)] flex items-center justify-center transition duration-500 ${EASE} hover:-translate-y-0.5 hover:border-[#1c1c1c]/35 hover:bg-white hover:shadow-[0_14px_32px_rgba(28,28,28,0.2)] focus-visible:-translate-y-0.5 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:outline-hidden active:translate-y-0 active:scale-[0.97] active:duration-150 motion-reduce:transition-none motion-reduce:transform-none`}
       >
-        <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <line x1="4" y1="7" x2="20" y2="7" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="17" x2="20" y2="17" />
-        </svg>
+        <span className="flex h-4 w-5 flex-col justify-between md:h-[18px] md:w-6" aria-hidden="true">
+          <span className={`h-[1.75px] w-full origin-left rounded-full bg-current transition-transform duration-500 ${EASE} group-hover:-translate-y-px group-focus-visible:-translate-y-px motion-reduce:transition-none motion-reduce:transform-none`} />
+          <span className={`h-[1.75px] w-full origin-left rounded-full bg-current transition-transform duration-500 ${EASE} group-hover:scale-x-[0.6] group-focus-visible:scale-x-[0.6] motion-reduce:transition-none motion-reduce:transform-none`} />
+          <span className={`h-[1.75px] w-full origin-left rounded-full bg-current transition-transform duration-500 ${EASE} group-hover:translate-y-px group-focus-visible:translate-y-px motion-reduce:transition-none motion-reduce:transform-none`} />
+        </span>
       </button>
     </header>
   );
 }
-

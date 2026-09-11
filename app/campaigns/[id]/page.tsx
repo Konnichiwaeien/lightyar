@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!campaign) {
     return {
-      title: "Сбор не найден | Светлый",
+      title: "Сбор не найден",
     };
   }
 
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = campaign.shortDesc || "Поддержите сборы и проекты помощи бездомным животным в Ярославле.";
 
   return {
-    title: `${campaign.title} | Сборы приюта «Светлый»`,
+    title: `${campaign.title} | Сборы`,
     description,
     openGraph: {
       title: `${campaign.title} — Помогите подопечным приюта «Светлый»`,

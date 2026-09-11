@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const contextSource = fs.readFileSync(path.join(directory, "cursor-context.tsx"), "utf8");
 const cursorSource = fs.readFileSync(path.join(directory, "custom-cursor.tsx"), "utf8");
+const smoothScrollSource = fs.readFileSync(path.join(directory, "smooth-scroll.tsx"), "utf8");
 
 test("tracks fine mouse pointers without touch-device false positives", () => {
   assert.match(contextSource, /any-hover:\s*hover/);
@@ -25,4 +26,12 @@ test("does not render or hide the native cursor without a fine pointer", () => {
   assert.match(cursorSource, /isCustomCursorEnabled/);
   assert.match(cursorSource, /!isHomepage\s*\|\|\s*!isCustomCursorEnabled/);
   assert.match(cursorSource, /isHomepage\s*&&\s*isCustomCursorEnabled/);
+});
+
+test("keeps Lenis off touch and reduced-motion devices and out of the initial bundle", () => {
+  assert.doesNotMatch(smoothScrollSource, /import\s+Lenis\s+from\s+["']lenis["']/);
+  assert.match(smoothScrollSource, /import\(["']lenis["']\)/);
+  assert.match(smoothScrollSource, /prefers-reduced-motion:\s*reduce/);
+  assert.match(smoothScrollSource, /hover:\s*none/);
+  assert.match(smoothScrollSource, /pointer:\s*coarse/);
 });
