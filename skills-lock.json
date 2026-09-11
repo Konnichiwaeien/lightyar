@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skills": {
+    "humanizer-ru": {
+      "source": "ilyautov/humanizer-ru",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/humanizer-ru/SKILL.md",
+      "computedHash": "105d55e04af1e62f1a5a9f4b852c1e30fccf565e9038e2b278b3179565db02f1"
+    },
+    "ru-check": {
+      "source": "talkstream/ru-text",
+      "sourceType": "github",
+      "skillPath": "skills/ru-check/SKILL.md",
+      "computedHash": "4aec8748d50279ce28d7a6ad72969d44dab9dad522f7f3ef27309220978259b2"
+    },
+    "ru-score": {
+      "source": "talkstream/ru-text",
+      "sourceType": "github",
+      "skillPath": "skills/ru-score/SKILL.md",
+      "computedHash": "2ba095c67de2c7392b58639f6d7e2e5bfaa67c491890d6c2a04db7ce51db2ff8"
+    },
+    "ru-text": {
+      "source": "talkstream/ru-text",
+      "sourceType": "github",
+      "skillPath": "skills/ru-text/SKILL.md",
+      "computedHash": "a83305dc31d92193260288d6a27bec9b3936a16dabeea043975febacbdcb4c24"
+    }
+  }
+}
