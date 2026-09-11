@@ -34,9 +34,17 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  * Приёмку сторожит hero-cutouts.test.mjs, поэтому список короткий, но чистый.
  */
 const PETS = [
-  { src: "/reports/pets/dzhin.webp", name: "Джин" },
   { src: "/reports/pets/kapral.webp", name: "Капрал" },
   { src: "/reports/pets/taya.webp", name: "Тая" },
+  { src: "/reports/pets/dzhin.webp", name: "Джин" },
+  { src: "/reports/pets/bobbi.webp", name: "Бобби" },
+  { src: "/reports/pets/gerda.webp", name: "Герда" },
+  { src: "/reports/pets/matilda.webp", name: "Матильда" },
+  { src: "/reports/pets/alva.webp", name: "Альва" },
+  { src: "/reports/pets/tisha.webp", name: "Тиша" },
+  { src: "/reports/pets/gulyash.webp", name: "Гуляш" },
+  { src: "/reports/pets/dzhek.webp", name: "Джек" },
+  { src: "/reports/pets/lakki.webp", name: "Лакки" },
 ] as const;
 
 const HOLD_MS = 6200;
