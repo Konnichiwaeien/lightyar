@@ -455,7 +455,7 @@
   rotate: calc((var(--i) % 3 - 1) * 9deg);
   animation: reports-paw-step 1ms linear both;
   animation-timeline: --total;
-  animation-range: entry calc(34% + var(--i) * 6%) entry calc(48% + var(--i) * 6%);
+  animation-range: cover calc(13% + var(--i) * 5%) cover calc(21% + var(--i) * 5%);
 }
 
 @keyframes reports-paw-step {

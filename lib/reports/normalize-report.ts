@@ -4,6 +4,7 @@ import type {
   StrapiFinancialSummary,
   StrapiOutcomeMetric,
   StrapiReportDocument,
+  StrapiTrustNote,
 } from "../api/types";
 import {
   parseOptionalNumber,
@@ -14,6 +15,18 @@ import {
 
 export type OutcomeKind = StrapiOutcomeMetric["kind"];
 export type DocumentType = StrapiReportDocument["documentType"];
+
+/**
+ * Карточка доверия: короткое утверждение о фонде, которое нельзя посчитать
+ * из отчёта. Откуда деньги, кто в команде. Раньше это был текст в разметке
+ * страницы, и правился он только кодом.
+ */
+export interface TrustNote {
+  title: string;
+  text: string;
+  /** Кусок текста, который выделяется янтарём. Должен встречаться в тексте. */
+  highlight?: string;
+}
 
 export interface FinancialSummary {
   currency: "RUB";
@@ -64,6 +77,8 @@ export interface AnnualReport {
   body?: string;
   coverImage?: string;
   financialSummary?: FinancialSummary;
+  fundingNote?: TrustNote;
+  teamNote?: TrustNote;
   outcomes: ReportOutcome[];
   customMetrics: ReportCustomMetric[];
   documents: ReportDocument[];
@@ -141,6 +156,14 @@ function normalizeDocument(
   };
 }
 
+function normalizeTrustNote(note?: StrapiTrustNote | null): TrustNote | undefined {
+  const title = note?.title?.trim();
+  const text = note?.text?.trim();
+  if (!title || !text) return undefined;
+  const highlight = note?.highlight?.trim();
+  return { title, text, highlight: highlight && text.includes(highlight) ? highlight : undefined };
+}
+
 export function normalizeReport(
   report: StrapiAnnualReport,
   resolveMediaUrl: (url: string) => string,
@@ -154,6 +177,8 @@ export function normalizeReport(
     body: report.body?.trim() || undefined,
     coverImage: report.coverImage?.url ? resolveMediaUrl(report.coverImage.url) : undefined,
     financialSummary: normalizeFinancialSummary(report.financialSummary),
+    fundingNote: normalizeTrustNote(report.fundingNote),
+    teamNote: normalizeTrustNote(report.teamNote),
     outcomes: sortByOrder((report.outcomes || []).map(normalizeOutcome).filter((item): item is ReportOutcome => item !== null)),
     customMetrics: sortByOrder((report.customMetrics || []).map(normalizeCustomMetric).filter((item): item is ReportCustomMetric => item !== null)),
     documents: sortByOrder((report.documents || []).map((item) => normalizeDocument(item, resolveMediaUrl)).filter((item): item is ReportDocument => item !== null)),

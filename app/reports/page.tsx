@@ -20,7 +20,7 @@ import { ReportsHero } from "@/components/reports/reports-hero";
 import { newsService } from "@/lib/api/services/news";
 import { petStatsService } from "@/lib/api/services/pet-stats";
 import { reportsService } from "@/lib/api/services/reports";
-import type { FinancialSummary } from "@/lib/reports/normalize-report";
+import type { FinancialSummary, TrustNote } from "@/lib/reports/normalize-report";
 import "@/components/reports/reports.css";
 
 export const metadata: Metadata = {
@@ -49,6 +49,37 @@ function totalFinance(summaries: (FinancialSummary | undefined)[]): FinancialSum
     // остаток не складывается: берём последний известный
     closingBalance: present[0].closingBalance,
   };
+}
+
+/**
+ * Запасные карточки доверия на случай, если редактор ещё не заполнил поля
+ * в CMS. Текст взят из отчёта за 2024 год; как только поля появятся,
+ * страница возьмёт их и сюда больше не заглянет.
+ */
+const FALLBACK_FUNDING: TrustNote = {
+  title: "Только частные деньги",
+  text: "В отчёте Минюста стоит один источник: деньги граждан России. Ни грантов, ни бюджета, ни иностранного финансирования.",
+  highlight: "деньги граждан России",
+};
+
+const FALLBACK_TEAM: TrustNote = {
+  title: "Трое учредителей, один сотрудник",
+  text: "Марина Морозова (директор), Светлана Клюкина, Андрей Синицин. За год учредители собирались один раз.",
+  highlight: "один раз",
+};
+
+/** Текст карточки с янтарной пометкой на выделенном куске. */
+function trustText(note: TrustNote) {
+  if (!note.highlight) return note.text;
+  const at = note.text.indexOf(note.highlight);
+  if (at < 0) return note.text;
+  return (
+    <>
+      {note.text.slice(0, at)}
+      <em>{note.highlight}</em>
+      {note.text.slice(at + note.highlight.length)}
+    </>
+  );
 }
 
 /** Рубли с копейками, как в отчётной форме. */
@@ -93,6 +124,11 @@ export default async function ReportsPage() {
   const spentOnPets = allTimeFinance?.targetExpenses ?? 0;
   const feesOnly = spentOnPets === 0 && (allTimeFinance?.operatingExpenses ?? 0) === 0 && (allTimeFinance?.bankFees ?? 0) > 0;
   const coveredYears = reports.map((report) => report.year).sort((left, right) => left - right);
+
+  // Утверждения о фонде живут в свежем отчёте: состав команды со временем
+  // меняется, и правит его редактор, а не программист.
+  const funding = reports.find((report) => report.fundingNote)?.fundingNote ?? FALLBACK_FUNDING;
+  const team = reports.find((report) => report.teamNote)?.teamNote ?? FALLBACK_TEAM;
   const period =
     coveredYears.length === 0
       ? ""
@@ -142,11 +178,8 @@ export default async function ReportsPage() {
                   <div className="reports-badge">
                     <HandCoins className="reports-pic" aria-hidden="true" />
                   </div>
-                  <h3>Только частные деньги</h3>
-                  <p>
-                    В отчёте Минюста стоит один источник: <em>деньги граждан России</em>. Ни грантов, ни бюджета,
-                    ни иностранного финансирования.
-                  </p>
+                  <h3>{funding.title}</h3>
+                  <p>{trustText(funding)}</p>
                 </article>
                 <article>
                   <div className="reports-badge">
@@ -171,11 +204,8 @@ export default async function ReportsPage() {
                   <div className="reports-badge">
                     <Users className="reports-pic" aria-hidden="true" />
                   </div>
-                  <h3>Трое учредителей, один сотрудник</h3>
-                  <p>
-                    Марина Морозова (директор), Светлана Клюкина, Андрей Синицин. За год учредители собирались{" "}
-                    <em>один раз</em>.
-                  </p>
+                  <h3>{team.title}</h3>
+                  <p>{trustText(team)}</p>
                 </article>
               </div>
             </div>

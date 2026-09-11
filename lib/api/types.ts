@@ -232,6 +232,14 @@ export interface StrapiReportDocument {
   order?: number | null;
 }
 
+/** Карточка доверия: утверждение о фонде, которого нет в цифрах. */
+export interface StrapiTrustNote {
+  id?: number;
+  title: string;
+  text: string;
+  highlight?: string | null;
+}
+
 export interface StrapiAnnualReport {
   id: number;
   documentId: string;
@@ -241,6 +249,8 @@ export interface StrapiAnnualReport {
   body?: string | null;
   coverImage?: StrapiMedia | null;
   financialSummary?: StrapiFinancialSummary | null;
+  fundingNote?: StrapiTrustNote | null;
+  teamNote?: StrapiTrustNote | null;
   outcomes?: StrapiOutcomeMetric[] | null;
   customMetrics?: StrapiCustomMetric[] | null;
   documents?: StrapiReportDocument[] | null;
