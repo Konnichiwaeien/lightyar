@@ -31,35 +31,180 @@
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
+/* ---------------- сцена: сумка, в которую всё складывается ---------------- */
+
+.wishlist-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  margin-bottom: clamp(-5rem, -5vw, -3.5rem);
+}
+
+.wishlist-stage__copy {
+  position: relative;
+  z-index: 2;
+  /* заголовок заходит на сцену: блок, который никуда не выходит за свою
+     колонку, читается как ячейка таблицы, а не как разворот */
+  margin-right: clamp(-6rem, -5vw, -1rem);
+}
+
+.wishlist-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--w-amber-text);
+  margin-bottom: 0.9rem;
+}
+
+.wishlist-stage__copy h2 {
+  font-family: var(--font-sans);
+  font-size: clamp(3.5rem, 8.5vw, 6.4rem);
+  font-weight: 780;
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: var(--w-ink);
+  margin-bottom: 1.4rem;
+}
+
+.wishlist-stage__copy h2 > span {
+  display: block;
+}
+
+.wishlist-stage__copy h2 em {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.08em;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  color: var(--w-amber);
+}
+
+.wishlist-lead {
+  color: var(--w-muted);
+  max-width: 40ch;
+  font-size: 1.02rem;
+  line-height: 1.62;
+}
+
+.wishlist-scene {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 280px;
+  /* сцену держим в разумном размере: растянутая на всю колонку, она
+     делает вокруг сумки поле пустоты шире самой сумки */
+  max-width: 470px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.wishlist-disc {
+  position: absolute;
+  left: 50%;
+  /* круг центрируется по массе картона, а не по середине сцены и не по
+     центру самого файла: у кота торчат уши, и геометрический центр
+     картинки заметно выше того, что глаз считает её тяжестью */
+  top: 64%;
+  width: 74%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 36%, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.08) 62%, transparent 72%);
+}
+
+.wishlist-orbit {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 56%;
+  width: 84%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.wishlist-orbit__slot {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.wishlist-object-anchor {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  width: 18%;
+  transform: translate(-50%, -50%);
+}
+
+.wishlist-object {
+  width: 100%;
+  color: var(--w-ink);
+  pointer-events: none;
+}
+
+.wishlist-object__art {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(28, 28, 28, 0.14));
+}
+
+.wishlist-bag {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 4%;
+  width: 68%;
+  transform: translateX(-50%);
+  /* цвет остаётся для векторной заглушки: у фотографии он ни на что
+     не влияет, но без него запасной вариант станет чёрным */
+  color: #3f382e;
+}
+
+.wishlist-bag__art {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 22px 34px rgba(28, 28, 28, 0.2));
+}
+
+
+/* ---------------- строка со счётчиком и стрелками ---------------- */
+
 .wishlist-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1.5rem;
-  margin-bottom: 1rem;
+  margin: 0 0 1.25rem;
 }
 
-.wishlist-head h2 {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.wishlist-count {
+  color: var(--w-muted);
+  font-size: 0.95rem;
+}
+
+.wishlist-count b {
   font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-size: 1.5rem;
   font-weight: 600;
-  letter-spacing: -0.025em;
   color: var(--w-ink);
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.15rem;
 }
 
-.wishlist-mark {
-  display: grid;
-  place-items: center;
-  width: clamp(46px, 5vw, 60px);
-  height: clamp(46px, 5vw, 60px);
-  border-radius: 50%;
-  background: var(--w-amber);
-  color: var(--w-ink);
-  flex: none;
+/* рисованный предмет вместо фотографии позиции: у него прозрачный фон,
+   поэтому он не растягивается на всю плашку, а стоит в ней по центру */
+.wishlist-card__object {
+  width: 68%;
+  height: auto;
 }
+
 
 .wishlist-nav {
   display: flex;
@@ -105,21 +250,26 @@
   padding: 0.5rem 0 1.5rem !important;
   margin: 0 -0.5rem !important;
   overflow: visible !important;
-
 }
 
 .wishlist-track .swiper-wrapper {
   align-items: stretch;
 }
 
+.wishlist-track .swiper-slide {
+  height: auto;
+  align-self: stretch;
+}
+
 .wishlist-card {
   height: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 1rem;
+  box-sizing: border-box;
   background: var(--w-card);
   border-radius: var(--w-r-lg);
-  padding: 1.1rem;
+  padding: 1.2rem;
   box-shadow: var(--w-lift);
   transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
 }
@@ -136,6 +286,26 @@
   background: var(--w-paper);
   display: grid;
   place-items: center;
+}
+
+.wishlist-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--w-muted);
+  font-family: var(--font-serif);
+  font-size: 0.86rem;
+  font-style: italic;
+  line-height: 1;
+  text-align: center;
+}
+
+.wishlist-choice::before,
+.wishlist-choice::after {
+  width: 100%;
+  height: 1px;
+  background: var(--w-rule);
+  content: "";
 }
 
 .wishlist-card__placeholder {
@@ -165,6 +335,18 @@
   margin-top: 0.4rem;
 }
 
+.wishlist-card__content {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.wishlist-card__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
 .wishlist-card__title b {
   font-family: var(--font-serif);
   font-size: 1.25rem;
@@ -177,7 +359,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: var(--w-amber-text);
+  color: var(--w-amber-deep);
   font-weight: 700;
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
@@ -193,7 +375,8 @@
 .wishlist-specs {
   font-size: 0.86rem;
   color: var(--w-muted);
-  margin-bottom: 0.4rem;
+  min-height: 2.4em;
+  line-height: 1.4;
 }
 
 .wishlist-btn {
@@ -205,8 +388,9 @@
   padding: 0.9rem 1.2rem;
   border: 0;
   border-radius: 999px;
-  background: var(--w-ink);
-  color: var(--w-sheet);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: #fff7e5;
+  color: var(--w-ink);
   font: inherit;
   font-size: 0.92rem;
   font-weight: 600;
@@ -216,17 +400,17 @@
 }
 
 .wishlist-btn:hover {
-  background: var(--w-amber-text);
+  border-color: var(--w-amber);
+  background: var(--w-amber);
   transform: translateY(-2px);
 }
 
 .wishlist-btn--quiet {
-  background: transparent;
-  color: var(--w-muted);
+  background: var(--w-card);
+  color: var(--w-ink);
   border: 1px solid var(--w-rule);
   font-size: 0.85rem;
   font-weight: 500;
-  margin-top: auto;
 }
 
 .wishlist-btn--quiet:hover {
@@ -254,6 +438,18 @@
   padding: 2.25rem 1.5rem;
 }
 
+/* значок карточки «Свой вариант»: она единственная без фотографии,
+   и без крупного знака выглядит как карточка, у которой не загрузилась картинка */
+.wishlist-own-icon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(28, 28, 28, 0.09);
+  color: var(--w-ink);
+}
+
 .wishlist-card--own b {
   font-family: var(--font-serif);
   font-size: 1.5rem;
@@ -277,6 +473,9 @@
 .gift-scrim {
   position: fixed;
   inset: 0;
+  inline-size: 100%;
+  max-inline-size: 100dvw;
+  box-sizing: border-box;
   z-index: 120;
   background: rgba(28, 28, 28, 0.6);
   backdrop-filter: blur(4px);
@@ -287,12 +486,15 @@
 
 /* оболочка держит позицию и вход, панель — внешний вид и перетаскивание */
 .gift-shell {
-  width: min(540px, 100%);
+  inline-size: min(540px, 100%);
+  min-inline-size: 0;
+  max-inline-size: 100%;
   display: flex;
 }
 
 .gift-shell--drawer {
-  width: 100%;
+  inline-size: 100%;
+  max-inline-size: 100%;
   align-self: end;
 }
 
@@ -312,6 +514,8 @@
   color: var(--w-ink);
   border-radius: 36px;
   width: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   max-height: min(88vh, 880px);
   display: flex;
   flex-direction: column;
@@ -322,7 +526,7 @@
 /* на мобильном — шторка снизу: возврат к списку остаётся в одном движении */
 .gift-panel--drawer {
   border-radius: 32px 32px 0 0;
-  max-height: 92vh;
+  max-height: 92dvh;
 }
 
 .gift-grabber {
@@ -376,6 +580,9 @@
   display: grid;
   gap: 1.1rem;
   align-content: start;
+  min-inline-size: 0;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .gift-lead {
@@ -410,6 +617,7 @@
   font-weight: 600;
   line-height: 1.45;
   margin-bottom: 1rem;
+  overflow-wrap: anywhere;
 }
 
 .gift-copy {
@@ -489,6 +697,10 @@
 
 .gift-form input {
   font: inherit;
+  font-size: 1rem;
+  inline-size: 100%;
+  min-inline-size: 0;
+  box-sizing: border-box;
   padding: 0.95rem 1.15rem;
   border-radius: var(--w-r-sm, 16px);
   border: 1px solid transparent;
@@ -530,6 +742,12 @@
   margin-top: 1px;
   padding: 0;
   accent-color: var(--w-amber-deep);
+}
+
+.gift-consent a {
+  color: var(--w-amber-text);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .gift-error {
@@ -604,7 +822,6 @@
 
   .wishlist-card:hover,
   .wishlist-btn:hover,
-  .wishlist-nav button:hover,
   .gift-submit:hover:not(:disabled) {
     transform: none;
   }
@@ -616,8 +833,59 @@
     place-items: end stretch;
   }
 
+  .gift-shell--drawer,
+  .gift-panel--drawer {
+    inline-size: 100%;
+    max-inline-size: 100%;
+  }
+
   .gift-head {
-    padding-top: 1rem;
+    padding: 1rem max(1rem, env(safe-area-inset-right)) 0.85rem max(1rem, env(safe-area-inset-left));
+  }
+
+  .gift-body {
+    padding: 0 max(1rem, env(safe-area-inset-right)) max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   }
 }
 
+/* ---------------- адаптив сцены ---------------- */
+
+@media (max-width: 860px) {
+  /* сцена уходит под текст: рядом с заголовком на узком экране
+     коробке остаётся полоска, в которой предметы налезают друг на друга */
+  .wishlist-stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-bottom: clamp(-2.5rem, -8vw, -1.25rem);
+  }
+
+  .wishlist-stage__copy {
+    margin-right: 0;
+  }
+
+  .wishlist-lead {
+    max-width: 52ch;
+  }
+
+  .wishlist-scene {
+    aspect-ratio: 1;
+    max-width: 390px;
+    margin-top: clamp(-7rem, -16vw, -4rem);
+  }
+
+  .wishlist-head {
+    margin-top: 1.25rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .wishlist-card__media {
+    aspect-ratio: auto;
+    min-height: clamp(21.25rem, 49svh, 32.3rem);
+  }
+
+  .wishlist-card__object {
+    width: min(72%, 22rem);
+    max-height: 76%;
+  }
+}

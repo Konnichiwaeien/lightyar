@@ -49,15 +49,9 @@ export function DogsStoriesSection({ initialPets = [] }: DogsStoriesSectionProps
       className="relative h-[250vh]"
       id="pets"
     >
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+      <div className="pet-stories__stage sticky top-0 flex flex-col justify-center overflow-hidden">
         {/* Header */}
-        <div className="px-6 md:px-12 mb-10 md:mb-16">
-          <div className="flex items-center justify-between mb-4 md:mb-8">
-            <span className="text-sm font-bold uppercase tracking-[0.2em] opacity-50">
-              <span aria-hidden="true">[ </span>Ищут дом<span aria-hidden="true"> ]</span>
-            </span>
-            <span className="text-xs opacity-30 hidden md:block uppercase tracking-widest">Скролл → панорама</span>
-          </div>
+        <div className="mb-6 px-6 md:mb-10 md:px-12">
           <h2
             className="text-[10vw] md:text-[8vw] leading-none font-bold uppercase tracking-tighter"
             onMouseEnter={textEnter}
@@ -76,7 +70,7 @@ export function DogsStoriesSection({ initialPets = [] }: DogsStoriesSectionProps
           {cards.map((dog, i) => (
             <div
               key={i}
-              className="relative w-[78vw] sm:w-[55vw] md:w-[32vw] lg:w-[28vw] h-[45vh] md:h-[55vh] shrink-0 group rounded-2xl md:rounded-3xl overflow-hidden bg-[#e4dfd5]"
+              className="pet-story-card group relative shrink-0 overflow-hidden rounded-2xl bg-[#e4dfd5] md:rounded-3xl"
               onMouseEnter={dog.isLink ? textEnter : imageEnter}
               onMouseLeave={dog.isLink ? textLeave : imageLeave}
             >
@@ -132,7 +126,7 @@ export function DogsStoriesSection({ initialPets = [] }: DogsStoriesSectionProps
         </motion.div>
 
         {/* Scroll progress */}
-        <div className="px-6 md:px-12 mt-8 md:mt-12" aria-hidden="true">
+        <div className="mt-4 px-6 md:mt-6 md:px-12" aria-hidden="true">
           <div className="w-48 h-1 bg-stone-200 rounded-full overflow-hidden">
             <motion.div
               style={{ scaleX: scrollYProgress }}

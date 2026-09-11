@@ -2,11 +2,14 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { Gift, HandHeart, Info, ChevronLeft, ChevronRight, CircleDollarSign } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Gift, HandHeart, Info, ChevronLeft, ChevronRight, CircleDollarSign, MessageCircleHeart } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
 import { GiftOrderModal } from "@/components/wishlist/gift-order-modal";
+import { GiftObjectArt, DestinationArt } from "@/components/wishlist/gift-objects";
+import { requestDonationIntent } from "@/lib/donations/donation-intent";
 import type { WishlistItem, WishlistSettings } from "@/lib/api/services/wishlist";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -14,6 +17,10 @@ import "./needs-section.css";
 
 const price = (value: number) =>
   `~${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value)} ₽`;
+
+/** Три равных сектора орбиты: верх, низ справа и низ слева. */
+const ORBIT_ANGLES = [-90, 30, 150];
+const ORBIT_DURATION = 24;
 
 export function NeedsSection({
   items = [],
@@ -26,6 +33,10 @@ export function NeedsSection({
   const [active, setActive] = useState<WishlistItem | null>(null);
   // стрелки гаснут на краях: кнопка, которая ничего не делает, врёт о своей роли
   const [edges, setEdges] = useState({ start: true, end: false });
+  const reduced = useReducedMotion();
+  // Framer Motion can report `null` during SSR hydration. That means the
+  // preference is unknown, not that motion should be permanently disabled.
+  const orbitMotionEnabled = reduced !== true;
 
   const syncEdges = (instance: SwiperClass) =>
     setEdges({ start: instance.isBeginning, end: instance.isEnd });
@@ -33,16 +44,64 @@ export function NeedsSection({
   // если CMS недоступна, секция молча исчезает: пустой вишлист хуже отсутствующего
   if (items.length === 0) return null;
 
+  const decor = items.slice(0, ORBIT_ANGLES.length);
+
   return (
     <section className="wishlist" id="needs">
       <div className="wishlist-inner">
+        <div className="wishlist-stage">
+          <div className="wishlist-stage__copy">
+            <p className="wishlist-kicker">Что нужно подопечным</p>
+            <h2>
+              <span>Соберём</span>
+              <em>посылку</em>
+            </h2>
+            <p className="wishlist-lead">
+              Выберите нужную вещь на {settings.marketplaceName} и закажите её в наш пункт выдачи.
+              Мы заберём посылку и покажем в отчёте, кому она помогла.
+            </p>
+          </div>
+
+          <div className="wishlist-scene" aria-hidden="true">
+            <div className="wishlist-disc" />
+
+            <div className="wishlist-orbit">
+              {decor.map((item, index) => {
+                const angle = ORBIT_ANGLES[index];
+                const orbitTransition = { duration: ORBIT_DURATION, repeat: Infinity, ease: "linear" as const };
+
+                return (
+                  <motion.div
+                    key={item.documentId}
+                    className="wishlist-orbit__slot"
+                    initial={false}
+                    style={{ rotate: angle }}
+                    animate={orbitMotionEnabled ? { rotate: [angle, angle + 360] } : undefined}
+                    transition={orbitTransition}
+                  >
+                    <div className="wishlist-object-anchor">
+                      <motion.div
+                        className="wishlist-object"
+                        initial={false}
+                        style={{ rotate: -angle }}
+                        animate={orbitMotionEnabled ? { rotate: [-angle, -angle - 360] } : undefined}
+                        transition={orbitTransition}
+                      >
+                        <GiftObjectArt title={item.title} className="wishlist-object__art" />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="wishlist-bag">
+              <DestinationArt className="wishlist-bag__art" />
+            </div>
+          </div>
+        </div>
+
         <div className="wishlist-head">
-          <h2>
-            <span className="wishlist-mark" aria-hidden="true">
-              <Gift size={26} />
-            </span>
-            Вишлист
-          </h2>
           <div className="wishlist-nav">
             <button
               type="button"
@@ -63,11 +122,6 @@ export function NeedsSection({
           </div>
         </div>
 
-        <p className="wishlist-lead">
-          Это то, что нужно приюту прямо сейчас. Вы заказываете покупку на маркетплейсе с доставкой в наш пункт
-          выдачи — мы забираем и показываем в отчёте.
-        </p>
-
         <Swiper
           modules={[Navigation, A11y]}
           onSwiper={(instance) => {
@@ -79,8 +133,8 @@ export function NeedsSection({
           spaceBetween={24}
           slidesPerView={1.15}
           breakpoints={{
-            560: { slidesPerView: 2.1 },
-            900: { slidesPerView: 3.1 },
+            560: { slidesPerView: 1.5 },
+            1100: { slidesPerView: 3.1 },
             1200: { slidesPerView: 4 },
           }}
           a11y={{ prevSlideMessage: "Предыдущие позиции", nextSlideMessage: "Следующие позиции" }}
@@ -98,41 +152,53 @@ export function NeedsSection({
                     style={{ objectFit: "cover" }}
                   />
                 ) : (
-                  <span className="wishlist-card__placeholder" aria-hidden="true">
-                    <Gift size={40} />
-                  </span>
+                  <GiftObjectArt title={item.title} className="wishlist-card__object" />
                 )}
                 {item.urgent ? <span className="wishlist-urgent">Срочно</span> : null}
               </div>
 
-              <div className="wishlist-card__title">
-                <b>{item.title}</b>
-                {item.approxPrice !== undefined ? (
-                  <span className="wishlist-price">
-                    {price(item.approxPrice)}
-                    {item.note ? (
-                      <span className="wishlist-info" title={item.note}>
-                        <Info size={14} aria-hidden="true" />
-                        <span className="sr-only">{item.note}</span>
-                      </span>
-                    ) : null}
-                  </span>
+              <div className="wishlist-card__content">
+                <div className="wishlist-card__title">
+                  <b>{item.title}</b>
+                  {item.approxPrice !== undefined ? (
+                    <span className="wishlist-price">
+                      {price(item.approxPrice)}
+                      {item.note ? (
+                        <span className="wishlist-info" title={item.note}>
+                          <Info size={14} aria-hidden="true" />
+                          <span className="sr-only">{item.note}</span>
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : null}
+                </div>
+
+                {item.brand || item.specs ? (
+                  <p className="wishlist-specs">{[item.brand, item.specs].filter(Boolean).join(", ")}</p>
                 ) : null}
               </div>
 
-              {item.brand || item.specs ? (
-                <p className="wishlist-specs">{[item.brand, item.specs].filter(Boolean).join(", ")}</p>
-              ) : null}
+              <div className="wishlist-card__actions">
+                <button type="button" className="wishlist-btn" onClick={() => setActive(item)}>
+                  <Gift size={16} aria-hidden="true" />
+                  Подарить
+                </button>
 
-              <button type="button" className="wishlist-btn" onClick={() => setActive(item)}>
-                <Gift size={16} aria-hidden="true" />
-                Подарить
-              </button>
-
-              <a className="wishlist-btn wishlist-btn--quiet" href="#donate">
-                <CircleDollarSign size={15} aria-hidden="true" />
-                Или оплатить пожертвованием
-              </a>
+                <span className="wishlist-choice" aria-hidden="true">или</span>
+                <button
+                  type="button"
+                  className="wishlist-btn wishlist-btn--quiet"
+                  onClick={() => requestDonationIntent({
+                    kind: "gift",
+                    id: item.documentId,
+                    title: item.title,
+                    amount: item.approxPrice ?? 500,
+                  })}
+                >
+                  <CircleDollarSign size={15} aria-hidden="true" />
+                  <span>Оплатить пожертвованием</span>
+                </button>
+              </div>
             </SwiperSlide>
           ))}
 
@@ -141,13 +207,14 @@ export function NeedsSection({
               <HandHeart size={44} />
             </span>
             <b>Свой вариант</b>
-            <p>Хотите передать вещи лично? Мы будем рады любой помощи!</p>
+            <p>Хотите привезти корм, амуницию или другие нужные вещи сами? Напишите нам, договоримся.</p>
             <a
               className="wishlist-btn wishlist-btn--light"
               href={settings.contactUrl || "#footer"}
               target={settings.contactUrl ? "_blank" : undefined}
               rel={settings.contactUrl ? "noopener noreferrer" : undefined}
             >
+              <MessageCircleHeart size={18} strokeWidth={1.8} aria-hidden="true" />
               Связаться
             </a>
           </SwiperSlide>

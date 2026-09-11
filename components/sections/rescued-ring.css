@@ -1,0 +1,723 @@
+/*
+ * Кольцо портретов.
+ *
+ * Контур один на все портреты — они едут по нему, разнесённые равномерно.
+ * Кривая нарисована от руки и намеренно не круг: правильная окружность
+ * читается как карусель, а неровная — как живое движение.
+ *
+ * Главная тонкость: offset-path принимает координаты в пикселях и сам
+ * не тянется. Поэтому холст с кольцом имеет фиксированный размер, а под
+ * ширину экрана его подгоняет один transform от контейнерных единиц.
+ * Масштаб и анимация живут на разных узлах — иначе они затирают друг друга.
+ */
+
+.ring {
+  --ring-paper: #f4f1eb;
+  --ring-ink: var(--color-foreground, #1c1c1c);
+  --ring-muted: #6c655b;
+  --ring-amber: var(--color-amber, #f59e0b);
+  /* Второй маркер — тёплая глина, а не зелень: холодный салатовый выпадал
+     из палитры фонда, где кроме янтаря нет ни одного цветного пятна. */
+  --ring-clay: #f0d7c6;
+
+  /* размер портрета внутри холста; холст масштабируется целиком */
+  --ring-portrait: 196px;
+  --ring-w: 920;
+  --ring-h: 736;
+  /* Центр не прямоугольника, а фактической нарисованной траектории. */
+  --ring-center-x: 452.17;
+  --ring-center-y: 316.06;
+
+  position: relative;
+  background: #fff;
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 240, 0.7) 46%, rgba(246, 239, 229, 0.88));
+  /* По границам секции остаётся шов в пиксель цвета чернил: секция поднята
+     в свой слой композитора, и край слоя не совпадает с фоном родителя.
+     Тень в цвет фона перекрывает шов сверху и снизу. */
+  box-shadow: 0 -1px 0 0 #fff, 0 1px 0 0 #fff;
+  /* Ритм по вертикали: сверху и снизу одинаково, и заметно больше, чем
+     было — секции нужны поля, иначе кольцо упирается в соседей. */
+  padding: 0 clamp(1.25rem, 5vw, 4rem);
+  /* Три полных высоты прокрутки после закрепления дают каждой фазе
+     собственную дистанцию: россыпь, круг, затем круг + колонка. */
+  min-height: 360vh;
+  overflow: clip;
+}
+
+/* Белая база остаётся, но секция снова живёт: два тёплых световых поля
+   медленно расходятся под орбитой. Двигаются только transform/opacity —
+   сама анимация не вмешивается в геометрию и не трогает движение собак. */
+.ring::before,
+.ring::after {
+  position: absolute;
+  z-index: 0;
+  width: min(76vw, 66rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ring::before {
+  top: 4%;
+  left: -18%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.1) 36%, transparent 70%);
+  filter: blur(1.5rem);
+  animation: ring-ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.ring::after {
+  top: 52%;
+  right: -20%;
+  background: radial-gradient(circle, rgba(240, 215, 198, 0.42) 0%, rgba(245, 158, 11, 0.08) 42%, transparent 72%);
+  filter: blur(2.25rem);
+  animation: ring-ambient-pulse 22s ease-in-out infinite alternate;
+}
+
+@keyframes ring-ambient-drift {
+  from { transform: translate3d(-3%, -2%, 0) scale(0.92); opacity: 0.62; }
+  to { transform: translate3d(26%, 8%, 0) scale(1.12); opacity: 0.88; }
+}
+
+@keyframes ring-ambient-pulse {
+  from { transform: translate3d(4%, -5%, 0) scale(1.06); opacity: 0.5; }
+  to { transform: translate3d(-24%, 10%, 0) scale(0.9); opacity: 0.8; }
+}
+
+.ring-ambient {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.ring-ambient__canvas {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ring-ambient__wash,
+.ring-ambient__threads {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ring-ambient__wash {
+  width: min(72vw, 58rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(clamp(2.5rem, 7vw, 6rem));
+}
+
+.ring-ambient__wash--amber {
+  top: -28%;
+  left: -18%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.48), rgba(255, 190, 70, 0.16) 48%, transparent 72%);
+}
+
+.ring-ambient__wash--clay {
+  right: -20%;
+  bottom: -34%;
+  background: radial-gradient(circle, rgba(224, 179, 148, 0.5), rgba(240, 215, 198, 0.2) 50%, transparent 72%);
+}
+
+.ring-ambient__threads {
+  inset: -32%;
+  opacity: 0.34;
+  background:
+    conic-gradient(from 110deg at 48% 48%, transparent 0 18%, rgba(245, 158, 11, 0.14) 22%, transparent 28% 54%, rgba(196, 145, 104, 0.12) 59%, transparent 65% 100%);
+  filter: blur(1.5rem);
+  transform-origin: center;
+}
+
+/* Липкая сцена: держится в кадре, пока секция проезжает мимо. */
+.ring-sticky {
+  z-index: 1;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.ring-stage {
+  position: relative;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  aspect-ratio: 920 / 736;
+  max-height: 94vh;
+}
+
+/* Отдельный холст нужен не для декора, а для геометрии: на desktop он
+   занимает sticky-сцену, а на узком экране получает собственную высоту и
+   освобождает обычный поток для длинного текста ниже. */
+.ring-visual {
+  container-type: inline-size;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* Холст масштабируется по ширине и центрируется по вертикали внутри сцены.
+   На низком desktop aspect-ratio обрезается max-height, поэтому привязка к
+   top:0 раньше уводила орбиту ниже текста примерно на 50px. */
+.ring-fit {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(var(--ring-w) * 1px);
+  height: calc(var(--ring-h) * 1px);
+  /* делим длину на длину — получается число, которого и ждёт scale().
+     Без множителя 1px тут выходит длина, объявление отбрасывается целиком
+     и холст остаётся неподогнанным */
+  translate: 0 -50%;
+  scale: calc(100cqw / (var(--ring-w) * 1px));
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+/* Отдельный fit-слой повторяет геометрию .ring-fit: так текст и портреты
+   используют одну систему координат даже при max-height у sticky-сцены. */
+.ring-center-fit {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 0;
+  width: calc(var(--ring-w) * 1px);
+  height: calc(var(--ring-h) * 1px);
+  translate: 0 -50%;
+  scale: calc(100cqw / (var(--ring-w) * 1px));
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+/* слой готовой орбиты: после сборки он уезжает влево, но не исчезает */
+.ring-orbit {
+  position: absolute;
+  inset: 0;
+  transform-origin:
+    calc(var(--ring-center-x) * 1px)
+    calc(var(--ring-center-y) * 1px);
+}
+
+.ring-glow {
+  position: absolute;
+  left: calc(var(--ring-center-x) * 1px);
+  top: calc(var(--ring-center-y) * 1px);
+  width: 62%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.26), rgba(245, 158, 11, 0.06) 58%, transparent 72%);
+}
+
+.ring-portrait {
+  position: absolute;
+  top: 0;
+  left: 0;
+  aspect-ratio: 1;
+  offset-path: path("M 460 40 C 704 48, 872 184, 860 336 C 848 500, 672 600, 448 592 C 224 584, 52 488, 44 332 C 36 168, 216 32, 460 40 Z");
+  offset-rotate: 0deg;
+  offset-anchor: 50% 50%;
+  transform-origin: center;
+  will-change: offset-distance, transform;
+}
+
+.ring-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Тени нет намеренно. Мягкий край шерсти + размытая тень давали позади
+     животного серое облако — оно и читалось как «размытие сзади».
+     Срез по груди снизу гасим коротким затуханием, без тени он не мутит. */
+  mask-image: linear-gradient(to bottom, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 92%, transparent 100%);
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  /* в ch мерить нельзя: единица считается от шрифта блока, а строка ниже
+     набрана вчетверо крупнее — «79 жизней» уезжало на две строки */
+  /* Ширина ровно как у холста кольца. Это не косметика: при отъезде оба
+     сдвигаются на −46%, а процент считается от собственной ширины —
+     при разной ширине они разъезжались, и текст уходил из центра круга. */
+  transform-origin:
+    calc(var(--ring-center-x) * 1px)
+    calc(var(--ring-center-y) * 1px);
+  will-change: transform;
+}
+
+.ring-center__copy {
+  position: absolute;
+  left: calc(var(--ring-center-x) * 1px);
+  top: calc(var(--ring-center-y) * 1px);
+  transform: translate(-50%, -50%);
+  width: min(54%, 32rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* разрядка светлым над тяжёлой строкой — та же игра, что на референсе */
+.ring-kicker {
+  font-size: clamp(0.6rem, 1.3vw, 0.72rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--ring-muted);
+  margin-bottom: 0.6rem;
+}
+
+/* Обе строки одного кегля: разный размер делал блок ступенчатым и рваным.
+   Разница теперь только в насыщенности и в цвете маркера. */
+.ring-line {
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 3.8vw, 2.65rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  /* маркер закрашивает всю строчную коробку, а не только буквы: при
+     плотном интерлиньяже соседние плашки налезали друг на друга */
+  line-height: 1.24;
+  letter-spacing: 0.005em;
+  color: var(--ring-ink);
+}
+
+.ring-line--second {
+  font-weight: 500;
+}
+
+.ring-mark {
+  display: inline-grid;
+  inline-size: 1.32em;
+  block-size: 1.18em;
+  place-items: center;
+  text-align: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0 -0.04em;
+  background: var(--ring-amber);
+  color: #1c1c1c;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 0.04em;
+}
+
+/* У Playfair цифровая тушь оптически ниже середины её line-box. Отдельный
+   слой корректирует именно глиф, а не двигает квадрат относительно строки. */
+.ring-mark__value {
+  display: block;
+  line-height: 0.82;
+  transform: translateY(-0.07em);
+}
+
+.ring-mark--clay {
+  background: var(--ring-clay);
+}
+
+.ring-foot {
+  margin-top: 1.1rem;
+  font-size: clamp(0.86rem, 1.8vw, 0.98rem);
+  line-height: 1.55;
+  color: var(--ring-muted);
+}
+
+@media (max-width: 1180px) {
+  .ring {
+    --ring-portrait: 132px;
+    --ring-w: 560;
+    --ring-h: 560;
+    --ring-center-x: 280;
+    --ring-center-y: 280;
+  }
+
+  .ring-stage {
+    width: min(560px, 100%);
+    aspect-ratio: 1;
+  }
+
+  /* на узком экране кольцо проходит близко к центру: без ограничения
+     строка «70 собак и 9 кошек» ложится прямо на морды */
+  .ring-center__copy {
+    width: min(23rem, 72%);
+    max-width: none;
+  }
+
+  .ring-kicker {
+    font-size: clamp(0.72rem, 2.2vw, 0.92rem);
+  }
+
+  .ring-line {
+    font-size: clamp(1.85rem, 6vw, 3rem);
+  }
+
+  .ring-foot {
+    margin-top: 1rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  }
+
+  /* На телефоне это компактное кольцо в пределах одного экрана, а не
+     вертикальная россыпь длиной в две секции. Центры отступают от краёв
+     на радиус портрета, поэтому ни одна вырезка не обрезается. */
+  .ring-portrait {
+    offset-path: path("M 280 46 C 412 46, 514 148, 514 280 C 514 412, 412 514, 280 514 C 148 514, 46 412, 46 280 C 46 148, 148 46, 280 46 Z");
+  }
+
+}
+
+@media (max-width: 560px) {
+  .ring {
+    --ring-portrait: 82px;
+  }
+
+  .ring-center__copy {
+    width: 58%;
+    gap: 0.25rem;
+  }
+
+  .ring-kicker {
+    margin-bottom: 0.3rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+  }
+
+  .ring-line {
+    font-size: clamp(1.35rem, 7vw, 1.75rem);
+    line-height: 1.18;
+  }
+
+  .ring-foot {
+    margin-top: 0.65rem;
+    font-size: 0.8rem;
+    line-height: 1.42;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring::before,
+  .ring::after {
+    animation: none;
+  }
+
+  .ring-portrait {
+    will-change: auto;
+  }
+
+  .ring-ambient__wash,
+  .ring-ambient__threads {
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
+
+/* ---------------- декор по краям ---------------- */
+
+.ring-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ring-decor__label {
+  position: absolute;
+  top: clamp(1.5rem, 4vh, 2.75rem);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ring-muted);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.ring-decor__label--tl { left: clamp(1.25rem, 5vw, 4rem); }
+.ring-decor__label--tr { right: clamp(1.25rem, 5vw, 4rem); }
+
+/* На узком экране декора нет: подписи и дуги там только съедают поля,
+   в которых и так тесно. */
+@media (max-width: 1180px) {
+  .ring-decor { display: none; }
+}
+
+.ring-compare {
+  margin-top: 1.4rem;
+  display: flex;
+  justify-content: center;
+}
+
+
+/* ---------------- колонка, которая выходит после кольца ---------------- */
+
+.ring-aside {
+  position: absolute;
+  right: 0;
+  /* по верху: колонка длиннее круга, и центрирование уводило её вниз */
+  top: 4%;
+  width: min(50ch, 42%);
+  max-height: 92%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  text-align: left;
+  z-index: 3;
+}
+
+.ring-aside__kicker {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ring-muted);
+}
+
+.ring-aside__lead {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 2.7vw, 2.55rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--ring-ink);
+}
+
+.ring-aside__lead-accent {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.ring-aside__lead-accent::after {
+  position: absolute;
+  z-index: -1;
+  right: -0.06em;
+  bottom: 0.04em;
+  left: -0.06em;
+  height: 0.18em;
+  border-radius: 50%;
+  background: var(--ring-amber);
+  content: "";
+  transform: rotate(-1.2deg);
+}
+
+.ring-aside__note {
+  font-size: clamp(1rem, 1.15vw, 1.08rem);
+  line-height: 1.45;
+  color: var(--ring-muted);
+}
+
+/* Кнопка-строка со стрелкой: чёрная пилюля спорила с плашками цифр,
+   которые в этой секции и есть акцент. */
+.ring-aside__cta {
+  align-self: start;
+  margin-top: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--ring-amber);
+  color: var(--ring-ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: gap 0.3s, border-color 0.3s;
+}
+
+.ring-aside__cta::after {
+  content: "→";
+  transition: transform 0.3s;
+}
+
+.ring-aside__cta:hover {
+  gap: 0.9rem;
+  border-color: var(--ring-ink);
+}
+
+.ring-aside__cta:hover::after {
+  transform: translateX(3px);
+}
+
+/* Выделение внутри колонки — тот же мазок, что в «О нас». */
+.ring-aside mark {
+  background: var(--ring-amber);
+  position: relative;
+  color: #1c1c1c;
+  padding-inline: 0.2em;
+  border-radius: 0.75em 0.3em 0.65em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ring-aside mark.soft {
+  background: var(--ring-clay);
+  border-radius: 0.3em 0.75em 0.35em 0.65em;
+}
+
+/* колонка прокручивается своим содержимым: текста стало больше, чем
+   помещается в закреплённый экран */
+.ring-aside {
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-right: 0.5rem;
+}
+
+.ring-aside::-webkit-scrollbar { display: none; }
+
+@media (max-width: 1180px) {
+  /* На узком экране кольцу некуда отступать: колонка встаёт под ним
+     обычным потоком, а не сбоку. */
+  .ring {
+    min-height: 0;
+  }
+
+  .ring-sticky {
+    position: static;
+    height: auto;
+    padding: clamp(3rem, 8vh, 5rem) 0;
+  }
+
+  .ring-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Портреты выходят за квадрат орбиты на половину своей ширины.
+       Запас учитывает этот реальный габарит, поэтому нижние собаки больше
+       не наезжают на заголовок следующей колонки на 900–1180 px. */
+    gap: clamp(4.5rem, 10vw, 7rem);
+    width: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .ring-visual {
+    position: relative;
+    inset: auto;
+    width: min(560px, 100%);
+    aspect-ratio: 1;
+    flex: none;
+  }
+
+  .ring-center,
+  .ring-orbit {
+    transform: none !important;
+  }
+
+  .ring-aside {
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    transform: none !important;
+    opacity: 1 !important;
+    margin-top: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .ring-aside__lead {
+    font-size: clamp(1.9rem, 9vw, 2.75rem);
+  }
+
+  .ring-aside__note {
+    max-width: 36rem;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .ring-aside__cta {
+    align-self: center;
+  }
+
+}
+
+/* ---------------- предметы, слетающиеся к колонке ---------------- */
+
+/* Полный рост колонки — предметы закрепляются у её краёв сверху донизу,
+   как редакционная декорация, а не складываются отдельной кучей внизу. */
+.ring-gather {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  width: min(50ch, 42%);
+  height: 100%;
+  pointer-events: none;
+}
+
+.ring-gather__item {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 12px 20px rgba(28, 28, 28, 0.14));
+}
+
+@media (max-width: 1180px) {
+  .ring-gather { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 1181px) {
+  .ring {
+    min-height: 0;
+  }
+
+  .ring-sticky {
+    position: static;
+    height: auto;
+    padding: clamp(4rem, 8vh, 6rem) 0;
+  }
+
+  .ring-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4rem;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .ring-visual {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 920 / 736;
+  }
+
+  .ring-center,
+  .ring-orbit,
+  .ring-aside {
+    transform: none !important;
+  }
+
+  .ring-aside {
+    position: static;
+    width: min(56ch, 100%);
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    opacity: 1 !important;
+    text-align: center;
+    align-items: center;
+  }
+
+  .ring-aside__cta {
+    align-self: center;
+  }
+
+  .ring-gather {
+    display: none;
+  }
+}

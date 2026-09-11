@@ -56,10 +56,10 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-8">
           <div className="max-w-2xl">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-serif text-[#1c1c1c] leading-[1.05] tracking-tight mb-6 text-wrap: balance">
-              Новости <span className="italic text-amber-500">приюта</span>
+              Новости <span className="italic text-amber-500">«Светлого»</span>
             </h2>
             <p className="text-[#1c1c1c]/60 text-lg md:text-xl font-light">
-              Что у нас происходит: пристройства, сборы, отчёты и истории подопечных.
+              Кто нашёл дом, кому сейчас нужна помощь и как живут наши подопечные.
             </p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
             </span>
             <h3 className="text-3xl font-serif text-[#1c1c1c] mb-4">Не удалось загрузить новости</h3>
             <p className="text-[#1c1c1c]/50 font-light leading-relaxed mb-8 max-w-md">
-              В данный момент сервис обновлений недоступен. Пожалуйста, попробуйте перезагрузить страницу позже или следите за нами в соцсетях.
+              Новости пока не загрузились. Попробуйте обновить страницу или загляните к нам во ВКонтакте.
             </p>
             <button
               onClick={() => window.location.reload()}

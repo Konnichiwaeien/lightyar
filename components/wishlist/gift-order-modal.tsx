@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
 import { Copy, Check, ArrowUpRight, X, Loader2, PawPrint } from "lucide-react";
 import type { WishlistItem, WishlistSettings } from "@/lib/api/services/wishlist";
 
@@ -35,7 +37,12 @@ export function GiftOrderModal({
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDrawer, setIsDrawer] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const reduced = useReducedMotion();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // режим пересчитывается и по событию, и при каждом открытии: полагаться только
   // на change нельзя — в фоновой вкладке событие может не долететь
@@ -115,7 +122,7 @@ export function GiftOrderModal({
       ? { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" } }
       : { initial: { opacity: 0, y: 24, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 16, scale: 0.98 } };
 
-  return (
+  const modal = (
     <AnimatePresence>
       {open && item ? (
         <motion.div
@@ -160,7 +167,7 @@ export function GiftOrderModal({
               </button>
             </header>
 
-            <div className="gift-body">
+            <div className="gift-body" data-lenis-prevent>
               {stage === "sent" ? (
                 <div className="gift-done">
                   <span className="gift-done__mark" aria-hidden="true">
@@ -213,30 +220,31 @@ export function GiftOrderModal({
                   </p>
 
                   <form onSubmit={submit} className="gift-form">
-                    <label>
+                    <label htmlFor="gift-donor-name">
                       <span className="gift-label">
                         Имя дарителя <i aria-hidden="true">*</i>
                       </span>
-                      <input name="donorName" required placeholder="Как к вам обращаться" autoComplete="name" />
+                      <input id="gift-donor-name" name="donorName" required placeholder="Как к вам обращаться" autoComplete="name" />
                     </label>
 
-                    <label>
+                    <label htmlFor="gift-phone">
                       <span className="gift-label">
                         Телефон <i aria-hidden="true">*</i>
                       </span>
-                      <input name="phone" required placeholder="+7 (999) 999-99-99" inputMode="tel" autoComplete="tel" />
+                      <input id="gift-phone" name="phone" required placeholder="+7 (999) 999-99-99" inputMode="tel" autoComplete="tel" />
                     </label>
 
-                    <label>
+                    <label htmlFor="gift-email">
                       <span className="gift-label">E-mail</span>
-                      <input name="email" type="email" placeholder="Чтобы прислать благодарность" autoComplete="email" />
+                      <input id="gift-email" name="email" type="email" placeholder="Чтобы прислать благодарность" autoComplete="email" />
                     </label>
 
-                    <label className="gift-file">
+                    <label className="gift-file" htmlFor="gift-barcode">
                       <span className="gift-label">
                         Штрих-код заказа <i aria-hidden="true">*</i>
                       </span>
                       <input
+                        id="gift-barcode"
                         name="barcode"
                         type="file"
                         required
@@ -256,9 +264,14 @@ export function GiftOrderModal({
                 style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
               />
 
-              <label className="gift-consent">
-                      <input type="checkbox" name="consent" required />
-                      <span>Соглашаюсь на обработку персональных данных</span>
+              <label className="gift-consent" htmlFor="gift-consent">
+                      <input id="gift-consent" type="checkbox" name="consent" required />
+                      <span>
+                        Соглашаюсь на обработку персональных данных согласно{" "}
+                        <Link href="/privacy" onClick={(event) => event.stopPropagation()}>
+                          политике конфиденциальности
+                        </Link>
+                      </span>
                     </label>
 
                     <AnimatePresence>
@@ -290,4 +303,6 @@ export function GiftOrderModal({
       ) : null}
     </AnimatePresence>
   );
+
+  return isMounted ? createPortal(modal, document.body) : null;
 }

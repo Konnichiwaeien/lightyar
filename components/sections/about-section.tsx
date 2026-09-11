@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useInView, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import { useCursor } from "@/components/ui/cursor-context";
 import Image from "next/image";
-import { Dog, Cat, HeartHandshake } from "lucide-react";
 
 interface Particle {
   size: number;
@@ -18,7 +18,7 @@ interface Particle {
   zIndex: number;
 }
 
-// Light particle dust motes — beautiful cinematic style with depth of field
+// Мягкие световые пузырьки с тремя планами глубины.
 function LightParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
 
@@ -28,28 +28,24 @@ function LightParticles() {
 
     const timer = setTimeout(() => {
       setParticles(
-        Array.from({ length: 18 }, (_, i) => {
-          // Create depth of field effect: 3 layers
-          const layer = i % 3; // 0: background (blurry), 1: midground (sharp), 2: foreground (very blurry)
+        Array.from({ length: 30 }, (_, i) => {
+          const layer = i % 3;
           
           let size, blur, opacity, zIndex;
           if (layer === 0) {
-            // Background (blurry, small)
-            size = 2 + Math.random() * 3;
-            blur = 2 + Math.random() * 2;
-            opacity = 0.4 + Math.random() * 0.4; // Slightly increased for visibility
+            size = 5 + Math.random() * 5;
+            blur = 2 + Math.random() * 3;
+            opacity = 0.42 + Math.random() * 0.24;
             zIndex = 0;
           } else if (layer === 1) {
-            // Midground (sharp, tiny)
-            size = 1 + Math.random() * 1.5;
-            blur = 0.5 + Math.random() * 1;
-            opacity = 0.6 + Math.random() * 0.4;
+            size = 3 + Math.random() * 3;
+            blur = 0.5 + Math.random() * 1.2;
+            opacity = 0.58 + Math.random() * 0.24;
             zIndex = 10;
           } else {
-            // Foreground (very blurry, large)
-            size = 4 + Math.random() * 6;
-            blur = 3 + Math.random() * 4;
-            opacity = 0.2 + Math.random() * 0.3;
+            size = 10 + Math.random() * 9;
+            blur = 4 + Math.random() * 5;
+            opacity = 0.22 + Math.random() * 0.2;
             zIndex = 20;
           }
 
@@ -57,11 +53,11 @@ function LightParticles() {
             size,
             left: Math.random() * 100,
             top: Math.random() * 100,
-            duration: 15 + Math.random() * 20, // Much slower, organic drift
-            delay: -(Math.random() * 20), // Negative delay so they are already moving on mount
+            duration: 15 + Math.random() * 20,
+            delay: -(Math.random() * 20),
             opacity,
             driftX: -20 + Math.random() * 40,
-            driftY: -30 + Math.random() * -40, // Mostly drift upwards
+            driftY: -30 + Math.random() * -40,
             blur: blur,
             zIndex: zIndex
           };
@@ -84,9 +80,9 @@ function LightParticles() {
           15% {
             opacity: var(--base-opacity);
           }
-          50% { 
+          50% {
             transform: translate(calc(var(--drift-x) * 0.5), calc(var(--drift-y) * 0.5)); 
-            opacity: calc(var(--base-opacity) * 1.5);
+            opacity: var(--base-opacity);
           }
           85% {
             opacity: var(--base-opacity);
@@ -98,7 +94,7 @@ function LightParticles() {
         }
       `}</style>
       <div 
-        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+        className="about-light-field absolute inset-0 z-0 h-full w-full pointer-events-none"
         style={{
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
           WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)"
@@ -107,16 +103,15 @@ function LightParticles() {
         {particles.map((p, i) => (
           <div
             key={i}
-            className="absolute rounded-full pointer-events-none mix-blend-normal"
+            className="about-light-particle absolute rounded-full pointer-events-none"
             style={{
               width: p.size,
               height: p.size,
               left: `${p.left}%`,
               top: `${p.top}%`,
-              background: "#ffffff",
-              boxShadow: `0 0 ${p.size * 3}px ${p.size}px rgba(255, 200, 100, 0.8)`,
+              boxShadow: `0 0 ${p.size * 2.6}px ${p.size * 0.7}px rgba(245, 158, 11, 0.48)`,
               filter: `blur(${p.blur}px)`,
-              opacity: 0, // Starts at 0, animation handles opacity
+              opacity: 0,
               zIndex: p.zIndex,
               animation: `cinematicFloat ${p.duration}s ${p.delay}s ease-in-out infinite`,
               willChange: "transform, opacity",
@@ -132,38 +127,89 @@ function LightParticles() {
   );
 }
 
-/** Показатели фонда для витрины на главной. Значения согласуются с CMS вручную. */
-const STATS = [
-  { icon: Dog, value: 60, plus: true, label: "Собак на кураторстве", accent: false },
-  { icon: Cat, value: 25, plus: false, label: "Кошек в безопасности", accent: false },
-  { icon: HeartHandshake, value: 100, plus: true, label: "Спасённых жизней", accent: true },
-] as const;
+/**
+ * Показатели считаются из карточек животных, а не пишутся руками.
+ * Раньше здесь стояли 60/25/100, и секция спорила с кольцом ниже,
+ * которое берёт те же величины из CMS.
+ *
+ * Каждому показателю — вырезанный портрет подопечного. Готовый значок
+ * ничего не значит; настоящая собака рядом с числом значит ровно то,
+ * о чём число.
+ */
+/** Число добегает до значения один раз, когда показатель попал в кадр. */
+function CountUp({ to }: { to: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const reduced = useReducedMotion();
+  const seen = useInView(ref, { once: true, amount: 0.6 });
+  const value = useMotionValue(0);
+  const spring = useSpring(value, { stiffness: 55, damping: 20 });
+  const [shown, setShown] = useState(0);
 
-export function AboutSection({ imageUrl }: { imageUrl?: string }) {
-  const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
+  useEffect(() => {
+    if (seen) value.set(to);
+  }, [seen, to, value]);
+
+  useEffect(() => spring.on("change", (v) => setShown(Math.round(v))), [spring]);
+
   return (
-    <section className="relative py-20 md:py-28 px-6 md:px-12 w-full overflow-hidden" id="about">
+    <span ref={ref} className="tabular-nums">
+      {reduced || !seen ? to : shown}
+    </span>
+  );
+}
+
+interface Stat {
+  value: number;
+  unit: string;
+  note: string;
+  photo: string;
+  mark: string;
+}
+
+export function AboutSection({
+  imageUrl,
+  total,
+  dogs,
+  adopted,
+}: {
+  imageUrl?: string;
+  total: number;
+  dogs: number;
+  cats: number;
+  adopted: number;
+}) {
+  const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
+
+  const stats: Stat[] = [
+    { value: total, unit: "под опекой", note: "сейчас", photo: "dzhek", mark: "bg-[#efe3cb]" },
+    { value: dogs, unit: "собак", note: "на кураторстве", photo: "mira", mark: "bg-[#f0d7c6]" },
+    { value: adopted, unit: "уже дома", note: "нашли семью", photo: "kapral", mark: "bg-[#F5A623]" },
+  ];
+  return (
+    <section className="about-section relative w-full overflow-hidden px-6 pt-20 pb-20 md:px-12 md:pt-28 md:pb-28" id="about">
       <LightParticles />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
-        
-        {/* Label (Semantic Span inside outline) */}
-        <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] mb-10 text-[#F5A623] inline-block">
-          <span aria-hidden="true">[ </span>О нас<span aria-hidden="true"> ]</span>
-        </span>
-
         {/* Massive Centered Editorial Title (Logical Section Heading) */}
         <h2
           className="text-4xl md:text-6xl lg:text-7xl font-serif leading-[1.05] text-center tracking-tight mb-12 max-w-5xl text-stone-800 text-wrap: balance md:text-pretty"
           onMouseEnter={textEnter}
           onMouseLeave={textLeave}
         >
-          Небольшая команда, большое <span className="italic font-light text-[#F5A623]">дело</span>
+          {/* С планшета — две строки: первая чернилами, вторая светлым тоном.
+              Одной строкой заголовок читался как сплошная плита. */}
+          <span className="block">Небольшая команда,</span>
+          <span className="block text-stone-800/55">
+            <span className="text-[#F5A623]">большое</span>{" "}
+            <span className="italic text-stone-800/85">дело</span>
+          </span>
         </h2>
 
         {/* Subtitle / Description */}
-        <p className="text-lg md:text-2xl font-light opacity-60 text-center max-w-4xl leading-relaxed mb-12 md:mb-16">
-          Мы — волонтёры из Ярославля с многолетним стажем. В октябре 2024 объединились в фонд, чтобы помогать системно. Сейчас на попечении 85 хвостиков — и каждому мы ищем свою семью.
+        <p className="max-w-4xl text-center text-lg font-light leading-relaxed text-stone-700/85 mb-12 md:mb-16 md:text-2xl">
+          АНБО «Светлый» появилась в Ярославле в октябре 2024 года, но наша команда помогает
+          животным уже много лет. Даём им временный дом и уход, учим снова доверять людям
+          и ищем ответственных хозяев.
         </p>
 
         {/* Cinematic Integrated Block */}
@@ -175,47 +221,54 @@ export function AboutSection({ imageUrl }: { imageUrl?: string }) {
             Раньше на узком экране каждая растягивалась во всю ширину вокруг
             одинокой цифры по центру и выглядела пустой.
           */}
-          <ul className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 px-4 md:px-12 mb-8 md:-mb-12 relative z-20">
-            {STATS.map(({ icon: Icon, value, plus, label, accent }) => (
-              <li
-                key={label}
-                className="flex items-center gap-4 rounded-3xl bg-[#FDFBF7]/70 p-4 backdrop-blur-md md:flex-col md:justify-center md:gap-1 md:bg-transparent md:p-4 md:text-center md:backdrop-blur-none"
-              >
-                <span
-                  className={`grid size-12 shrink-0 place-items-center rounded-2xl md:size-14 md:rounded-full ${accent ? "bg-[#F5A623] text-stone-900" : "bg-stone-900/5 text-stone-700"}`}
-                  aria-hidden="true"
-                >
-                  <Icon className="size-6 md:size-7" strokeWidth={1.75} />
+          <ul className="about-stats relative z-20 mb-10 w-full px-2 md:mb-14 md:px-4 lg:px-8 xl:px-12">
+            {stats.map(({ value, unit, note, photo, mark }) => (
+              <li key={unit} className="about-stat flex min-w-0 items-center">
+                {/* мягкий круг позади вырезки — приём из отчётов Wikimedia:
+                    он держит силуэт на фоне, не превращая его в карточку */}
+                <span className="about-stat__portrait relative grid place-items-end justify-center overflow-visible">
+                  {/* пятно неровное: идеальный круг под живым силуэтом
+                      читается как значок из набора */}
+                  <span
+                    className="about-stat__halo absolute inset-0 rounded-[47%_53%_44%_56%_/_52%_45%_55%_48%]"
+                    aria-hidden="true"
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/pets/cutout-${photo}.webp`}
+                    alt=""
+                    className="relative h-[108%] w-[104%] max-w-none object-contain object-bottom"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </span>
-                <span className="flex min-w-0 flex-col md:items-center">
-                  <span
-                    className={`font-serif text-4xl leading-none tabular-nums md:text-6xl lg:text-[5.5rem] ${accent ? "text-[#F5A623]" : "text-stone-800"}`}
-                  >
-                    {value}
-                    {plus ? <span className={accent ? "font-light text-stone-800" : "font-light text-[#F5A623]"}>+</span> : null}
+                <span className="about-stat__copy flex min-w-0 flex-col">
+                  <span className="about-stat__value font-serif leading-none text-stone-800">
+                    <CountUp to={value} />
                   </span>
-                  <span
-                    className={`mt-1 text-[11px] font-bold uppercase tracking-[0.16em] md:mt-2 md:text-xs md:tracking-[0.2em] ${accent ? "text-[#F5A623]" : "opacity-50"}`}
-                  >
-                    {label}
+                  {/* подпись в две строки: единица под маркером сверху,
+                      уточнение отдельной строкой — одной строкой оно
+                      растягивало карточку и ломало сетку на планшете */}
+                  <span className="mt-2 flex flex-col items-start gap-1 text-xs leading-snug md:text-sm lg:text-base">
+                    <mark className={`${mark} rounded-sm px-1.5 py-0.5 text-stone-900`}>{unit}</mark>
+                    <span className="opacity-55">{note}</span>
                   </span>
                 </span>
               </li>
             ))}
           </ul>
-
           {/* Panoramic Image Container */}
           <div 
-            className="w-full aspect-video md:aspect-21/9 rounded-4xl md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-stone-200/50 to-[#F5A623]/20 relative shadow-2xl shadow-[#F5A623]/10 z-10 cursor-none"
+            className="about-panorama relative z-10 w-full overflow-hidden rounded-4xl bg-gradient-to-br from-stone-200/50 to-[#F5A623]/20 shadow-2xl shadow-[#F5A623]/10 cursor-none md:rounded-[3rem]"
             onMouseEnter={imageEnter}
             onMouseLeave={imageLeave}
           >
             <Image
-              src={imageUrl || "/photo-placeholder.jpg"}
+              src={imageUrl || "/about/panorama.jpg"}
               alt="Собаки в приюте Светлый на прогулке"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-              className="object-cover transition-transform duration-[1.5s] motion-safe:hover:scale-105"
+              className="about-panorama__image object-cover transition-transform duration-[1.5s] motion-safe:hover:scale-105"
             />
             {/* Subtle overlay for text legibility and aesthetic premium feel */}
             <div className="absolute inset-0 bg-gradient-to-t from-stone-900/15 via-transparent to-transparent pointer-events-none" />

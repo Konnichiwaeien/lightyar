@@ -4,6 +4,7 @@ import { Heart, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCursor } from "@/components/ui/cursor-context";
+import { requestDonationIntent } from "@/lib/donations/donation-intent";
 
 interface CampaignItem {
   id: string;
@@ -108,13 +109,19 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
 
                     {/* Buttons Row */}
                     <div className="flex gap-3">
-                      <Link
-                        href={`/campaigns/${fund.id}`}
+                      <button
+                        type="button"
+                        onClick={() => requestDonationIntent({
+                          kind: "campaign",
+                          id: fund.id,
+                          title: fund.title,
+                          amount: 500,
+                        })}
                         className="flex-1 bg-amber-500 text-black py-4 md:py-6 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest text-xs md:text-sm hover:bg-amber-400 transition-all pointer-events-auto cursor-none flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transform hover:-translate-y-1 focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"
                       >
                         <Heart size={20} className="fill-black/30 text-black/50" aria-hidden="true" />
                         Помочь
-                      </Link>
+                      </button>
                       <Link
                         href={`/campaigns/${fund.id}`}
                         className="bg-white/10 text-white py-4 md:py-6 px-6 md:px-8 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest text-xs md:text-sm hover:bg-white/20 transition-all pointer-events-auto cursor-none flex items-center justify-center gap-2 border border-white/10 hover:border-white/30 transform hover:-translate-y-1 focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"

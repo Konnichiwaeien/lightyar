@@ -1,37 +1,89 @@
 "use client";
 
-import { Mail } from "lucide-react";
+import Image from "next/image";
+import { ArrowUpRight, Camera, Footprints, HouseHeart, Mail } from "lucide-react";
+import { motion } from "framer-motion";
 import { useCursor } from "@/components/ui/cursor-context";
+import "./volunteer-section.css";
 
-export function VolunteerSection() {
+const VOLUNTEER_ROLES = [
+  {
+    icon: Footprints,
+    title: "Выгул",
+    description: "Погулять и пообщаться с собаками недалеко от Ярославля",
+  },
+  {
+    icon: Camera,
+    title: "Фото и посты",
+    description: "Снять питомца и помочь рассказать о нём",
+  },
+  {
+    icon: HouseHeart,
+    title: "Передержка",
+    description: "Дать животному временный дом и спокойный быт",
+  },
+] as const;
+
+export function VolunteerSection({ imageUrl }: { imageUrl?: string }) {
   const { imageEnter, imageLeave } = useCursor();
-  return (
-    <section
-      className="relative py-20 md:py-28 px-6 md:px-12 flex items-center justify-center text-center overflow-hidden"
-      id="volunteer"
-      onMouseEnter={imageEnter}
-      onMouseLeave={imageLeave}
-    >
-      {/* Background — gradient only, no placeholder text */}
-      <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-linear-to-br from-[#262420] via-[#3d362b] to-[#262420]" />
-        <div className="absolute inset-0 bg-linear-to-b from-[#1c1c1c]/50 via-transparent to-[#1c1c1c]/50" />
-      </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto">
-        <h2 className="text-4xl md:text-7xl font-bold uppercase tracking-tighter mb-6 text-white text-wrap: balance">
-          Приходите<br />
-          <span className="font-serif italic text-amber-500">помогать</span>
-        </h2>
-        <p className="text-lg md:text-xl text-white/50 mb-10 font-light max-w-lg mx-auto">
-          Выгул собак, фотосъёмка для соцсетей, помощь на передержке — любые руки нужны.
-        </p>
-        <a
-          href="mailto:help@svetly.ru?subject=Хочу стать волонтером"
-          className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-amber-500 transition-colors pointer-events-auto cursor-none"
+  return (
+    <section className="volunteer-section" id="volunteer">
+      <div className="volunteer-editorial">
+        <header className="volunteer-copy">
+          <h2>
+            Приходите <em>помогать</em>
+          </h2>
+          <p>
+            Можно приехать погулять с собаками, помочь с фото и постами или взять животное
+            на передержку. Выберите то, что подходит именно вам.
+          </p>
+        </header>
+
+        <figure
+          className="volunteer-scene"
+          onMouseEnter={imageEnter}
+          onMouseLeave={imageLeave}
         >
-          <Mail size={16} aria-hidden="true" /> Отправить заявку
-        </a>
+          <Image
+            src={imageUrl || "/about/panorama.jpg"}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-[50%_50%] md:object-[50%_48%]"
+          />
+        </figure>
+
+        <aside className="volunteer-action-panel" aria-label="Как можно помочь">
+          <ol>
+            {VOLUNTEER_ROLES.map((role, index) => {
+              const RoleIcon = role.icon;
+              return (
+                <motion.li
+                  className="volunteer-role"
+                  key={role.title}
+                  initial={false}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ duration: 0.48, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="volunteer-role__number" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="volunteer-role__icon" aria-hidden="true"><RoleIcon size={30} strokeWidth={1.65} /></span>
+                  <div className="volunteer-role__copy">
+                    <strong>{role.title}</strong>
+                    <p>{role.description}</p>
+                  </div>
+                </motion.li>
+              );
+            })}
+          </ol>
+          <a href="mailto:help@svetly.ru?subject=Хочу стать волонтером">
+            <span><Mail size={17} aria-hidden="true" /> Отправить заявку</span>
+            <ArrowUpRight size={20} aria-hidden="true" />
+          </a>
+        </aside>
       </div>
     </section>
   );
