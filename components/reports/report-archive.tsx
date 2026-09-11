@@ -59,7 +59,7 @@ export function ReportArchive({
                       </h3>
                       <p className="reports-year-desc">
                         {year >= currentYear
-                          ? "Год ещё идёт. Отчёт появится, когда мы закроем год и сверим документы."
+                          ? "Он ещё идёт. Отчёт появится, когда закроем год и сверим документы."
                           : "Собираем данные. Сверим документы, сдадим отчёт в Минюст, тогда и покажем."}
                       </p>
                       <span className="reports-year-cta reports-year-cta--soon">Появится позже</span>

@@ -11,7 +11,7 @@ export default function ReportsError({ reset }: { error: Error & { digest?: stri
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-amber-400">Архив на паузе</p>
         <h1 className="max-w-3xl font-serif text-5xl leading-[0.98] md:text-7xl">Отчётность временно недоступна</h1>
         <p className="mt-7 max-w-xl text-base leading-relaxed text-white/58 md:text-lg">
-          Мы не скрываем пустой экран за выдуманными цифрами. Попробуйте загрузить опубликованные данные ещё раз.
+          Выдумывать цифры вместо настоящих мы не станем. Попробуйте загрузить отчёты ещё раз.
         </p>
         <button
           type="button"

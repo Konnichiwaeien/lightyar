@@ -52,7 +52,7 @@ export function ShelterScales({ pets }: { pets: CensusPet[] }) {
         {/* Сроки ожидания фактами: линейка-поводок растягивалась на всю ширину
             и читалась как украшение, а не как шкала. */}
         <figure className="reports-leash">
-          <figcaption>Сколько идёт дорога домой</figcaption>
+          <figcaption>Сколько длится дорога домой</figcaption>
           <ul className="reports-facts">
             {wait.medianDays !== undefined ? (
               <li className="reports-fact--icon" style={{ "--i": 0 } as React.CSSProperties}>

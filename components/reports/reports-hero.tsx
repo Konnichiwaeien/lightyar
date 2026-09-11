@@ -28,13 +28,18 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  * Оформительские портреты, а не выдача из базы. Кадры отобраны по маске:
  * силуэт нигде не касается рамки снимка, поэтому лапы целые, а не срезаны
  * краем кадра. Имена настоящие, это подопечные приюта.
+ *
+ * Вырезка держится только на ровном светлом фоне, поэтому все снимки зимние:
+ * по летней траве заливка от края останавливается и тащит землю с собакой.
  */
 const PETS = [
   { src: "/reports/pets/taya.webp", name: "Тая" },
   { src: "/reports/pets/dzhin.webp", name: "Джин" },
+  { src: "/reports/pets/ilyusha.webp", name: "Илюша" },
   { src: "/reports/pets/kapral.webp", name: "Капрал" },
-  { src: "/reports/pets/alma.webp", name: "Альма" },
-  { src: "/reports/pets/dzhoy.webp", name: "Джой" },
+  { src: "/reports/pets/matilda.webp", name: "Матильда" },
+  { src: "/reports/pets/barni.webp", name: "Барни" },
+  { src: "/reports/pets/dzhena.webp", name: "Джена" },
 ] as const;
 
 const HOLD_MS = 6200;

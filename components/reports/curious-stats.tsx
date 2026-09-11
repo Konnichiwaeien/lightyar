@@ -63,7 +63,7 @@ export function CuriousStats({ pets }: { pets: CensusPet[] }) {
     icon: "hourglass",
     value: <CountUp value={c.waitingYears} />,
     unit: plural(c.waitingYears, "год", "года", "лет"),
-    label: "суммарно ждут дом все, кто сейчас в приюте",
+    label: "столько в сумме ждут дом те, кто сейчас в приюте",
   });
   if (c.averageWaitDays !== undefined) {
     tiles.push({
@@ -72,7 +72,7 @@ export function CuriousStats({ pets }: { pets: CensusPet[] }) {
       icon: "clock",
       value: <CountUp value={c.averageWaitDays} />,
       unit: plural(c.averageWaitDays, "день", "дня", "дней"),
-      label: "в среднем живёт в приюте тот, кто ещё ждёт",
+      label: "в среднем прожил в приюте тот, кто дом ещё ищет",
     });
   }
   if (c.heaviest) {
@@ -107,7 +107,7 @@ export function CuriousStats({ pets }: { pets: CensusPet[] }) {
       tone: "moss",
       icon: "calendar-grid",
       value: <CountUp value={c.busiestDay.count} />,
-      label: `поступлений пришлось на ${c.busiestDay.label}, больше любого другого дня`,
+      label: `поступлений выпало на ${c.busiestDay.label}: больше, чем в любой другой день`,
     });
   }
   tiles.push({
@@ -126,8 +126,7 @@ export function CuriousStats({ pets }: { pets: CensusPet[] }) {
           Цифры, которых <span className="reports-mark">нет в отчётах</span>
         </h2>
         <p className="reports-curious-lead">
-          В форму для Минюста это не попадает, а о приюте рассказывает больше любой сводки. Всё посчитано по карточкам
-          подопечных.
+          В отчётную форму такое не впишешь, а про приют это говорит не меньше сводок. Считали по карточкам подопечных.
         </p>
 
         <ul className="reports-curio-grid">

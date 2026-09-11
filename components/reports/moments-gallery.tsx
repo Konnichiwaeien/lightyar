@@ -36,7 +36,7 @@ export async function MomentsGallery({ news }: { news: StrapiNews[] }) {
         <h2 id="moments-title">
           Жизнь между <span className="reports-mark">отчётами</span>
         </h2>
-        <p className="reports-moments-lead">Случайные кадры из новостей приюта. Нажмите на любой, и откроется заметка целиком.</p>
+        <p className="reports-moments-lead">Случайные кадры из новостей приюта. Нажмите на любой, откроется заметка.</p>
 
         <ul className="reports-moments-grid">
           {shots.map((shot, index) => (
