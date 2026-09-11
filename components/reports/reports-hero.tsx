@@ -25,21 +25,18 @@ import { useMotionPreference } from "./use-motion-preference";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
- * Оформительские портреты, а не выдача из базы. Кадры отобраны по маске:
- * силуэт нигде не касается рамки снимка, поэтому лапы целые, а не срезаны
- * краем кадра. Имена настоящие, это подопечные приюта.
+ * Оформительские портреты, а не выдача из базы. Имена настоящие, это
+ * подопечные приюта.
  *
- * Вырезка держится только на ровном светлом фоне, поэтому все снимки зимние:
- * по летней траве заливка от края останавливается и тащит землю с собакой.
+ * Каждая вырезка проходит стандарт из docs/pet-cutout-standard.md: срез,
+ * посторонние куски, вуаль, рост, резкость, плита фона, осанка, симметрия.
+ * Альма и Джой отсюда ушли: у первой срезан хвост, у второго лапа.
+ * Приёмку сторожит hero-cutouts.test.mjs, поэтому список короткий, но чистый.
  */
 const PETS = [
-  { src: "/reports/pets/taya.webp", name: "Тая" },
   { src: "/reports/pets/dzhin.webp", name: "Джин" },
-  { src: "/reports/pets/ilyusha.webp", name: "Илюша" },
   { src: "/reports/pets/kapral.webp", name: "Капрал" },
-  { src: "/reports/pets/matilda.webp", name: "Матильда" },
-  { src: "/reports/pets/barni.webp", name: "Барни" },
-  { src: "/reports/pets/dzhena.webp", name: "Джена" },
+  { src: "/reports/pets/taya.webp", name: "Тая" },
 ] as const;
 
 const HOLD_MS = 6200;
