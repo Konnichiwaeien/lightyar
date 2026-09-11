@@ -1,10 +1,63 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { memo, useId, useMemo, useState } from "react";
 import type { CensusPet } from "@/lib/api/services/pet-stats";
 
 type Lens = "all" | "shelter" | "home" | "year";
+
+/**
+ * Сетка кружков. Вынесена в memo и ничего не знает о выбранном разрезе:
+ * подсветку делает CSS по data-атрибутам обёртки, поэтому переключение
+ * вкладки меняет один атрибут вместо перерисовки восьми десятков элементов.
+ */
+const CensusField = memo(function CensusField({
+  pets,
+  failed,
+  onFail,
+}: {
+  pets: CensusPet[];
+  failed: readonly string[];
+  onFail: (documentId: string) => void;
+}) {
+  return (
+    <ul className="reports-field">
+      {pets.map((pet, index) => {
+        // первые тридцать кружков грузим сразу, остальные по мере прокрутки:
+        // восемь десятков одновременных запросов забивают очередь браузера
+        const eager = index < 30;
+        const broken = failed.includes(pet.documentId);
+        return (
+          <li key={pet.documentId}>
+            <a
+              className="reports-face"
+              data-status={pet.status}
+              data-year={pet.intakeYear ?? ""}
+              href={`/pets/${pet.documentId}`}
+              title={`${pet.name}${pet.intakeYear ? ` · под опекой с ${pet.intakeYear}` : ""}`}
+            >
+              {pet.photo && !broken ? (
+                <Image
+                  src={pet.photo}
+                  alt={pet.name}
+                  width={160}
+                  height={160}
+                  loading={eager ? "eager" : "lazy"}
+                  onError={() => onFail(pet.documentId)}
+                />
+              ) : (
+                <span className="reports-face-initial" aria-hidden="true">
+                  {pet.name.slice(0, 1)}
+                </span>
+              )}
+              <span className="sr-only">{pet.name}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+});
 
 /**
  * Поле подопечных: диаграмма, собранная из настоящих морд.
@@ -15,9 +68,14 @@ type Lens = "all" | "shelter" | "home" | "year";
 export function PetCensus({ pets }: { pets: CensusPet[] }) {
   const [lens, setLens] = useState<Lens>("all");
   const [year, setYear] = useState<number | undefined>(undefined);
+ /** Фото, которых нет на диске: показываем букву имени вместо битой картинки. */
+ const [failed, setFailed] = useState<readonly string[]>([]);
+  const styleId = useId().replace(/[^a-zA-Z0-9]/g, "");
 
   const years = useMemo(
-    () => [...new Set(pets.map((pet) => pet.intakeYear).filter((value): value is number => Boolean(value)))].sort(),
+    () => [...new Set(pets.map((pet) => pet.intakeYear).filter((value): value is number => Boolean(value)))]
+      // без компаратора сравнение идёт как у строк, и любой год не из четырёх цифр встанет не туда
+      .toSorted((left, right) => left - right),
     [pets],
   );
 
@@ -30,87 +88,60 @@ export function PetCensus({ pets }: { pets: CensusPet[] }) {
     [pets],
   );
 
-  const isHighlighted = (pet: CensusPet) => {
-    if (lens === "all") return true;
-    if (lens === "shelter") return pet.status === "shelter";
-    if (lens === "home") return pet.status === "home";
-    return pet.intakeYear === year;
-  };
+  /* Разрез по году сравнивает два атрибута, а такого селектора в CSS нет:
+     на каждый известный год пишем собственное правило. */
+  const yearRules = useMemo(
+    () => years
+      .map((value) => `[data-census="${styleId}"][data-lens="year"][data-year="${value}"] .reports-face:not([data-year="${value}"]){opacity:.24;filter:grayscale(1)}`)
+      .join(""),
+    [years, styleId],
+  );
 
-  const select = (next: Lens, nextYear?: number) => {
-    setLens(next);
-    setYear(nextYear);
-  };
+  const markFailed = useMemo(
+    () => (documentId: string) => setFailed((current) => (current.includes(documentId) ? current : [...current, documentId])),
+    [],
+  );
 
   if (pets.length === 0) return null;
 
+  const options: { key: string; label: string; lens: Lens; year?: number }[] = [
+    { key: "all", label: `Все ${counts.all}`, lens: "all" },
+    { key: "shelter", label: `Ищут дом · ${counts.shelter}`, lens: "shelter" },
+    { key: "home", label: `Нашли дом · ${counts.home}`, lens: "home" },
+    ...years.map((value) => ({ key: String(value), label: String(value), lens: "year" as Lens, year: value })),
+  ];
+
   return (
     <>
-      <div className="reports-tabs" role="group" aria-label="Разрез переписи">
-        <button type="button" aria-pressed={lens === "all"} onClick={() => select("all")}>
-          Все {counts.all}
-        </button>
-        <button type="button" aria-pressed={lens === "shelter"} onClick={() => select("shelter")}>
-          Ищут дом · {counts.shelter}
-        </button>
-        <button type="button" aria-pressed={lens === "home"} onClick={() => select("home")}>
-          Нашли дом · {counts.home}
-        </button>
-        {years.map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={lens === "year" && year === value}
-            onClick={() => select("year", value)}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
+      <style>{yearRules}</style>
 
-      <ul className="reports-field">
-        {pets.map((pet, index) => {
-          const highlighted = isHighlighted(pet);
-          // первые тридцать кружков грузим сразу, остальные по мере прокрутки:
-          // восемь десятков одновременных запросов забивают очередь браузера
-          const eager = index < 30;
+      {/* Выбор взаимоисключающий, поэтому это переключатель, а не набор
+          независимых кнопок: скринридер объявит «такой-то из шести». */}
+      <div className="reports-tabs" role="radiogroup" aria-label="Разрез переписи">
+        {options.map((option) => {
+          const checked = option.lens === lens && option.year === year;
           return (
-            <li key={pet.documentId}>
-              <a
-                className={[
-                  "reports-face",
-                  highlighted ? "" : "reports-face--dimmed",
-                  pet.status === "home" ? "reports-face--marked" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                href={`/pets/${pet.documentId}`}
-                title={`${pet.name}${pet.intakeYear ? ` · под опекой с ${pet.intakeYear}` : ""}`}
-              >
-                {pet.photo ? (
-                  <Image
-                    src={pet.photo}
-                    alt={pet.name}
-                    fill
-                    sizes="80px"
-                    loading={eager ? "eager" : "lazy"}
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : (
-                  <span className="reports-face-initial" aria-hidden="true">
-                    {pet.name.slice(0, 1)}
-                  </span>
-                )}
-                <span className="sr-only">{pet.name}</span>
-              </a>
-            </li>
+            <button
+              key={option.key}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              tabIndex={checked ? 0 : -1}
+              onClick={() => { setLens(option.lens); setYear(option.year); }}
+            >
+              {option.label}
+            </button>
           );
         })}
-      </ul>
+      </div>
+
+      <div data-census={styleId} data-lens={lens} data-year={year ?? ""}>
+        <CensusField pets={pets} failed={failed} onFail={markFailed} />
+      </div>
 
       <p className="reports-census-note">
-        Янтарным кольцом отмечены те, кто уже дома. Клик по любому кружку открывает страницу питомца.
-      </p>
+ Янтарное кольцо значит «уже дома». Нажмите на любой кружок, и откроется страница питомца.
+ </p>
     </>
   );
 }

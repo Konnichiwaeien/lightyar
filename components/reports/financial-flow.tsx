@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { useMotionPreference } from "./use-motion-preference";
+import { useRef, type ReactNode } from "react";
 import type { FinancialSummary } from "@/lib/reports/normalize-report";
 
 const money = (value: number) =>
@@ -25,11 +26,11 @@ export function FinancialFlow({
   note,
 }: {
   financialSummary: FinancialSummary;
-  heading: string;
+  heading: ReactNode;
   note?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference();
   const inView = useInView(ref, { once: true, amount: 0.25 });
   const shown = reduced || inView;
 

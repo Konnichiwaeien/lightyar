@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useMotionPreference } from "./use-motion-preference";
 import { useRef, type ReactNode } from "react";
 
 /**
@@ -21,7 +22,7 @@ export function ReportReveal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref, { once: true, amount: 0.12 });
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference();
   const shown = reduced || visible;
 
   return (

@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 /**
- * Переход к соседним годам. Отсутствующий сосед не превращается в мёртвую ссылку —
- * он честно объясняет, почему его нет.
+ * Переход к соседним годам. Отсутствующий сосед не превращается в мёртвую
+ * ссылку: он объясняет словами, почему его нет.
  */
 export function ReportNeighbors({
   olderYear,
@@ -15,18 +16,21 @@ export function ReportNeighbors({
 }) {
   return (
     <nav className="reports-neighbors" aria-label="Другие годы">
-      <div className="reports-neighbor-grid">
+      <div className="reports-wrap reports-neighbor-grid">
         {olderYear ? (
           <Link className="reports-neighbor" href={`/reports/${olderYear}`}>
             <span>Предыдущий год</span>
             <b className="reports-num">{olderYear}</b>
-            <p>Отчёт за {olderYear} год</p>
+            <p>
+              Открыть отчёт
+              <ArrowUpRight className="reports-pic" aria-hidden="true" />
+            </p>
           </Link>
         ) : (
           <div className="reports-neighbor reports-neighbor--empty">
             <span>Предыдущий год</span>
-            <b>—</b>
-            <p>{firstYear ? `${firstYear} — первый год работы фонда` : "Более ранних отчётов нет"}</p>
+            <b>первый</b>
+            <p>{firstYear ? `${firstYear} год стал первым в работе фонда` : "Более ранних отчётов нет"}</p>
           </div>
         )}
 
@@ -34,13 +38,16 @@ export function ReportNeighbors({
           <Link className="reports-neighbor reports-neighbor--right" href={`/reports/${newerYear}`}>
             <span>Следующий год</span>
             <b className="reports-num">{newerYear}</b>
-            <p>Отчёт за {newerYear} год</p>
+            <p>
+              Открыть отчёт
+              <ArrowUpRight className="reports-pic" aria-hidden="true" />
+            </p>
           </Link>
         ) : (
           <div className="reports-neighbor reports-neighbor--right reports-neighbor--empty">
             <span>Следующий год</span>
-            <b>—</b>
-            <p>Отчёт готовится после закрытия финансового года</p>
+            <b>скоро</b>
+            <p>Отчёт появится после того, как мы закроем финансовый год</p>
           </div>
         )}
       </div>

@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { PawPrint, Home, HeartPulse, Dog, Cat, Users } from "lucide-react";
 import type { PetStats } from "@/lib/reports/pet-stats";
 import type { CensusPet } from "@/lib/api/services/pet-stats";
 
@@ -17,7 +16,7 @@ export function IntakeTreemap({ stats, pets }: { stats: PetStats; pets: CensusPe
   const columns = years.map((slice) => `${slice.intake}fr`).join(" ");
 
   const photoForYear = (year: number) =>
-    pets.find((pet) => pet.intakeYear === year && pet.photo)?.photo;
+    pets.find((pet) => pet.intakeYear === year && pet.cover)?.cover;
 
   return (
     <div className="reports-treemap-host">
@@ -42,13 +41,8 @@ export function IntakeTreemap({ stats, pets }: { stats: PetStats; pets: CensusPe
                   />
                 ) : null}
                 <span className="reports-tile-body">
-                  <PawPrint className="reports-pic" aria-hidden="true" />
                   <b className="reports-num">{slice.intake}</b>
-                  <span>
-                    поступили
-                    <br />
-                    за {slice.year} год
-                  </span>
+                  <span>поступили за {slice.year} год</span>
                 </span>
               </a>
             </li>
@@ -56,34 +50,6 @@ export function IntakeTreemap({ stats, pets }: { stats: PetStats; pets: CensusPe
         })}
       </ol>
 
-      <p className="reports-chips">
-        <span>
-          <PawPrint className="reports-pic" aria-hidden="true" />
-          Площадь плитки равна числу поступивших за год
-        </span>
-        <span>
-          <Home className="reports-pic" aria-hidden="true" />
-          <b className="reports-num">{stats.adopted}</b> нашли дом
-        </span>
-        <span>
-          <Dog className="reports-pic" aria-hidden="true" />
-          <b className="reports-num">{stats.dogs}</b> собак
-        </span>
-        <span>
-          <Cat className="reports-pic" aria-hidden="true" />
-          <b className="reports-num">{stats.cats}</b> кошек
-        </span>
-        {stats.inTreatment > 0 ? (
-          <span>
-            <HeartPulse className="reports-pic" aria-hidden="true" />
-            <b className="reports-num">{stats.inTreatment}</b> на лечении
-          </span>
-        ) : null}
-        <span>
-          <Users className="reports-pic" aria-hidden="true" />
-          <b>1</b> человек в штате, остальное держат волонтёры
-        </span>
-      </p>
     </div>
   );
 }

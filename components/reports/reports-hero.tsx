@@ -1,52 +1,123 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { ArrowDown } from "lucide-react";
+import { useMotionPreference } from "./use-motion-preference";
 
 /**
- * Первый экран раздела. Фотография ведёт, текст сидит в нижней трети,
- * оба действия ведут внутрь страницы — заглушек здесь нет.
+ * Первый экран раздела.
+ *
+ * Вместо одной маски с видео здесь сменяют друг друга настоящие подопечные:
+ * фотографии из Strapi с вырезанным фоном, все вписаны в один бокс и прижаты
+ * к низу, поэтому при смене собака не прыгает по размеру. Смена медленная,
+ * через растворение: страница про отчётность, а не карусель.
+ *
+ * Форма под ними не круг, а пятно, которое медленно перетекает из одного
+ * очертания в другое. Морф идёт на border-radius: контур не перерисовывается
+ * на каждом кадре, работает композитор.
+ *
+ * Заголовок набран тем же Playfair, что и заголовки секций: гротеск Black
+ * капителью давал чёрный кирпич и спорил с остальной страницей.
  */
-export function ReportsHero({
-  imageUrl,
-  latestYear,
-}: {
-  imageUrl?: string;
-  latestYear?: number;
-}) {
+
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+/**
+ * Оформительские портреты, а не выдача из базы. Кадры отобраны по маске:
+ * силуэт нигде не касается рамки снимка, поэтому лапы целые, а не срезаны
+ * краем кадра. Имена настоящие, это подопечные приюта.
+ */
+const PETS = [
+  { src: "/reports/pets/taya.webp", name: "Тая" },
+  { src: "/reports/pets/dzhin.webp", name: "Джин" },
+  { src: "/reports/pets/kapral.webp", name: "Капрал" },
+  { src: "/reports/pets/alma.webp", name: "Альма" },
+  { src: "/reports/pets/dzhoy.webp", name: "Джой" },
+] as const;
+
+const HOLD_MS = 6200;
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
+};
+
+const rise = {
+  hidden: { opacity: 0, y: 28, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: EASE } },
+};
+
+export function ReportsHero() {
+  const [active, setActive] = useState(0);
+  const reduced = useMotionPreference();
+  const goToOverview = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = document.getElementById("itogi");
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    window.history.replaceState(null, "", "#itogi");
+  };
+
+  // Кадры сменяются только при живом движении: при просьбе его убрать
+  // остаётся первый портрет, а морф формы гасится в CSS.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => setActive((index) => (index + 1) % PETS.length), HOLD_MS);
+    return () => window.clearInterval(id);
+  }, []);
+
   return (
     <section className="reports-hero">
-      <div className="reports-hero-inner">
-        {imageUrl ? (
-          <div className="reports-hero-media">
-            <Image
-              src={imageUrl}
-              alt="Волонтёр выводит собак на утреннюю прогулку"
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: "cover" }}
-            />
-          </div>
-        ) : null}
-        <div className="reports-hero-body">
-          <div className="reports-wrap">
-            <h1>
-              Что мы сделали <em>на ваши деньги</em>
-            </h1>
-            <div className="reports-hero-meta">
-              <p>Каждый рубль, каждое животное и каждый документ с октября 2024 года.</p>
-              <div className="reports-pill-row">
-                {latestYear ? (
-                  <a className="reports-pill" href={`/reports/${latestYear}`}>
-                    Открыть отчёт за {latestYear}
-                  </a>
-                ) : null}
-                <a className="reports-pill reports-pill--ghost" href="#itogi">
-                  Итоги за всё время
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="reports-wrap reports-hero-layout">
+        <motion.div className="reports-hero-copy" variants={stagger} initial={reduced ? "visible" : "hidden"} animate="visible">
+          <motion.h1 variants={rise}>
+            <span>
+              <span className="reports-mark">Считайте</span> вместе с нами
+            </span>
+            <em>отчёты, документы, имена</em>
+          </motion.h1>
+          {/* Кнопка внизу колонки: заголовок и она держат экран за два угла,
+              а между ними остаётся воздух. Плавно ведёт ко второй секции;
+              при «меньше движения» прыжок без анимации. */}
+          <motion.a className="reports-hero-cta" href="#itogi" variants={rise} onClick={goToOverview}>
+            К отчётам
+            <span className="reports-hero-cta-ico" aria-hidden="true">
+              <ArrowDown className="reports-pic" />
+            </span>
+          </motion.a>
+        </motion.div>
       </div>
+
+      <div className="reports-hero-stage">
+        <motion.div
+          className="reports-hero-blob"
+          aria-hidden="true"
+          initial={reduced ? false : { opacity: 0, scale: 0.78 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.3, ease: EASE }}
+        />
+
+        <div className="reports-hero-pets">
+          {PETS.map((pet, index) => (
+            <Image
+              key={pet.src}
+              className="reports-hero-pet"
+              data-active={index === active}
+              src={pet.src}
+              alt={`${pet.name} из приюта «Светлый»`}
+              width={900}
+              height={1150}
+              priority={index === 0}
+              sizes="(max-width: 900px) 78vw, 42vw"
+            />
+          ))}
+        </div>
+
+      </div>
+
+      <div className="reports-hero-grain" aria-hidden="true" />
     </section>
   );
 }

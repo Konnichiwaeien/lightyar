@@ -7,13 +7,15 @@
 .reports-experience {
   /* поверхности наследуем из общей темы: раньше здесь лежали почти те же
      значения своими литералами, и палитра расходилась при любой правке */
+  /* Единый вертикальный шаг: между разделами и между сценами внутри раздела. */
+  --section-gap: clamp(3rem, 8vh, 5.5rem);
   --paper: var(--color-paper, #e8e4dc);
   --sheet: #f4f1eb;
   --card: #ffffff;
   --ink: var(--color-foreground, #1c1c1c);
   --muted: #6c655b;
   /* янтарь для текста на светлом: брендовый #f59e0b даёт 2.15 на белом и как надпись нечитаем */
-  --amber-text: #a85406;
+  --amber-text: #9a4c05;
   --rule: #d8d1c4;
   --amber: var(--color-amber, #f59e0b);
   --clay: #b0603a;
@@ -39,6 +41,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 40%;
 }
 
 .reports-experience h1,
@@ -78,53 +81,290 @@
 
 /* ---------------- герой ---------------- */
 
-.reports-hero {
-  height: 92vh;
-  min-height: 600px;
-  padding: 12px 12px 0;
-}
+/* ---------------- герой: подопечные и перетекающее пятно ---------------- */
 
-.reports-hero-inner {
+/* Шапка остаётся в потоке, герой уходит под неё и начинается от верха
+   страницы; кнопке меню нужен слой выше героя. */
+.reports-experience > header {
   position: relative;
-  height: 100%;
-  border-radius: var(--r-xl);
+  z-index: 30;
+}
+
+.reports-hero {
+  --header-h: 6rem;
+  --hero-h: max(38rem, min(100svh, 60rem));
+  /* Бокс портрета: высота от героя, ширина по пропорции ассета 900 × 1150,
+     поэтому собаки не растягиваются и не прыгают при смене кадра. */
+  /* Один вертикальный отступ на всё: от шапки до заголовка, от кнопки
+     и от сцены до низа. Раньше сверху было 14px, снизу 41px. */
+  --gap-y: clamp(2rem, 5vh, 3.5rem);
+  --fig-top: clamp(1rem, 3vh, 2.5rem);
+  --fig-bottom: var(--gap-y);
+  --fig-right: max(1.5rem, 3vw);
+  --fig-h: calc(var(--hero-h) - var(--fig-top) - var(--fig-bottom));
+  /* Потолок по ширине окна: на средних экранах фигура, посчитанная
+     от высоты, съедала колонку текста и рвала заголовок на слоги. */
+  --fig-w: min(calc(var(--fig-h) * 0.783), 48vw);
+  --edge: calc((100vw - min(100vw, 1280px)) / 2 + clamp(1.25rem, 4vw, 4rem));
+  position: relative;
+  isolation: isolate;
+  margin-top: calc(var(--header-h) * -1);
+  min-height: var(--hero-h);
   overflow: hidden;
-  background: var(--dark);
+  background: var(--card);
+  color: var(--ink);
 }
 
-.reports-hero-media {
-  position: absolute;
-  inset: 0;
+@media (min-width: 768px) {
+  .reports-hero {
+    --header-h: 7.5rem;
+  }
 }
 
-.reports-hero-media img {
-  filter: grayscale(0.12) contrast(1.04);
+.reports-hero-layout {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: var(--hero-h);
+  padding-top: calc(var(--header-h) + var(--gap-y));
+  padding-bottom: var(--gap-y);
 }
 
-.reports-hero-inner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(23, 20, 15, 0.5) 0%, rgba(23, 20, 15, 0.05) 32%, rgba(23, 20, 15, 0.9) 100%);
+/* Текст не заходит под портрет: ширина колонки считается от него. */
+.reports-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: calc(100vw - var(--fig-right) - var(--fig-w) - var(--edge) - 1rem);
 }
 
-.reports-hero-body {
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: 3;
-  padding-bottom: clamp(2.5rem, 6vh, 4rem);
-  color: var(--dark-text);
-}
-
+/* Заголовок тем же Playfair, что и заголовки секций, только крупнее:
+   раздел должен читаться одним голосом от первого экрана до подвала. */
 .reports-hero h1 {
-  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
-  margin: 0 0 1.75rem;
-  max-width: 14ch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  font-size: clamp(3rem, 7.4vw, 7.4rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
 }
 
+/* Курсив заметно мельче: он перечисляет, а не кричит, и при таком
+   кегле перечисление умещается в строку вместо трёх. */
 .reports-hero h1 em {
+  margin-top: 0.35em;
+  font-size: 0.58em;
+  line-height: 1.1;
   font-style: italic;
-  color: var(--amber);
+  font-weight: 400;
+}
+
+/* Маркер в герое уже на экране при загрузке, поэтому вход по времени,
+   а не по прокрутке. */
+.reports-hero h1 .reports-mark::before {
+  animation: reports-mark-in 700ms cubic-bezier(0.23, 1, 0.32, 1) 700ms both;
+  animation-timeline: auto;
+  animation-range: normal;
+}
+
+/* Кнопка к архиву: янтарная пилюля, стрелка в своём кружке, без обводок. */
+.reports-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.85rem;
+  min-height: 52px;
+  margin: clamp(2rem, 6vh, 3.5rem) 0 0;
+  padding: 0 0.45rem 0 1.6rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--dark-text);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    translate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-hero-cta-ico {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background: rgba(242, 236, 224, 0.16);
+  transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-hero-cta .reports-pic {
+  width: 1.1em;
+  height: 1.1em;
+  stroke-width: 2;
+}
+
+.reports-hero-cta:hover {
+  translate: 0 -2px;
+  box-shadow: 0 16px 32px -16px rgba(28, 28, 28, 0.6);
+}
+
+.reports-hero-cta:hover .reports-hero-cta-ico {
+  translate: 0 2px;
+  background: rgba(242, 236, 224, 0.28);
+}
+
+/* --- сцена: пятно, портреты, имя --- */
+
+.reports-hero-stage {
+  position: absolute;
+  z-index: 1;
+  bottom: var(--fig-bottom);
+  right: var(--fig-right);
+  width: var(--fig-w);
+  height: var(--fig-h);
+}
+
+/* Пятно перетекает из очертания в очертание: анимируется border-radius,
+   поэтому браузер не строит контур заново на каждом кадре. Круг из него
+   получается частным случаем, но ни на одном кадре не задерживается. */
+.reports-hero-blob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--fig-h) * 0.88);
+  aspect-ratio: 1;
+  translate: -50% -52%;
+  background: var(--amber);
+  border-radius: 71% 29% 38% 62% / 62% 39% 61% 38%;
+  animation: reports-hero-morph 30s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes reports-hero-morph {
+  0%,
+  100% { border-radius: 71% 29% 38% 62% / 62% 39% 61% 38%; }
+  25% { border-radius: 33% 67% 72% 28% / 36% 68% 32% 64%; }
+  50% { border-radius: 62% 38% 27% 73% / 58% 28% 72% 42%; }
+  75% { border-radius: 29% 71% 61% 39% / 68% 63% 37% 32%; }
+}
+
+.reports-hero-pets {
+  position: absolute;
+  inset: 0;
+}
+
+/* Кадры лежат стопкой и растворяются друг в друга: смена длинная,
+   поэтому переход читается как дыхание, а не как перелистывание. */
+/* Селектор с двумя классами: общее правило раздела для img задаёт cover
+   и оказалось сильнее, из-за чего портреты обрезало по бокам. */
+.reports-hero-stage .reports-hero-pet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  opacity: 0;
+  scale: 1.03;
+  transform-origin: 50% 100%;
+  transition:
+    opacity 1.7s cubic-bezier(0.4, 0, 0.2, 1),
+    scale 2.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-hero-stage .reports-hero-pet[data-active="true"] {
+  opacity: 1;
+  scale: 1;
+}
+
+/* Бумажное зерно сайта поверх всего героя. */
+.reports-hero-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: url("/texture/paper-grain.png");
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* От планшета герой встаёт в столбик: заголовок получает всю ширину и растёт
+   по-настоящему крупным, кнопка идёт сразу под ним, собака остаётся большой. */
+@media (max-width: 1200px) {
+  /* Сцена почти во всю ширину и заходит под подводку: на узком экране
+     маленький круг под текстом смотрелся приложением, а не героем. */
+  .reports-hero {
+    --fig-w: min(96vw, 36rem);
+    --fig-h: calc(var(--fig-w) / 0.783);
+    min-height: 0;
+  }
+
+  .reports-hero {
+    padding-bottom: var(--gap-y);
+  }
+
+  /* Текст с кнопкой по центру свободной высоты над сценой: прижатый к верху
+     блок оставлял под собой дыру. */
+  .reports-hero-layout {
+    min-height: 0;
+    padding-top: var(--gap-y);
+    padding-bottom: 0;
+  }
+
+  .reports-hero-copy {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .reports-hero-copy {
+    max-width: none;
+  }
+
+  .reports-hero h1 {
+    max-width: 14ch;
+    font-size: clamp(2.8rem, 11vw, 7rem);
+  }
+
+  /* Кнопка поверх сцены: собака заходит под неё. */
+  .reports-hero-cta {
+    position: relative;
+    z-index: 3;
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  /* Сцена по центру: прижатая вправо, она уезжала за край экрана вместе
+     с пятном, которое считается от высоты фигуры. */
+  .reports-hero-stage {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin: calc(-1 * clamp(1.25rem, 5vh, 3rem)) auto 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .reports-hero-stage {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .reports-hero-blob {
+    width: min(calc(var(--fig-h) * 0.98), 92vw);
+    translate: -50% -50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-hero-blob {
+    animation: none;
+  }
+
+  .reports-hero-stage .reports-hero-pet {
+    transition: none;
+  }
+
 }
 
 .reports-hero-meta {
@@ -148,6 +388,7 @@
 }
 
 .reports-pill {
+  /* переход задан в блоке отклика ниже */
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.5rem;
@@ -157,11 +398,6 @@
   background: var(--amber);
   color: #17140f;
   text-decoration: none;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.reports-pill:hover {
-  transform: translateY(-2px);
 }
 
 .reports-pill--ghost {
@@ -174,28 +410,34 @@
 /* ---------------- итог и тримап ---------------- */
 
 .reports-total {
-  padding: clamp(4rem, 10vh, 7rem) 0 clamp(3rem, 7vh, 5rem);
+  padding: var(--section-gap) 0 0;
 }
 
 .reports-total h2 {
-  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
   margin: 0 0 1.1rem;
   max-width: 17ch;
 }
 
+/* Дорожка следов под заголовком: файл подключён маской, цвет задаёт CSS. */
 .reports-scribble {
   display: block;
-  width: clamp(150px, 22vw, 260px);
-  height: auto;
-  margin: 0 0 3rem;
-  overflow: visible;
+  width: clamp(230px, 32vw, 420px);
+  aspect-ratio: 1600 / 260;
+  margin: 0.9rem 0 3rem;
+  background: var(--amber);
+  -webkit-mask: url("/reports/marks/paw-trail.png") left center / contain no-repeat;
+  mask: url("/reports/marks/paw-trail.png") left center / contain no-repeat;
+  /* Прорисовка слева направо: маска не умеет stroke-dashoffset,
+     поэтому открываем её клипом. */
+  animation: reports-mark-draw 900ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-timeline: view();
+  animation-range: entry 12% entry 48%;
 }
 
-.reports-scribble path {
-  fill: none;
-  stroke: var(--amber-text);
-  stroke-width: 4;
-  stroke-linecap: round;
+@keyframes reports-mark-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
 
 /*
@@ -228,73 +470,1941 @@
   transform: scale(1.05);
 }
 
+/* Затемнение собрано к середине: цифра теперь стоит там, и на светлом
+   кадре белый текст без этого слоя пропадал. */
 .reports-tile::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(23, 20, 15, 0.92) 0%, rgba(23, 20, 15, 0.62) 32%, rgba(23, 20, 15, 0.12) 68%);
+  background:
+    radial-gradient(ellipse 72% 46% at 50% 50%, rgba(23, 20, 15, 0.62) 0%, rgba(23, 20, 15, 0) 100%),
+    linear-gradient(to top, rgba(23, 20, 15, 0.55) 0%, rgba(23, 20, 15, 0.22) 45%, rgba(23, 20, 15, 0.3) 100%);
 }
 
+/* Число в середине плитки: снизу оно тонуло в подписи и терялось
+   на пёстрой фотографии. */
 .reports-tile-body {
   position: absolute;
-  inset: auto 0 0 0;
+  inset: 0;
   z-index: 2;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.5rem;
   padding: clamp(1rem, 2vw, 1.6rem);
   color: var(--dark-text);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.9rem;
+  text-align: center;
 }
 
 .reports-tile-body b {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 600;
-  line-height: 0.85;
+  line-height: 0.82;
   letter-spacing: -0.03em;
-  font-size: clamp(2.6rem, 5.6vw, 5rem);
+  font-size: clamp(4rem, 8.5vw, 7.5rem);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.45);
 }
 
 .reports-tile-body span {
-  font-size: 0.9rem;
-  color: rgba(242, 236, 224, 0.85);
-  padding-bottom: 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: rgba(242, 236, 224, 0.92);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
 }
 
-.reports-tile .reports-pic {
-  width: clamp(24px, 2.6vw, 34px);
+@media (prefers-reduced-motion: reduce) {
+  .reports-scribble {
+    animation: none;
+  }
+}
+
+/* ---------------- шкалы-сцены: будки, поводок, состав ---------------- */
+
+/* Приём из отчётов Дайлапии: величину несёт предмет, а не столбик. Предметы
+   подключены масками, поэтому красятся токенами и не тянут за собой цвет.
+   Ни одной линейки: с ними факты читались как ведомость. */
+/* Светлая панель: между бумагой обзора и бумагой диаграмм. */
+.reports-scales {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--sheet);
+}
+
+.reports-scales h2 {
+  margin: 0 0 clamp(2rem, 5vh, 3rem);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-scales figure {
+  margin: 0;
+}
+
+.reports-scales figcaption {
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* --- будки: площадь будки равна числу жильцов --- */
+
+.reports-kennels ol {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(0.75rem, 2.5vw, 2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-kennels li {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  align-items: end;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-items: center;
+  text-align: center;
+}
+
+/* Сторона растёт как корень из доли: глаз сравнивает площади. */
+.reports-kennel {
+  position: relative;
+  width: calc(var(--size) * clamp(6.5rem, 16vw, 15rem));
+  min-width: 3.5rem;
+  aspect-ratio: 1000 / 900;
+  transform-origin: 50% 100%;
+  animation: reports-kennel-up 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 8% entry 40%;
+}
+
+@keyframes reports-kennel-up {
+  from {
+    opacity: 0;
+    transform: translateY(10%) scale(0.92);
+  }
+}
+
+.reports-kennel-body {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  -webkit-mask: url("/reports/marks/kennel.png") center / contain no-repeat;
+  mask: url("/reports/marks/kennel.png") center / contain no-repeat;
+}
+
+/* Свет в лазу: янтарный прямоугольник за силуэтом, виден только сквозь
+   проём и щели между досками. Координаты сняты с самого файла.
+   Загорается по прокрутке, дальше едва заметно дышит, как живой огонь:
+   у каждой будки свой сдвиг, чтобы не мигали хором. */
+.reports-kennel-light {
+  position: absolute;
+  left: 27%;
+  top: 42%;
+  width: 33%;
+  height: 55%;
+  background: var(--amber);
+  animation:
+    reports-kennel-glow 1ms linear both,
+    reports-kennel-breathe 4.6s ease-in-out infinite;
+  animation-timeline: view(), auto;
+  animation-range: entry 32% entry 62%, normal;
+  animation-delay: 0s, calc(var(--i, 0) * -1.3s);
+}
+
+@keyframes reports-kennel-glow {
+  from { opacity: 0; }
+}
+
+@keyframes reports-kennel-breathe {
+  0%, 100% { filter: brightness(1); }
+  43% { filter: brightness(0.86); }
+  52% { filter: brightness(1.05); }
+  64% { filter: brightness(0.92); }
+}
+
+.reports-kennels b {
+  margin-top: 1rem;
+  color: var(--ink);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.2rem, 3.8vw, 3.8rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Подпись не шире своей колонки и с запасом по высоте: иначе колонка
+   с длинной подписью поднимает свою будку над остальными. */
+.reports-kennels li > span:last-child {
+  align-self: start;
+  max-width: min(16ch, 100%);
+  min-height: 2.7em;
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+/* --- поводок: линейка времени --- */
+
+.reports-scales .reports-leash {
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+}
+
+/* Числа засечек стоят над линией: без запаса они садились на подпись. */
+.reports-leash-track {
+  position: relative;
+  margin-top: 2.6rem;
+}
+
+/* Поводок вытягивается слева направо по прокрутке, засечки встают следом. */
+.reports-leash-line {
+  height: clamp(2.5rem, 4vw, 3.5rem);
+  background: var(--ink);
+  -webkit-mask: url("/reports/marks/leash-taut.png") left center / 100% 100% no-repeat;
+  mask: url("/reports/marks/leash-taut.png") left center / 100% 100% no-repeat;
+  animation: reports-mark-draw 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 12% entry 58%;
+}
+
+.reports-leash-mark {
+  position: absolute;
+  top: -0.7rem;
+  bottom: -0.7rem;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--amber);
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  animation: reports-tick-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 48% entry 72%;
+}
+
+.reports-leash-mark[data-kind="longest"] {
+  background: var(--clay);
+  animation-range: entry 58% entry 82%;
+}
+
+@keyframes reports-tick-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+}
+
+/* Число висит над засечкой, поэтому линейка читается без легенды. */
+.reports-leash-mark i {
+  position: absolute;
+  bottom: calc(100% + 0.3rem);
+  left: 50%;
+  translate: -50% 0;
+  color: var(--ink);
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- факты: крупная цифра янтарём, подпись под ней, никаких линий --- */
+
+.reports-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 4vw, 3rem);
+  margin: clamp(1.75rem, 4vh, 2.75rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-facts li {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(6% + var(--i, 0) * 5%) entry calc(30% + var(--i, 0) * 5%);
+}
+
+@keyframes reports-fact-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.reports-facts b {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35em;
+  color: var(--amber-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.6rem, 4.2vw, 4rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-facts b small {
+  color: var(--muted);
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.reports-facts li > span {
+  max-width: 22ch;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Значки фактов: маски в чернилах, файл выбирается по имени факта. */
+.reports-fact-ico {
+  display: block;
+  width: 3.4rem;
+  aspect-ratio: 1;
+  background: var(--ink);
+  -webkit-mask: var(--icon) center bottom / contain no-repeat;
+  mask: var(--icon) center bottom / contain no-repeat;
+}
+
+.reports-fact-ico {
+  visibility: hidden;
+}
+
+.reports-fact-ico[data-icon="female"],
+.reports-fact-ico[data-icon="male"],
+.reports-fact-ico[data-icon="sterilized"],
+.reports-fact-ico[data-icon="kennel"],
+.reports-fact-ico[data-icon="hourglass"],
+.reports-fact-ico[data-icon="small"],
+.reports-fact-ico[data-icon="medium"],
+.reports-fact-ico[data-icon="large"],
+.reports-fact-ico[data-icon="tag"],
+.reports-fact-ico[data-icon="clock"],
+.reports-fact-ico[data-icon="glasses"],
+.reports-fact-ico[data-icon="scales"],
+.reports-fact-ico[data-icon="camera"],
+.reports-fact-ico[data-icon="snowflake"],
+.reports-fact-ico[data-icon="dog-head"],
+.reports-fact-ico[data-icon="cat"],
+.reports-fact-ico[data-icon="calendar-grid"],
+.reports-fact-ico[data-icon="paw"],
+.reports-fact-ico[data-icon="stethoscope"],
+.reports-fact-ico[data-icon="syringe"],
+.reports-fact-ico[data-icon="feed-bag"],
+.reports-fact-ico[data-icon="van"],
+.reports-fact-ico[data-icon="hands-paw"],
+.reports-fact-ico[data-icon="stamp"],
+.reports-fact-ico[data-icon="pen"],
+.reports-fact-ico[data-icon="heart-pulse"],
+.reports-fact-ico[data-icon="ruble"] {
+  visibility: visible;
+}
+
+/* Значки страницы года: пропорции берём из самих файлов. */
+.reports-fact-ico[data-icon="stamp"] { --icon: url("/reports/marks/stamp.png"); }
+.reports-fact-ico[data-icon="ruble"] { --icon: url("/reports/marks/ruble.png"); }
+
+.reports-fact-ico[data-icon="syringe"] {
+  --icon: url("/reports/marks/syringe.png");
+  aspect-ratio: 800 / 500;
+  width: 4.4rem;
+}
+
+.reports-fact-ico[data-icon="feed-bag"] {
+  --icon: url("/reports/marks/feed-bag.png");
+  aspect-ratio: 800 / 700;
+}
+
+.reports-fact-ico[data-icon="van"] {
+  --icon: url("/reports/marks/van.png");
+  aspect-ratio: 900 / 600;
+  width: 4.4rem;
+}
+
+.reports-fact-ico[data-icon="hands-paw"] {
+  --icon: url("/reports/marks/hands-paw.png");
+  aspect-ratio: 800 / 600;
+}
+
+.reports-fact-ico[data-icon="pen"] {
+  --icon: url("/reports/marks/pen.png");
+  aspect-ratio: 700 / 400;
+  width: 4rem;
+}
+
+.reports-fact-ico[data-icon="heart-pulse"] {
+  --icon: url("/reports/marks/heart-pulse.png");
+  aspect-ratio: 700 / 600;
+}
+
+.reports-fact-ico[data-icon="dog-head"] { --icon: url("/reports/marks/dog-head.png"); }
+.reports-fact-ico[data-icon="paw"] { --icon: url("/reports/marks/paw-single.png"); }
+.reports-fact-ico[data-icon="stethoscope"] { --icon: url("/reports/marks/stethoscope.png"); }
+.reports-fact-ico[data-icon="calendar-grid"] { --icon: url("/reports/marks/calendar-grid.png"); }
+
+.reports-fact-ico[data-icon="cat"] {
+  --icon: url("/reports/marks/cat.png");
+  aspect-ratio: 600 / 700;
+}
+
+.reports-fact-ico[data-icon="clock"] { --icon: url("/reports/marks/clock.png"); }
+.reports-fact-ico[data-icon="snowflake"] { --icon: url("/reports/marks/snowflake.png"); }
+
+.reports-fact-ico[data-icon="glasses"] {
+  --icon: url("/reports/marks/glasses.png");
+  width: 3.8rem;
+  aspect-ratio: 800 / 400;
+}
+
+.reports-fact-ico[data-icon="scales"] {
+  --icon: url("/reports/marks/scales.png");
+  width: 3.6rem;
+  aspect-ratio: 800 / 700;
+}
+
+.reports-fact-ico[data-icon="camera"] {
+  --icon: url("/reports/marks/camera.png");
+  width: 3.5rem;
+  aspect-ratio: 700 / 600;
+}
+
+.reports-fact-ico[data-icon="tag"] {
+  --icon: url("/reports/marks/tag.png");
+  width: 2.7rem;
+  aspect-ratio: 400 / 500;
+}
+
+.reports-fact-ico[data-icon="female"] { --icon: url("/reports/marks/female.png"); }
+.reports-fact-ico[data-icon="male"] { --icon: url("/reports/marks/male.png"); }
+.reports-fact-ico[data-icon="sterilized"] { --icon: url("/reports/marks/stethoscope.png"); }
+.reports-fact-ico[data-icon="kennel"] {
+  --icon: url("/reports/marks/kennel.png");
+  width: 3.8rem;
+  aspect-ratio: 1000 / 900;
+}
+
+.reports-fact-ico[data-icon="hourglass"] {
+  --icon: url("/reports/marks/hourglass.png");
+  width: 2.6rem;
+  aspect-ratio: 500 / 700;
+}
+
+/* Три собаки одной позы: размер значка честно растёт со сложением. */
+.reports-fact-ico[data-icon="small"] {
+  --icon: url("/reports/marks/dog-small.png");
+  width: 2.6rem;
+  aspect-ratio: 700 / 600;
+}
+
+.reports-fact-ico[data-icon="medium"] {
+  --icon: url("/reports/marks/dog-medium.png");
+  width: 3.3rem;
+  aspect-ratio: 850 / 750;
+}
+
+.reports-fact-ico[data-icon="large"] {
+  --icon: url("/reports/marks/dog-large.png");
+  width: 4.1rem;
+  aspect-ratio: 1000 / 900;
+}
+
+/* Значок сверху, под ним цифра и подпись: сбоку он резал строку надвое. */
+.reports-fact--icon .reports-fact-ico {
+  width: 5rem;
+  margin-bottom: 0.75rem;
+}
+
+.reports-fact--icon .reports-fact-ico[data-icon="hourglass"] {
+  width: 3.8rem;
+}
+
+/* Рекордсмен ожидания с настоящим фото из карточки, тем же строем. */
+.reports-fact-photo {
+  position: relative;
+  width: clamp(6.5rem, 9vw, 8.5rem);
+  aspect-ratio: 1;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  border-radius: 71% 29% 38% 62% / 62% 39% 61% 38%;
+  background: var(--amber);
+  animation: reports-hero-morph 30s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.reports-fact-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-fact-photo {
+    animation: none;
+  }
+}
+
+/* Состав шестью колонками: цифры в одну линию, подписи под ними. */
+.reports-facts--grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+}
+
+.reports-facts--grid li {
+  grid-template-rows: 4.2rem auto auto;
+}
+
+.reports-facts--grid .reports-fact-ico {
+  align-self: end;
+  margin-bottom: 0.9rem;
+}
+
+.reports-facts--grid li > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .reports-kennels ol {
+    gap: 0.5rem;
+  }
+
+  .reports-kennel {
+    width: calc(var(--size) * 22vw);
+    min-width: 2.75rem;
+  }
+
+  .reports-kennels li > span:last-child {
+    min-height: 4.05em;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .reports-facts--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reports-facts--grid li {
+    grid-template-rows: 3.6rem auto auto;
+  }
+}
+
+/* ---------------- касса: закреплённая сцена с монетами ---------------- */
+
+/* Секция выше экрана, сцена липнет к верху и живёт, пока секция
+   прокручивается насквозь. При «меньше движения» секция обычной высоты. */
+/* Белая полоса во весь экран: сцена кассы как отдельный подиум. */
+.reports-till {
+  position: relative;
+  height: 280vh;
+  margin-top: var(--section-gap);
+  background: var(--card);
+}
+
+.reports-till[data-still="true"] {
   height: auto;
-  color: var(--amber);
-  margin-bottom: 0.45rem;
 }
 
-.reports-chips {
+.reports-till-sticky {
+  position: sticky;
+  top: 0;
+  display: grid;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.reports-till[data-still="true"] .reports-till-sticky {
+  position: static;
+  height: auto;
+  padding: clamp(2rem, 5vh, 4rem) 0;
+  overflow: visible;
+}
+
+.reports-till-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.reports-till-copy h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-till-copy > p:not(.reports-till-kicker):not(.reports-till-sum) {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-till-sum {
+  display: grid;
+  gap: 0.4rem;
+  margin: clamp(1.5rem, 3vh, 2.25rem) 0 0;
+}
+
+.reports-till-sum b {
+  color: var(--ink);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-till-sum span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.reports-till-facts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  font-size: 0.88rem;
-  color: var(--muted);
+  gap: 1rem clamp(1.75rem, 4vw, 3rem);
+  margin: clamp(1.5rem, 3vh, 2.25rem) 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.reports-chips span {
+.reports-till-facts li {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.reports-till-facts b {
+  color: var(--amber-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-till-facts span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Сцена: миска внизу, монеты летят сверху. Квадрат держит место под полёт. */
+.reports-till-scene {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  max-height: 76vh;
+  margin: 0 auto;
+  width: min(100%, 76vh);
+}
+
+.reports-till-bowl {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 4%;
+  aspect-ratio: 900 / 700;
+  overflow: hidden;
+  background: var(--ink);
+  -webkit-mask: url("/reports/marks/bowl.png") center / contain no-repeat;
+  mask: url("/reports/marks/bowl.png") center / contain no-repeat;
+}
+
+/* Наполнение растёт снизу на долю оставшихся денег. */
+.reports-till-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--amber);
+  transform-origin: 50% 100%;
+}
+
+/* Монета из нашей серии масок: лапа в ней вырезана, сквозь неё видно фон.
+   Стоит там, куда приземляется, а летит сверху через transform, поэтому
+   раскладка не пересчитывается. Тень через filter: она идёт по силуэту,
+   а не по квадрату элемента. */
+.reports-till-coin {
+  position: absolute;
+  top: 46%;
+  width: clamp(2.2rem, 4.6vw, 3.8rem);
+  aspect-ratio: 1;
+  background: var(--amber);
+  -webkit-mask: url("/reports/marks/coin.png") center / contain no-repeat;
+  mask: url("/reports/marks/coin.png") center / contain no-repeat;
+  translate: -50% 0;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 860px) {
+  /* Без закрепления: секция обычной высоты, сцена проигрывается по ходу
+     прокрутки. Закреплённый экран оставлял пустоту под текстом. */
+  .reports-till {
+    height: auto;
+    margin-top: var(--section-gap);
+    padding: var(--section-gap) 0;
+    overflow: hidden;
+  }
+
+  .reports-till-sticky {
+    position: static;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .reports-till-stage {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 1rem;
+  }
+
+  .reports-till-scene {
+    order: -1;
+    width: min(100%, calc(30vh * 900 / 700));
+    max-height: 30vh;
+    aspect-ratio: 900 / 700;
+  }
+
+  .reports-till-bowl {
+    inset: 0;
+  }
+
+  .reports-till-copy h2 {
+    margin-bottom: 0.6rem;
+    font-size: clamp(2rem, 8vw, 2.6rem);
+  }
+
+  .reports-till-copy > p:not(.reports-till-kicker):not(.reports-till-sum) {
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .reports-till-sum {
+    margin-top: 1rem;
+  }
+
+  .reports-till-sum b {
+    font-size: clamp(2.2rem, 9vw, 3rem);
+  }
+
+  .reports-till-facts {
+    margin-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-kennel,
+  .reports-kennel-light,
+  .reports-leash-line,
+  .reports-leash-mark,
+  .reports-facts li {
+    animation: none;
+  }
+}
+
+/* ---------------- цифры, которых нет в отчётах ---------------- */
+
+.reports-curious {
+  padding: var(--section-gap) 0 0;
+}
+
+.reports-curious h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-curious-lead {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .reports-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Мозаика плиток: рекордсмены с фото занимают большие плитки, остальные
+   факты чередуют янтарь, чернила и белый. Плотная раскладка закрывает дыры. */
+.reports-curio-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(clamp(9rem, 13vw, 11.5rem), auto);
+  grid-auto-flow: dense;
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  margin: clamp(2rem, 5vh, 3rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-curio {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  text-align: left;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: clamp(1rem, 1.6vw, 1.4rem);
+  overflow: hidden;
+  border-radius: var(--r-md);
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(4% + var(--i, 0) * 2%) entry calc(26% + var(--i, 0) * 2%);
+}
+
+.reports-curio[data-span="big"] {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.reports-curio[data-span="wide"] {
+  grid-column: span 2;
+}
+
+.reports-curio[data-span="tall"] {
+  grid-row: span 2;
+}
+
+.reports-curio[data-tone="amber"] {
+  background: var(--amber);
+  color: #17140f;
+}
+
+.reports-curio[data-tone="ink"] {
+  background: var(--ink);
+  color: var(--dark-text);
+}
+
+.reports-curio[data-tone="card"] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--lift);
+}
+
+.reports-curio[data-tone="photo"] {
+  background: var(--stone);
+  color: var(--dark-text);
+}
+
+.reports-curio img {
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Затемнение снизу, чтобы цифра читалась на любом кадре. */
+.reports-curio-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(23, 20, 15, 0) 6%, rgba(23, 20, 15, 0.42) 42%, rgba(23, 20, 15, 0.82) 74%, rgba(23, 20, 15, 0.95) 100%);
+}
+
+.reports-curio[data-tone="photo"] > b,
+.reports-curio[data-tone="photo"] > span {
+  opacity: 1;
+  color: #fdfaf5;
+  text-shadow:
+    0 1px 3px rgba(23, 20, 15, 0.9),
+    0 2px 18px rgba(23, 20, 15, 0.75);
+}
+
+.reports-curio[data-tone="photo"] > span {
+  font-weight: 500;
+}
+
+.reports-curio > b,
+.reports-curio > span {
+  position: relative;
+  z-index: 2;
+}
+
+/* Значок в потоке над цифрой, прижат к верху: подпись не дорастает до него,
+   при длинном тексте плитка растёт. Масштаб общий с легендами. */
+.reports-curio-ico {
+  position: relative;
+  z-index: 2;
+  width: 2.4rem;
+  margin-bottom: auto;
+  background: currentColor;
+}
+
+/* Мох и глина затемнены: чистые тона середины не держат контраст текста. */
+.reports-curio[data-tone="moss"] {
+  background: color-mix(in srgb, var(--moss) 76%, #17140f);
+  color: var(--dark-text);
+}
+
+.reports-curio[data-tone="clay"] {
+  background: color-mix(in srgb, var(--clay) 72%, #17140f);
+  color: var(--dark-text);
+}
+
+.reports-curio[data-tone="moss"] .reports-curio-ico,
+.reports-curio[data-tone="clay"] .reports-curio-ico {
+  background: var(--amber);
+}
+
+.reports-curio-ico[data-icon="glasses"] {
+  width: 4.4rem;
+}
+
+.reports-curio-ico[data-icon="tag"] {
+  width: 3rem;
+}
+
+.reports-curio[data-tone="amber"] .reports-curio-ico {
+  background: #17140f;
+}
+
+.reports-curio[data-tone="ink"] .reports-curio-ico {
+  background: var(--amber);
+}
+
+.reports-curio[data-tone="card"] .reports-curio-ico {
+  background: var(--ink);
+}
+
+.reports-curio > b {
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35em;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.6rem, 3.8vw, 3.6rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-curio[data-span="big"] > b {
+  font-size: clamp(3rem, 5.2vw, 5rem);
+}
+
+.reports-curio[data-span="tall"] > b {
+  font-size: clamp(3.5rem, 7.5vw, 7.5rem);
+}
+
+/* Сумма с копейками: чуть мельче и одной строкой, иначе рубль падает вниз. */
+.reports-curio[data-fit="long"] > b {
+  font-size: clamp(1.9rem, 2.7vw, 2.7rem);
+  white-space: nowrap;
+}
+
+.reports-curio[data-tone="card"] > b {
+  color: var(--amber-text);
+}
+
+.reports-curio > b small {
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+
+.reports-curio-date {
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.reports-curio > span {
+  max-width: 24ch;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  opacity: 0.86;
+}
+
+@media (max-width: 1100px) {
+  .reports-curio-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(clamp(9rem, 18vw, 12rem), auto);
+  }
+
+  .reports-curio[data-span="big"] {
+    grid-column: span 3;
+  }
+
+  .reports-curio[data-span="tall"] {
+    grid-row: auto;
+  }
+
+  .reports-curio[data-span="tall"] > b {
+    font-size: clamp(2.6rem, 3.8vw, 3.6rem);
+  }
+}
+
+@media (max-width: 700px) {
+  .reports-curio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(40vw, auto);
+    gap: 0.6rem;
+  }
+
+  .reports-curio[data-span="big"] {
+    grid-column: span 2;
+  }
+
+  .reports-outcomes .reports-curio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reports-outcomes .reports-curio[data-orphan="true"] {
+    grid-column: 1 / -1;
+  }
+
+  .reports-curio {
+    padding: 0.9rem;
+  }
+
+  .reports-curio > b {
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+  }
+
+  .reports-curio[data-span="big"] > b {
+    font-size: clamp(2.6rem, 12vw, 4rem);
+  }
+
+  .reports-curio[data-span="tall"] > b {
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+  }
+
+  .reports-curio > span {
+    font-size: 0.78rem;
+  }
+
+  .reports-curio-ico {
+    width: 2.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-curio {
+    animation: none;
+  }
+}
+
+/* ---------------- страница года: коротко и кто пришёл ---------------- */
+
+.reports-highlights,
+.reports-arrivals {
+  padding: var(--section-gap) 0 0;
+}
+
+.reports-highlights h2,
+.reports-arrivals h2 {
+  margin: 0 0 clamp(1.5rem, 4vh, 2.5rem);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-arrivals h2 {
+  margin-bottom: 1rem;
+}
+
+/* ---------------- расходы: мешок наполняется по прокрутке ---------------- */
+
+.reports-spending {
+  padding: var(--section-gap) 0 0;
+}
+
+.reports-spending-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.reports-spending-copy h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-spending-copy > p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-spending-total {
+  display: grid;
+  gap: 0.3rem;
+  margin: clamp(1.5rem, 4vh, 2.25rem) 0 0 !important;
+}
+
+.reports-spending-total b {
+  color: var(--ink);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.reports-spending-total > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Статьи расхода строками: заголовок слева, сумма справа, без линеек. */
+.reports-spending-rows {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 30rem;
+  margin: clamp(1.5rem, 3vh, 2rem) 0 0;
+}
+
+.reports-spending-rows div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+}
+
+.reports-spending-rows dt {
+  max-width: 32ch;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.reports-spending-rows dd {
+  margin: 0;
+  color: var(--amber-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-weight: 600;
+}
+
+/* Сцена: мешок внизу, гранулы падают сверху. Своя шкала прокрутки у секции. */
+.reports-spending-scene {
+  position: relative;
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  aspect-ratio: 1000 / 1700;
+  view-timeline: --sack block;
+}
+
+.reports-spending-sack {
+  position: absolute;
+  inset: auto 0 0 0;
+  aspect-ratio: 1200 / 1500;
+  overflow: hidden;
+  background: var(--ink);
+  -webkit-mask: url("/reports/scenes/feed-sack.png") center / contain no-repeat;
+  mask: url("/reports/scenes/feed-sack.png") center / contain no-repeat;
+}
+
+/* Уровень поднимается на долю потраченного: границы поля сняты с файла,
+   у мешка стенки идут от 12 до 88 процентов ширины. */
+.reports-spending-fill {
+  position: absolute;
+  inset: auto 8% 4% 8%;
+  height: max(calc(var(--fill) * 68%), 3%);
+  background: var(--amber);
+  transform-origin: 50% 100%;
+  animation: reports-sack-fill 1ms linear both;
+  animation-timeline: --sack;
+  animation-range: entry 25% entry 90%;
+}
+
+@keyframes reports-sack-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Гранула падает сверху в мешок: у каждой свой отрезок шкалы. */
+.reports-spending-grain {
+  position: absolute;
+  top: 0;
+  width: clamp(1.1rem, 2.4vw, 1.7rem);
+  aspect-ratio: 1;
+  background: var(--clay);
+  -webkit-mask: url("/reports/scenes/kibble.png") var(--cell, 0% 0%) / 300% 300% no-repeat;
+  mask: url("/reports/scenes/kibble.png") var(--cell, 0% 0%) / 300% 300% no-repeat;
+  translate: -50% 0;
+  animation: reports-grain-fall 1ms linear both;
+  animation-timeline: --sack;
+  animation-range: entry calc(18% + var(--delay) * 1%) entry calc(62% + var(--delay) * 1%);
+}
+
+@keyframes reports-grain-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(46cqh) rotate(var(--tilt));
+    opacity: 0;
+  }
+}
+
+.reports-spending-scene {
+  container-type: size;
+}
+
+@media (max-width: 860px) {
+  .reports-spending-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reports-spending-scene {
+    order: -1;
+    width: min(100%, 15rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-spending-fill,
+  .reports-spending-grain {
+    animation: none;
+  }
+
+  .reports-spending-fill {
+    transform: scaleY(1);
+  }
+
+  .reports-spending-grain {
+    opacity: 0;
+  }
+}
+
+/* ---------------- дорога домой: собака идёт по тропе ---------------- */
+
+.reports-walk,
+.reports-health {
+  padding: var(--section-gap) 0 0;
+}
+
+.reports-walk h2,
+.reports-health h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+/* Сцена сама себе шкала: собака идёт, пока полоса проходит через экран. */
+.reports-walk-scene {
+  position: relative;
+  height: clamp(7rem, 12vw, 10rem);
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 0;
+  view-timeline: --walk block;
+}
+
+.reports-walk-path {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: clamp(5rem, 9vw, 8rem);
+  background: var(--ink);
+  opacity: 0.7;
+  -webkit-mask: url("/reports/scenes/path.png") center bottom / 100% 100% no-repeat;
+  mask: url("/reports/scenes/path.png") center bottom / 100% 100% no-repeat;
+}
+
+/* Собака идёт слева направо и по дороге уменьшается: тропа сужается к правому
+   краю, и так путь читается как уход вдаль. */
+.reports-walk-dog {
+  position: absolute;
+  left: 0;
+  bottom: 12%;
+  width: clamp(5rem, 9vw, 8rem);
+  aspect-ratio: 1;
+  background: var(--ink);
+  -webkit-mask: url("/reports/scenes/dog-walking.png") center / contain no-repeat;
+  mask: url("/reports/scenes/dog-walking.png") center / contain no-repeat;
+  animation: reports-walk-go 1ms linear both;
+  animation-timeline: --walk;
+  animation-range: entry 20% cover 75%;
+}
+
+@keyframes reports-walk-go {
+  to {
+    translate: calc(100cqw - 100%) 0;
+    scale: 0.62;
+  }
+}
+
+.reports-walk-scene {
+  container-type: inline-size;
+}
+
+.reports-walk-facts {
+  align-items: start;
+  margin-top: clamp(2rem, 5vh, 3rem);
+}
+
+.reports-walk-facts .reports-fact--photo {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+.reports-walk-facts .reports-fact-photo {
+  grid-row: auto;
+  width: clamp(5.5rem, 7vw, 7rem);
+}
+
+/* ---------------- лечение: поршень шприца идёт по прокрутке ---------------- */
+
+.reports-health-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.reports-health-copy p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-health-figure {
+  display: grid;
+  gap: 0.3rem;
+  margin: clamp(1.5rem, 4vh, 2.25rem) 0 0 !important;
+}
+
+.reports-health-copy .reports-health-figure b {
+  color: var(--amber-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+/* «8 из 13»: крупная восьмёрка янтарём, знаменатель мельче рядом. */
+.reports-health-figure b small {
+  color: var(--muted);
+  font-size: 0.4em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.reports-health-figure > span {
+  max-width: 34ch;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.reports-health-figure > span strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Шприц: корпус на месте, доза заполняет колбу на долю стерилизованных,
+   поршень доходит ровно до края дозы. */
+.reports-health-scene {
+  position: relative;
+  aspect-ratio: 1800 / 600;
+  overflow: hidden;
+  view-timeline: --dose block;
+}
+
+.reports-health-body,
+.reports-health-plunger {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+}
+
+.reports-health-body {
+  -webkit-mask: url("/reports/scenes/syringe-body.png") center / contain no-repeat;
+  mask: url("/reports/scenes/syringe-body.png") center / contain no-repeat;
+}
+
+.reports-health-plunger {
+  -webkit-mask: url("/reports/scenes/syringe-plunger.png") center / contain no-repeat;
+  mask: url("/reports/scenes/syringe-plunger.png") center / contain no-repeat;
+  animation: reports-dose-push 1ms linear both;
+  animation-timeline: --dose;
+  animation-range: entry 30% entry 95%;
+}
+
+@keyframes reports-dose-push {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: calc(var(--fill) * -22%) 0;
+  }
+}
+
+/* Доза внутри колбы: полоса растёт слева направо на долю подготовленных. */
+.reports-health-dose {
+  position: absolute;
+  left: 26%;
+  right: 25%;
+  top: 34%;
+  height: 32%;
+  transform-origin: left center;
+  background: var(--amber);
+  animation: reports-dose-fill 1ms linear both;
+  animation-timeline: --dose;
+  animation-range: entry 30% entry 95%;
+}
+
+@keyframes reports-dose-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(var(--fill));
+  }
+}
+
+@media (max-width: 860px) {
+  .reports-health-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reports-health-scene {
+    order: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-walk-dog,
+  .reports-health-plunger,
+  .reports-health-dose {
+    animation: none;
+  }
+
+  .reports-health-dose {
+    transform: scaleX(var(--fill));
+  }
+}
+
+.reports-docs-head {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 1.75rem);
+}
+
+.reports-docs-stamp {
+  flex: none;
+  margin-left: auto;
+  width: clamp(3.4rem, 5vw, 4.6rem);
+  background: var(--clay);
+  rotate: -8deg;
+}
+
+.reports-year-ages {
+  padding: var(--section-gap) 0 0;
+}
+
+.reports-year-ages h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-breakdown-lead {
+  max-width: 56ch;
+  margin: 0 0 clamp(2rem, 5vh, 3rem);
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-arrivals-lead {
+  max-width: 52ch;
+  margin: 0 0 clamp(2rem, 5vh, 3rem);
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* Портреты поступивших: карточка это ссылка, кадр в пятне, под ним имя. */
+.reports-arrivals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: clamp(1.25rem, 2.5vw, 2rem) clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-arrival {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  text-decoration: none;
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(4% + var(--i, 0) * 1.5%) entry calc(26% + var(--i, 0) * 1.5%);
+}
+
+.reports-arrival-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  border-radius: 71% 29% 38% 62% / 62% 39% 61% 38%;
+  background: var(--amber);
+  transition: border-radius 0.8s cubic-bezier(0.16, 1, 0.3, 1), scale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-arrival:hover .reports-arrival-frame,
+.reports-arrival:focus-visible .reports-arrival-frame {
+  border-radius: 38% 62% 71% 29% / 39% 61% 38% 62%;
+  scale: 1.03;
+}
+
+.reports-arrival-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reports-arrival-frame i {
+  color: #17140f;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 2.2rem;
+  font-style: normal;
+}
+
+.reports-arrival b {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reports-arrival small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.reports-arrival:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-arrival {
+    animation: none;
+  }
+
+  .reports-arrival-frame {
+    transition: none;
+  }
+}
+
+/* ---------------- между цифрами: случайные кадры ---------------- */
+
+/* Белая полоса во весь экран: фотографии на белом, как в галерее, между
+   бумагой цифр и бумагой переписи. */
+.reports-moments {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--card);
+}
+
+.reports-moments h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+.reports-moments-lead {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* Мозаика: плотная раскладка сама заполняет дыры, форма кадра задаёт
+   его место. Первый кадр крупнее остальных. */
+.reports-moments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(11rem, 20vw, 18rem);
+  grid-auto-flow: dense;
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  margin: clamp(2rem, 5vh, 3rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-moments-grid li {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--stone);
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(4% + var(--i, 0) * 2%) entry calc(26% + var(--i, 0) * 2%);
+}
+
+.reports-moments-grid li[data-span="big"] {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.reports-moments-grid li[data-span="wide"] {
+  grid-column: span 2;
+}
+
+.reports-moments-grid li[data-span="tall"] {
+  grid-row: span 2;
+}
+
+/* На планшете две колонки: три давали мелкие кадры с тесными подписями.
+   Первый кадр на четыре клетки плюс двенадцать по одной это восемь рядов. */
+@media (max-width: 1100px) and (min-width: 701px) {
+  .reports-moments-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: clamp(15rem, 34vw, 24rem);
+  }
+}
+
+/* Кадр это ссылка на заметку: подпись с заголовком проступает снизу. */
+.reports-moment {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  outline-offset: -3px;
+}
+
+.reports-moments-grid img,
+.reports-year-moments-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-moment:hover img,
+.reports-moment:focus-visible img {
+  scale: 1.04;
+}
+
+.reports-moment-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 2.4rem 0.9rem 0.8rem;
+  background: linear-gradient(180deg, rgba(23, 20, 15, 0) 0%, rgba(23, 20, 15, 0.82) 100%);
+  color: var(--dark-text);
+}
+
+.reports-moment-caption b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.reports-moment-caption small {
+  font-size: 0.7rem;
+  opacity: 0.72;
+}
+
+.reports-moment:focus-visible {
+  outline: 3px solid var(--amber);
+}
+
+@media (max-width: 700px) {
+  .reports-moments-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 48vw;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-moments-grid li {
+    animation: none;
+  }
+
+  .reports-moments-grid img,
+  .reports-year-moments-grid img {
+    transition: none;
+  }
+}
+
+/* ---------------- динамика: график и кадры с итогами ---------------- */
+
+/* Конструкция из общей страницы отчётности темы kadence-child: слева серии
+   с подписанными точками, справа фотографии с крупным числом. График рисуется
+   в SVG, поэтому остаётся резким и не тянет за собой растровых файлов. */
+/* Светлая панель между бумагой переписи и бумагой архива. */
+.reports-dynamics {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--sheet);
+}
+
+.reports-dynamics-inner {
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.reports-dynamics-data {
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.reports-dynamics h2 {
+  margin: 0;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+}
+
+/* Легенда переключает серии: щелчок гасит линию, а не прячет её насовсем,
+   поэтому сравнение остаётся на месте. */
+.reports-dynamics-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  margin-top: 0.5rem;
+}
+
+.reports-dynamics-legend button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--sheet);
-  border-radius: 999px;
-  padding: 0.5rem 1.1rem;
-}
-
-.reports-chips b {
+  min-height: 44px;
+  padding: 0.35rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
   color: var(--ink);
-  font-weight: 650;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reports-chips .reports-pic {
-  width: 17px;
-  height: 17px;
-  color: var(--amber-text);
+.reports-dynamics-legend button[aria-pressed="false"] {
+  opacity: 0.38;
+}
+
+.reports-dynamics-legend button:hover {
+  border-color: var(--amber);
+}
+
+.reports-dynamics-legend i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.reports-dynamics-chart {
+  min-width: 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.reports-dynamics-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  overflow: visible;
+}
+
+.reports-chart-grid {
+  stroke: rgba(28, 28, 28, 0.09);
+  stroke-width: 1;
+}
+
+.reports-chart-axis {
+  fill: var(--muted);
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reports-chart-value {
+  font-family: var(--font-golos), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reports-chart-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Обводка цветом бумаги: точка не сливается с линией под ней. */
+.reports-chart-point {
+  stroke: var(--paper);
+  stroke-width: 3;
+}
+
+.reports-chart-series {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-chart-series[data-muted="true"] {
+  opacity: 0.08;
+}
+
+.reports-dynamics-note {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.reports-dynamics-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.reports-dynamics-photo {
+  position: relative;
+  min-height: 280px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--stone);
+}
+
+/* Широкий кадр сдвинут вниз: пара перестаёт читаться как таблица. */
+.reports-dynamics-photo--wide {
+  margin-top: clamp(1.5rem, 4vw, 2.6rem);
+}
+
+.reports-dynamics-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Подпись как у фото-плиток в цифрах: затемнение снизу кадра, крупная
+   цифра, под ней две строки столбиком. Плашка с цифрой в одном углу
+   и текстом в другом читалась чужеродно. */
+.reports-dynamics-photo figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 0.35rem;
+  padding: 3.5rem 1.1rem 1.1rem;
+  background: linear-gradient(180deg, rgba(23, 20, 15, 0) 0%, rgba(23, 20, 15, 0.85) 100%);
+  color: var(--dark-text);
+}
+
+.reports-dynamics-photo figcaption strong {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.6rem, 4vw, 3.6rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.reports-dynamics-photo figcaption span {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  color: rgba(242, 236, 224, 0.82);
+}
+
+.reports-dynamics-photo figcaption span b {
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+@media (min-width: 920px) {
+  .reports-dynamics-inner {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .reports-dynamics-data {
+    grid-column: 1 / span 7;
+  }
+
+  .reports-dynamics-photos {
+    grid-column: 8 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .reports-dynamics-photo {
+    min-height: 210px;
+  }
+
+  .reports-chart-axis {
+    font-size: 16px;
+  }
+
+  .reports-chart-value {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-chart-series,
+  .reports-dynamics-legend button {
+    transition: none;
+  }
 }
 
 /* ---------------- блоки доверия ---------------- */
@@ -303,7 +2413,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: clamp(1.25rem, 2.2vw, 1.75rem);
-  margin-top: clamp(2.5rem, 6vh, 4rem);
+  margin-top: var(--section-gap);
   align-items: start;
 }
 
@@ -314,14 +2424,10 @@
   box-shadow: var(--lift);
 }
 
+/* Средняя карточка отличается только сдвигом по вертикали: тёмная плашка
+   среди светлых читалась как ошибка вёрстки, а не как акцент. */
 .reports-trust article:nth-child(2) {
   margin-top: clamp(0rem, 3vw, 2.75rem);
-  background: var(--dark);
-  color: var(--dark-text);
-}
-
-.reports-trust article:nth-child(2) p {
-  color: rgba(242, 236, 224, 0.72);
 }
 
 .reports-trust article:nth-child(3) {
@@ -368,7 +2474,7 @@
 /* ---------------- перепись ---------------- */
 
 .reports-census {
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0 0;
 }
 
 .reports-section-head {
@@ -381,10 +2487,9 @@
 }
 
 .reports-census h2,
-.reports-charts h2,
 .reports-archive h2,
 .reports-docs h2 {
-  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
   max-width: 16ch;
 }
 
@@ -446,16 +2551,25 @@
 }
 
 .reports-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   filter: grayscale(0.18);
 }
 
-.reports-face--dimmed {
-  opacity: 0.22;
+/* Приглушение делает CSS по data-атрибутам: React при смене вкладки
+   меняет один атрибут обёртки и не перерисовывает восемь десятков кружков.
+   Разрез по году добавляется своим правилом на каждый известный год. */
+[data-lens="shelter"] .reports-face[data-status="home"],
+[data-lens="home"] .reports-face[data-status="shelter"] {
+  opacity: 0.24;
+  filter: grayscale(1);
 }
 
 /* кольцо рисуем внутри границ и поверх фотографии: inset-тень уходит под содержимое,
    а всё, что за границей кружка, срезает overflow: hidden */
-.reports-face--marked::after {
+.reports-face[data-status="home"]::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -482,22 +2596,32 @@
 
 /* ---------------- диаграммы ---------------- */
 
+/* Диаграммы на бумаге: белые карточки сами дают контраст. */
 .reports-charts {
-  margin: 0 12px;
-  border-radius: var(--r-xl);
-  background: var(--sheet);
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0 0;
 }
 
 .reports-charts h2 {
-  margin-bottom: 3rem;
+  margin: 0 0 3rem;
   max-width: 18ch;
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
 }
 
 .reports-chart-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
   gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+/* Три кольца в первом ряду, четвёртое с сезонной кривой во втором. */
+@media (min-width: 1000px) {
+  .reports-chart-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reports-chart--wide {
+    grid-column: span 2;
+  }
 }
 
 .reports-chart {
@@ -554,16 +2678,49 @@
 
 .reports-key {
   display: grid;
-  grid-template-columns: 12px 1fr auto;
+  grid-template-columns: 1.6rem 1fr auto;
   gap: 0.75rem;
   align-items: center;
   font-size: 0.9rem;
 }
 
-.reports-key i {
+/* Легенда: значок из серии масок в цвете сегмента; пока файла нет, точка. */
+.reports-key-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.reports-key-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
+}
+
+.reports-key .reports-fact-ico {
+  position: absolute;
+  inset: 0;
+  width: 1.6rem;
+  aspect-ratio: 1;
+}
+
+.reports-key .reports-fact-ico[data-icon="female"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="male"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="small"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="medium"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="large"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="sterilized"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="dog-head"] ~ .reports-key-dot,
+.reports-key .reports-fact-ico[data-icon="cat"] ~ .reports-key-dot {
+  display: none;
+}
+
+.reports-key .reports-fact-ico[data-icon="small"],
+.reports-key .reports-fact-ico[data-icon="medium"],
+.reports-key .reports-fact-ico[data-icon="large"] {
+  width: 1.6rem;
 }
 
 .reports-key span {
@@ -591,10 +2748,41 @@
   stroke-width: 1;
 }
 
-.reports-curve text {
-  font-size: 10px;
-  fill: var(--muted);
+/* Подписи месяцев в HTML: в SVG они масштабировались вместе с кривой,
+   в широкой карточке раздувались, на телефоне сжимались до нечитаемого.
+   Двенадцать подписей через space-between встают ровно под точками. */
+.reports-curve-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.35rem 0 0;
+  padding: 0 4.4%;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
+
+.reports-curve-axis span {
+  flex: 0 0 auto;
+  width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* На телефоне двенадцать подписей не влезают: чётные прячем, места
+   при этом не отдаём, чтобы остальные стояли под своими точками. */
+@media (max-width: 480px) {
+  .reports-curve-axis {
+    font-size: 0.62rem;
+    letter-spacing: 0;
+  }
+
+  .reports-curve-axis span:nth-child(even) {
+    visibility: hidden;
+  }
+}
+
 
 /* ---------------- коллаж ---------------- */
 
@@ -645,7 +2833,7 @@
 /* ---------------- архив по годам ---------------- */
 
 .reports-archive {
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0 0;
 }
 
 .reports-archive h2 {
@@ -675,22 +2863,19 @@
   transform: translateY(-6px);
 }
 
-.reports-year figure {
-  margin: 0;
-  aspect-ratio: 16/11;
-  border-radius: var(--r-md);
-  overflow: hidden;
-  background: var(--stone);
+/* Карточка без обложки не держит пустую колонку под изображение. */
+.reports-year--flat {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.reports-year figure img {
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+/* Без обложки текст занимает всю ширину карточки. */
+@media (min-width: 900px) {
+  .reports-year--flat .reports-year-desc {
+    max-width: 62ch;
+  }
 }
 
-.reports-year:hover figure img {
-  transform: scale(1.05);
-}
-
+/* Год крупно: он открывает карточку и работает как её заголовок. */
 .reports-year-no {
   font-family: var(--font-playfair), Georgia, serif;
   font-size: clamp(3.2rem, 6.5vw, 5rem);
@@ -707,85 +2892,133 @@
 .reports-year-desc {
   color: var(--muted);
   font-size: 0.95rem;
-  max-width: 40ch;
+  max-width: 46ch;
+  line-height: 1.5;
 }
 
+/* Факты одной строкой: столбик подписей с линейками и значками
+   читался как банковская выписка, а не как карточка года. */
 .reports-year-facts {
-  display: grid;
-  gap: 0;
-  margin: 1.7rem 0 1.6rem;
-  max-width: 30rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem clamp(1.75rem, 4vw, 3rem);
+  margin: clamp(1.75rem, 4vh, 2.5rem) 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.reports-year-facts div {
+.reports-year-facts li {
   display: grid;
-  grid-template-columns: 38px 1fr auto;
-  gap: 1rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.3rem;
   align-items: center;
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--rule);
 }
 
-.reports-year-facts div:first-child {
-  border-top: 1px solid var(--rule);
-}
-
-.reports-year-facts .reports-pic {
-  width: 22px;
-  height: 22px;
+/* Значок в янтарном кружке на два ряда: цифра и подпись стоят справа. */
+.reports-year-ico {
+  display: grid;
+  place-items: center;
+  grid-row: 1 / span 2;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.16);
   color: var(--amber-text);
 }
 
-.reports-year-facts span {
-  font-size: 0.92rem;
-  color: var(--muted);
+.reports-year-ico .reports-pic {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke-width: 1.8;
 }
 
 .reports-year-facts b {
+  color: var(--amber-text);
   font-family: var(--font-playfair), Georgia, serif;
-  font-size: 1.3rem;
-  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.4rem, 2.1vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
+.reports-year-facts span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Кнопка залита янтарём, стрелка в своём кружке: никаких обводок. */
 .reports-year-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.7rem;
+  min-height: 48px;
+  margin-top: clamp(1.5rem, 3.5vh, 2.25rem);
+  padding: 0 0.4rem 0 1.4rem;
+  border: 0;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--sheet);
-  font-size: 0.85rem;
+  background: var(--amber);
+  color: #17140f;
+  font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reports-year-cta:hover {
-  transform: translateY(-2px);
+.reports-year-cta-ico {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: rgba(23, 20, 15, 0.12);
+  transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.reports-year-cta .reports-pic {
+  width: 1.05em;
+  height: 1.05em;
+  stroke-width: 2;
+}
+
+.reports-year-cta:hover .reports-year-cta-ico {
+  translate: 2px -2px;
+  background: rgba(23, 20, 15, 0.2);
+}
+
+/* Будущие годы на тёплой подложке, без пунктира и без обводки у метки. */
 .reports-year--pending {
-  opacity: 0.6;
   box-shadow: none;
-  background: transparent;
-  border: 1px dashed var(--rule);
+  background: var(--sheet);
 }
 
-.reports-year--pending .reports-year-cta {
+.reports-year--pending .reports-year-no,
+.reports-year--pending h3 {
+  color: var(--muted);
+}
+
+.reports-year-cta--soon {
+  margin-top: 1.7rem;
+  padding: 0;
+  min-height: 0;
   background: transparent;
   color: var(--muted);
-  border: 1px solid var(--rule);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* ---------------- движение средств ---------------- */
 
 .reports-money {
-  margin: 0 12px;
-  border-radius: var(--r-xl);
+  margin: var(--section-gap) 0 0;
   background: var(--dark);
   color: var(--dark-text);
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0;
 }
 
 .reports-money h2 {
@@ -849,49 +3082,112 @@
 
 /* ---------------- документы ---------------- */
 
+/* Последний раздел перед подвалом держит и нижний отступ. */
 .reports-docs {
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0;
 }
 
 .reports-docs h2 {
   margin-bottom: 2.5rem;
 }
 
-.reports-doc-grid {
+/* Документы строками: у отчётов нет обложек, и вертикальный «лист»
+   с иконкой посередине читался как незагрузившаяся картинка. */
+.reports-doc-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: clamp(1.25rem, 2.5vw, 2rem);
-  list-style: none;
+  gap: 0.75rem;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 
 .reports-doc {
   display: grid;
-  gap: 1rem;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.reports-doc:hover {
-  transform: translateY(-8px);
-}
-
-.reports-doc-sheet {
-  aspect-ratio: 3/4;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(1.1rem, 2vw, 1.5rem) clamp(1.25rem, 2.4vw, 1.9rem);
   border-radius: var(--r-md);
   background: var(--card);
   box-shadow: var(--lift);
-  display: grid;
-  place-items: center;
-  padding: 2rem;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    translate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reports-doc-sheet .reports-pic {
-  width: 46px;
-  height: 46px;
-  color: var(--amber-text);
+.reports-doc:hover {
+  translate: 0 -3px;
+  box-shadow: 0 24px 60px -26px rgba(33, 29, 24, 0.45);
+}
+
+.reports-doc-badge {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+.reports-doc-badge .reports-pic {
+  width: 24px;
+  height: 24px;
+  color: #17140f;
+}
+
+.reports-doc-body {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.reports-doc-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 1.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-doc-action .reports-pic {
+  width: 1em;
+  height: 1em;
+  stroke-width: 1.8;
+}
+
+.reports-doc:hover .reports-doc-action {
+  border-color: var(--amber);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* На узком экране кнопка уходит под текст, иначе название сжимается в столбик. */
+@media (max-width: 620px) {
+  .reports-doc {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 1rem;
+  }
+
+  .reports-doc-action {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
+
+/* На самых узких экранах значок встаёт над названием: рядом с ним
+   заголовок документа ломался на шесть строк. */
+@media (max-width: 400px) {
+  .reports-doc {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.75rem;
+  }
 }
 
 .reports-doc b {
@@ -950,7 +3246,7 @@
 /* ---------------- финальный призыв ---------------- */
 
 .reports-cta {
-  padding: 0 12px 12px;
+  padding: 0;
 }
 
 .reports-cta-inner {
@@ -958,7 +3254,6 @@
   min-height: 440px;
   display: grid;
   align-items: center;
-  border-radius: var(--r-xl);
   overflow: hidden;
   background: var(--dark);
 }
@@ -997,175 +3292,160 @@
 
 /* ---------------- годовая страница ---------------- */
 
+/* Обложка года: год отдельной строкой над заголовком, справа кадры тех,
+   кто попал под опеку в этом году. Раньше это была тёмная панель во весь
+   экран, где цифра года налезала на заголовок. */
+/* Обложка на белом, вместе с шапкой: своя полоса во весь экран. Сверху
+   шапка уже даёт воздух, снизу шаг секции. */
 .reports-opening {
-  height: 100vh;
-  min-height: 620px;
-  padding: 12px 12px 0;
+  --reports-window: var(--card);
+  padding: clamp(0.5rem, 2vh, 1.5rem) 0 var(--section-gap);
+  background: var(--card);
 }
 
-.reports-opening-inner {
+.reports-experience[data-page="year"] > header {
+  background: var(--card);
+}
+
+.reports-year-window {
   position: relative;
-  height: 100%;
-  border-radius: var(--r-xl);
+  margin: 0 0 var(--block-gap, clamp(2rem, 5vh, 3rem));
+  aspect-ratio: 1000 / 520;
+  max-height: 74vh;
   overflow: hidden;
-  background: var(--dark);
-  display: grid;
-  place-items: center;
-}
-
-.reports-opening-media {
-  position: absolute;
-  inset: 0;
-}
-
-.reports-opening-media img {
-  filter: grayscale(0.25) contrast(1.06) brightness(0.82);
-}
-
-.reports-opening-inner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 90% at 50% 45%, rgba(23, 20, 15, 0.25) 0%, rgba(23, 20, 15, 0.78) 70%, rgba(23, 20, 15, 0.95) 100%);
-}
-
-.reports-opening-body {
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  color: var(--dark-text);
-  padding: 0 1.5rem;
-}
-
-.reports-opening-year {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(6rem, 22vw, 15rem);
-  line-height: 0.8;
-  letter-spacing: -0.05em;
-  display: block;
-}
-
-.reports-opening-body h1 {
-  font-size: clamp(1.5rem, 3.2vw, 2.6rem);
-  margin: 1.5rem auto 1.25rem;
-  max-width: 20ch;
-  font-weight: 500;
-}
-
-.reports-opening-body p {
-  max-width: 48ch;
-  margin: 0 auto;
-  color: rgba(242, 236, 224, 0.78);
-  font-size: 0.98rem;
-}
-
-.reports-letter {
-  padding: clamp(4rem, 10vh, 7rem) 0;
-}
-
-.reports-letter-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(2rem, 5vw, 4.5rem);
-  align-items: center;
-}
-
-.reports-letter figure {
-  margin: 0;
-  position: relative;
-  aspect-ratio: 4/5;
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  box-shadow: var(--lift);
   background: var(--stone);
 }
 
-.reports-letter blockquote {
-  margin: 0 0 1.75rem;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(1.5rem, 2.9vw, 2.3rem);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+.reports-year-window video,
+.reports-year-window img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.reports-letter blockquote em {
-  font-style: italic;
-  color: var(--amber-text);
-}
-
-.reports-letter p {
-  color: var(--muted);
-  max-width: 52ch;
-  margin-bottom: 1rem;
-}
-
-.reports-signature {
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--rule);
-}
-
-.reports-signature b {
+.reports-year-window svg {
+  position: relative;
+  z-index: 1;
   display: block;
-  font-size: 0.98rem;
+  width: 100%;
+  height: 100%;
 }
 
-.reports-signature span {
-  font-size: 0.85rem;
-  color: var(--muted);
+.reports-year-window text {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 500px;
+  font-weight: 600;
 }
+
+/* Кадр светлее: в цифрах он читается как тёмное пятно, а не как видео. */
+.reports-year-window video,
+.reports-year-window > img {
+  filter: brightness(1.18) saturate(1.06);
+}
+
+/* «Меньше движения»: кадр замирает, окно остаётся. */
+@media (prefers-reduced-motion: reduce) {
+  .reports-year-window video {
+    display: none;
+  }
+}
+
+.reports-opening-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.reports-opening-year {
+  display: block;
+  margin: 0;
+  color: var(--amber-text);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(4rem, 9vw, 8rem);
+  font-weight: 600;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+}
+
+.reports-opening-body h1 {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(2.4rem, 4.4vw, 4.4rem);
+  line-height: 1.02;
+}
+
+.reports-opening-lead {
+  max-width: 46ch;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-opening-period {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Кадры: первый крупный на два ряда, следующие столбиком рядом. */
+.reports-opening-faces {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-auto-rows: clamp(7rem, 12vw, 10rem);
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+}
+
+.reports-opening-faces span {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--stone);
+}
+
+.reports-opening-faces span:first-child {
+  grid-row: span 2;
+}
+
+.reports-opening-faces[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reports-opening-faces[data-count="2"] span:first-child {
+  grid-row: span 1;
+}
+
+.reports-opening-faces img {
+  object-fit: cover;
+}
+
 
 .reports-outcomes {
-  margin: 0 12px;
-  border-radius: var(--r-xl);
+  margin: var(--section-gap) 0 0;
   background: var(--sheet);
-  padding: clamp(3.5rem, 9vh, 6rem) 0;
+  padding: var(--section-gap) 0;
 }
 
 .reports-outcomes h2 {
-  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
   margin-bottom: 2.5rem;
   max-width: 18ch;
 }
 
-.reports-outcome-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: clamp(1rem, 2vw, 1.5rem);
-  list-style: none;
-  margin: 0;
-  padding: 0;
+@media (min-width: 701px) {
+  .reports-outcomes .reports-curio-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-.reports-outcome {
-  background: var(--card);
-  border-radius: var(--r-md);
-  padding: 1.9rem 1.75rem;
-  box-shadow: var(--lift);
-  display: grid;
-  gap: 0.9rem;
-}
-
-.reports-outcome .reports-pic {
-  width: 30px;
-  height: 30px;
-  color: var(--amber-text);
-}
-
-.reports-outcome b {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(2.4rem, 4.2vw, 3.2rem);
-  font-weight: 600;
-  line-height: 0.95;
-}
-
-.reports-outcome span {
-  font-size: 0.93rem;
-  color: var(--muted);
-}
-
-.reports-outcome--zero b {
-  color: var(--clay);
+.reports-outcomes .reports-curio[data-span="big"] {
+  grid-column: span 2;
 }
 
 .reports-outcome-note {
@@ -1176,76 +3456,90 @@
 }
 
 .reports-neighbors {
-  border-top: 1px solid var(--rule);
+  padding: var(--section-gap) 0;
 }
 
 .reports-neighbor-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
 }
 
 .reports-neighbor {
-  display: block;
-  padding: clamp(2.5rem, 6vw, 4rem) clamp(1.25rem, 4vw, 4rem);
-  text-decoration: none;
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border-radius: var(--r-md);
+  background: var(--card);
+  box-shadow: var(--lift);
   color: inherit;
-  transition: background 0.4s;
-}
-
-.reports-neighbor + .reports-neighbor {
-  border-left: 1px solid var(--rule);
+  text-decoration: none;
+  transition:
+    translate 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reports-neighbor:hover {
-  background: var(--sheet);
+  translate: 0 -3px;
+  box-shadow: 0 24px 60px -26px rgba(33, 29, 24, 0.45);
 }
 
 .reports-neighbor span {
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .reports-neighbor b {
-  display: block;
+  color: var(--ink);
   font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(2rem, 3.6vw, 3rem);
   font-weight: 600;
-  margin-top: 0.5rem;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
 }
 
 .reports-neighbor p {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
-  margin-top: 0.5rem;
 }
 
+.reports-neighbor p .reports-pic {
+  width: 1em;
+  height: 1em;
+  stroke-width: 1.8;
+}
+
+.reports-neighbor:hover p {
+  color: var(--amber-text);
+}
+
+/* Пустой сосед: тёплая подложка без тени, чтобы не спорил с живой ссылкой. */
 .reports-neighbor--empty {
-  opacity: 0.45;
+  background: var(--sheet);
+  box-shadow: none;
 }
 
-.reports-neighbor--right {
-  text-align: right;
+.reports-neighbor--empty b {
+  color: var(--muted);
 }
 
 /* ---------------- адаптив ---------------- */
 
 @media (max-width: 900px) {
-  .reports-hero {
-    height: auto;
-    min-height: 0;
-  }
-
-  .reports-hero-inner,
   .reports-opening-inner {
-    height: auto;
-    min-height: 560px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .reports-opening {
-    height: auto;
-    min-height: 0;
+  .reports-opening-faces {
+    grid-auto-rows: 30vw;
   }
 
   /*
@@ -1267,7 +3561,6 @@
   }
 
   .reports-year,
-  .reports-letter-grid,
   .reports-neighbor-grid {
     grid-template-columns: 1fr;
   }
@@ -1281,12 +3574,384 @@
     gap: 0.35rem;
   }
 
-  .reports-neighbor + .reports-neighbor {
-    border-left: 0;
-    border-top: 1px solid var(--rule);
-  }
 
   .reports-neighbor--right {
     text-align: left;
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * Отклик на наведение и фокус
+ *
+ * До этого у большинства контролов в переходе стоял только transform, и
+ * единственной реакцией был подъём на два пикселя — почти незаметный.
+ * Теперь вместе с ним меняются фон, рамка и тень.
+ * ------------------------------------------------------------------ */
+
+.reports-pill,
+.reports-year-cta,
+.reports-doc,
+.reports-tile,
+.reports-trust article {
+  transition:
+    translate 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-pill:active,
+.reports-year-cta:active,
+.reports-doc:active,
+.reports-tile:active {
+  scale: 0.98;
+  transition-duration: 0.12s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reports-pill:hover {
+    translate: 0 -2px;
+    box-shadow: 0 12px 28px -14px rgba(120, 77, 0, 0.55);
+  }
+
+  .reports-pill--ghost:hover {
+    background: rgba(242, 236, 224, 0.2);
+    border-color: rgba(242, 236, 224, 0.55);
+    box-shadow: none;
+  }
+
+  .reports-year-cta:hover {
+    translate: 0 -2px;
+    box-shadow: 0 14px 30px -16px rgba(120, 77, 0, 0.55);
+  }
+
+  .reports-year-cta--soon:hover {
+    translate: 0;
+    box-shadow: none;
+  }
+
+  .reports-doc:hover {
+    translate: 0 -3px;
+    border-color: var(--amber-text);
+    box-shadow: var(--lift);
+  }
+
+  .reports-tile:hover {
+    translate: 0 -3px;
+    box-shadow: 0 24px 48px -26px rgba(23, 20, 15, 0.6);
+  }
+
+  .reports-trust article:hover {
+    translate: 0 -3px;
+  }
+
+  .reports-tabs button:hover {
+    border-color: var(--amber-text);
+  }
+}
+
+/* Клавиатурный фокус повторяет наведение: иначе с клавиатуры страница
+   ощущается мёртвой рядом с мышью. */
+.reports-pill:focus-visible,
+.reports-year-cta:focus-visible,
+.reports-hero-cta:focus-visible,
+.reports-doc:focus-visible,
+.reports-tile:focus-visible {
+  translate: 0 -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-pill,
+  .reports-year-cta,
+  .reports-doc,
+  .reports-tile,
+  .reports-trust article {
+    translate: none !important;
+    scale: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Акцент в заголовке
+ *
+ * Тот же янтарный маркер, что несут заголовки на «О нас»: без него раздел
+ * выпадал из общего языка сайта. Фон задан прямо на строчном элементе, а не
+ * псевдоэлементом, — псевдоэлемент не умеет разрываться по строкам.
+ * ------------------------------------------------------------------ */
+
+/* Полоса лежит под нижними 70% строки, а не заливает слово целиком:
+   ровно так маркер устроен на «О нас», и так он читается как след от
+   руки, а не как кнопка. Полоса вырастает, когда заголовок входит
+   в экран: анимация привязана к прокрутке, JS не нужен. */
+.reports-mark {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.045em;
+  isolation: isolate;
+}
+
+.reports-mark::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -0.04em;
+  bottom: 0.03em;
+  left: -0.02em;
+  height: 0.7em;
+  border-radius: 0.08em;
+  background: rgba(245, 158, 11, 0.72);
+  transform-origin: left center;
+  animation: reports-mark-in 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-timeline: view();
+  animation-range: entry 15% entry 45%;
+}
+
+@keyframes reports-mark-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.18);
+  }
+}
+
+/* На тёмной поверхности маркер светлее: янтарь по чёрному съедает контраст. */
+.reports-flow .reports-mark::before {
+  background: rgba(255, 208, 131, 0.84);
+}
+
+/* ---------------- ритм фонов страницы года ---------------- */
+
+/* Дорога домой на белой панели: чередование фонов страницы года. */
+.reports-walk {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--card);
+}
+
+/* На телефоне высокая плитка становится обычной, а во всю ширину идёт
+   длинная сумма: так две колонки закрываются без дыры и без переноса рубля. */
+@media (max-width: 700px) {
+  .reports-curio[data-span="tall"] {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .reports-curio[data-fit="long"] {
+    grid-column: span 2;
+  }
+
+  .reports-curio[data-fit="long"] > b {
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
+  }
+}
+
+/* ---------------- страница года: стена кадров ---------------- */
+
+/* Кадры от края до края экрана, без панели и без рамок: заголовок и лид
+   в обёртке, а сама стена шире неё. Шесть колонок, крупные кадры на четыре
+   клетки, между кадрами тонкий шов бумаги. */
+.reports-year-moments {
+  margin: var(--section-gap) 0 0;
+}
+
+.reports-year-moments-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: clamp(9rem, 13vw, 15rem);
+  grid-auto-flow: dense;
+  gap: 4px;
+  margin: var(--block-gap) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reports-year-moments-grid li {
+  position: relative;
+  overflow: hidden;
+  background: var(--stone);
+  animation: reports-fact-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry calc(4% + var(--i, 0) * 1.5%) entry calc(24% + var(--i, 0) * 1.5%);
+}
+
+.reports-year-moments-grid li[data-span="big"] {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.reports-year-moments-grid li[data-span="wide"] {
+  grid-column: span 2;
+}
+
+.reports-year-moments-grid li[data-span="tall"] {
+  grid-row: span 2;
+}
+
+/* Подпись проступает при наведении: двадцать подписей разом это шум. */
+.reports-year-moments-grid .reports-moment-caption {
+  opacity: 0;
+  translate: 0 0.4rem;
+  transition:
+    opacity 0.5s ease,
+    translate 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reports-year-moments-grid .reports-moment:hover .reports-moment-caption,
+.reports-year-moments-grid .reports-moment:focus-visible .reports-moment-caption {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Планшет: четыре колонки, высокие кадры становятся обычными,
+   двадцать кадров дают ровно семь рядов. */
+@media (max-width: 1100px) {
+  .reports-year-moments-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: clamp(10rem, 22vw, 15rem);
+  }
+
+  .reports-year-moments-grid li[data-span="tall"] {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .reports-year-moments-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 45vw;
+    gap: 3px;
+  }
+
+  /* Тринадцать кадров: двадцать на двух колонках это семь экранов
+     подряд. Тринадцать закрывают ровно десять рядов. */
+  .reports-year-moments-grid li:nth-child(n + 14) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reports-year-moments-grid li {
+    animation: none;
+  }
+
+  .reports-year-moments-grid .reports-moment-caption {
+    transition: none;
+  }
+}
+
+
+/* Плитки на телефоне сжимаются к содержимому: ряд высотой в 40vw держал
+   значок сверху, цифру снизу и пустоту между ними. Фотоплитка одна
+   сохраняет высоту, иначе кадра не видно. */
+@media (max-width: 700px) {
+  .reports-curio-grid {
+    grid-auto-rows: auto;
+  }
+
+  .reports-curio {
+    gap: 0.2rem;
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+  .reports-curio-ico {
+    width: 1.9rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .reports-curio[data-span="big"] {
+    min-height: 78vw;
+  }
+}
+
+/* Обложка на телефоне: текст и кадры друг под другом тем же шагом. */
+@media (max-width: 900px) {
+  .reports-opening-inner {
+    gap: var(--block-gap, clamp(2rem, 5vh, 3rem));
+  }
+}
+
+/* Две полосы подряд стыкуются встык: иначе между ними проступала
+   полоса бумаги высотой в шаг секции. */
+:is(.reports-opening, .reports-walk, .reports-charts, .reports-outcomes, .reports-till, .reports-money, .reports-scales, .reports-moments, .reports-dynamics)
+  + :is(.reports-walk, .reports-charts, .reports-outcomes, .reports-till, .reports-money, .reports-scales, .reports-moments, .reports-dynamics) {
+  margin-top: 0;
+}
+
+/* ---------------- страницы отчётов: единый ритм ---------------- */
+
+/* Общая страница и страницы лет живут по одному шагу: между секциями
+   --section-gap, между заголовком и лидом 1rem, между лидом и
+   содержимым --block-gap. Полосы во весь экран несут тот же шаг внутри. */
+.reports-experience {
+  --block-gap: clamp(2rem, 5vh, 3rem);
+}
+
+.reports-experience h2 {
+  max-width: 18ch;
+  margin: 0 0 var(--block-gap);
+  font-size: clamp(2.6rem, 4.6vw, 4.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.reports-experience h2:has(+ p) {
+  margin-bottom: 1rem;
+}
+
+.reports-experience h2 + p {
+  max-width: 56ch;
+  margin: 0 0 var(--block-gap);
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.reports-experience h2 + p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Шапка документов: штамп рядом с заголовком, шаг после всей шапки. */
+.reports-docs-head {
+  margin-bottom: var(--block-gap);
+}
+
+.reports-docs-head h2 {
+  margin: 0;
+}
+
+/* Шапка переписи стоит столбиком, как у остальных секций: заголовок,
+   лид, шаг, вкладки. */
+.reports-section-head {
+  display: block;
+  margin-bottom: 0;
+}
+
+/* Итог общей страницы: дорожка следов сразу под заголовком, шаг после неё. */
+.reports-total h2 {
+  margin-bottom: 0.9rem;
+}
+
+.reports-scribble {
+  margin: 0 0 var(--block-gap);
+}
+
+/* Динамика: легенда это часть заголовка, она стоит вплотную. */
+.reports-dynamics h2 {
+  margin-bottom: 0.5rem;
+}
+
+/* Разрез на странице года идёт полосой на листе: белые карточки диаграмм
+   на бумаге сливались с фоном. */
+.reports-experience[data-page="year"] .reports-charts {
+  margin: var(--section-gap) 0 0;
+  padding: var(--section-gap) 0;
+  background: var(--sheet);
+}
+
+/* Касса: сумма под лидом тем же шагом, что и блоки других секций. Лид кассы
+   задан точнее общего правила, поэтому шаг держит сама сумма. */
+.reports-till-sum {
+  margin-top: var(--block-gap);
 }

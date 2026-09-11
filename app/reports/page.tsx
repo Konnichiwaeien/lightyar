@@ -3,21 +3,28 @@ import { HandCoins, Wallet, Users } from "lucide-react";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { DocumentStack } from "@/components/reports/document-stack";
 import { FinancialFlow } from "@/components/reports/financial-flow";
+import { CareDynamics } from "@/components/reports/care-dynamics";
+import { CuriousStats } from "@/components/reports/curious-stats";
+import { DonationTill } from "@/components/reports/donation-till";
 import { IntakeTreemap } from "@/components/reports/intake-treemap";
+import { MomentsGallery } from "@/components/reports/moments-gallery";
 import { PetCensus } from "@/components/reports/pet-census";
 import { ReportArchive } from "@/components/reports/report-archive";
 import { ReportCharts } from "@/components/reports/report-charts";
+import { ShelterScales } from "@/components/reports/shelter-scales";
+import { buildQuarters } from "@/lib/reports/care-dynamics";
+import { buildComposition, buildMonthlyIntake } from "@/lib/reports/shelter-scales";
 import { ReportEmptyState } from "@/components/reports/report-empty-state";
 import { ReportReveal } from "@/components/reports/report-reveal";
 import { ReportsHero } from "@/components/reports/reports-hero";
+import { newsService } from "@/lib/api/services/news";
 import { petStatsService } from "@/lib/api/services/pet-stats";
 import { reportsService } from "@/lib/api/services/reports";
-import { siteMediaService } from "@/lib/api/services/site-media";
 import type { FinancialSummary } from "@/lib/reports/normalize-report";
 import "@/components/reports/reports.css";
 
 export const metadata: Metadata = {
-  title: "Отчётность | АНБО «Светлый»",
+  title: "Отчётность",
   description:
     "Итоги работы АНБО «Светлый» с октября 2024 года: подопечные, движение средств и годовые отчёты с исходными документами.",
   alternates: { canonical: "/reports" },
@@ -45,11 +52,13 @@ function totalFinance(summaries: (FinancialSummary | undefined)[]): FinancialSum
 }
 
 export default async function ReportsPage() {
-  const [reports, stats, censusPets, siteMedia] = await Promise.all([
+  // Новости нужны только мозаике моментов: если они не пришли, страница
+  // живёт без неё, а не падает целиком.
+  const [reports, stats, censusPets, news] = await Promise.all([
     reportsService.getReports(),
     petStatsService.getPetStats(),
     petStatsService.getCensusPets(),
-    siteMediaService.getSiteMedia(),
+    newsService.getNews({ limit: 60 }).then((response) => response.data).catch(() => []),
   ]);
 
   const publishedYears = new Set(reports.map((report) => report.year));
@@ -58,7 +67,20 @@ export default async function ReportsPage() {
     .filter((year) => !publishedYears.has(year))
     .sort((left, right) => right - left);
 
-  const heroImage = siteMedia.heroPoster || reports[0]?.coverImage || censusPets.find((pet) => pet.photo)?.photo;
+  // Клиентским компонентам уходит только то, что они читают: полный список
+  // с галереями и весом сериализовался бы в разметку целиком.
+  const censusLite = censusPets.map(({ documentId, name, photo, status, type, intakeYear, inTreatment }) => ({
+    documentId,
+    name,
+    photo,
+    status,
+    type,
+    intakeYear,
+    inTreatment,
+  }));
+  const quarters = buildQuarters(censusPets);
+  const dynamicsCovers = censusPets.flatMap((pet) => (pet.cover ? [pet.cover] : [])).slice(0, 2);
+
   const allTimeFinance = totalFinance(reports.map((report) => report.financialSummary));
   const allDocuments = reports.flatMap((report) => report.documents);
 
@@ -77,14 +99,12 @@ export default async function ReportsPage() {
     <div className="reports-experience">
       <InnerHeader />
       <main id="main-content">
-        <ReportsHero imageUrl={heroImage} latestYear={reports[0]?.year} />
+        <ReportsHero />
 
         <section className="reports-total" id="itogi">
           <div className="reports-wrap">
-            <h2>Всё, что сделано с октября 2024 года</h2>
-            <svg className="reports-scribble" viewBox="0 0 260 22" aria-hidden="true">
-              <path d="M4 15c38-9 72 4 108-2 30-5 58-9 84 3" />
-            </svg>
+            <h2>Сколько животных и на какие <span className="reports-mark">деньги</span></h2>
+            <span className="reports-scribble" aria-hidden="true" />
           </div>
           <ReportReveal>
             <div className="reports-wrap">
@@ -92,74 +112,102 @@ export default async function ReportsPage() {
             </div>
           </ReportReveal>
 
-          <div className="reports-wrap">
-            <div className="reports-trust">
-              <article>
-                <div className="reports-badge">
-                  <HandCoins className="reports-pic" aria-hidden="true" />
-                </div>
-                <h3>Только частные деньги</h3>
-                <p>
-                  В отчёте Минюста отмечен единственный источник — <em>целевые поступления от граждан России</em>. Ни
-                  грантов, ни бюджетных средств, ни иностранного финансирования.
-                </p>
-              </article>
-              <article>
-                <div className="reports-badge">
-                  <Wallet className="reports-pic" aria-hidden="true" />
-                </div>
-                <h3>Ни рубля на себя</h3>
-                <p>
-                  Целевых расходов в 2024 году не было вообще. Единственное движение по счёту —{" "}
-                  <em>банковская комиссия 60,75 ₽</em>.
-                </p>
-              </article>
-              <article>
-                <div className="reports-badge">
-                  <Users className="reports-pic" aria-hidden="true" />
-                </div>
-                <h3>Трое учредителей, один сотрудник</h3>
-                <p>
-                  Марина Морозова (директор), Светлана Клюкина, Андрей Синицин. Собрание учредителей провело{" "}
-                  <em>одно заседание</em> за год.
-                </p>
-              </article>
+          <ReportReveal delay={0.05}>
+            <div className="reports-wrap">
+              <div className="reports-trust">
+                <article>
+                  <div className="reports-badge">
+                    <HandCoins className="reports-pic" aria-hidden="true" />
+                  </div>
+                  <h3>Только частные деньги</h3>
+                  <p>
+                    В отчёте Минюста стоит один источник: <em>деньги граждан России</em>. Ни грантов, ни бюджета,
+                    ни иностранного финансирования.
+                  </p>
+                </article>
+                <article>
+                  <div className="reports-badge">
+                    <Wallet className="reports-pic" aria-hidden="true" />
+                  </div>
+                  <h3>Ни рубля на себя</h3>
+                  <p>
+                    Целевых расходов в 2024 году не было вообще. Единственное движение по счёту: <em>банковская комиссия 60,75 ₽</em>.
+                  </p>
+                </article>
+                <article>
+                  <div className="reports-badge">
+                    <Users className="reports-pic" aria-hidden="true" />
+                  </div>
+                  <h3>Трое учредителей, один сотрудник</h3>
+                  <p>
+                    Марина Морозова (директор), Светлана Клюкина, Андрей Синицин. За год учредители собирались{" "}
+                    <em>один раз</em>.
+                  </p>
+                </article>
+              </div>
             </div>
-          </div>
+          </ReportReveal>
         </section>
-
-        <section className="reports-census" id="podopechnye">
-          <div className="reports-wrap">
-            <div className="reports-section-head">
-              <h2>Все подопечные — не диаграмма, а лица</h2>
-              <p>
-                Каждый кружок — настоящее животное из карточек фонда. Переключатель показывает долю, не пряча целое.
-              </p>
-            </div>
-            <PetCensus pets={censusPets} />
-          </div>
-        </section>
+        <ReportReveal>
+          <ShelterScales pets={censusPets} />
+        </ReportReveal>
 
         <ReportReveal>
           <section className="reports-charts">
             <div className="reports-wrap">
-              <h2>Цифры, у которых есть форма</h2>
-              <ReportCharts stats={stats} />
+              <h2>
+                Приют <span className="reports-mark">в разрезе</span>
+              </h2>
+              <ReportCharts composition={buildComposition(censusPets)} monthly={buildMonthlyIntake(censusPets)} />
             </div>
           </section>
         </ReportReveal>
 
-        <ReportArchive reports={reports} pendingYears={pendingYears} />
+        <DonationTill year={reports[0]?.year} finance={reports[0]?.financialSummary} />
+
+        <ReportReveal>
+          <CuriousStats pets={censusPets} />
+        </ReportReveal>
+
+        <ReportReveal>
+          <MomentsGallery news={news} />
+        </ReportReveal>
+
+
+        <section className="reports-census" id="podopechnye">
+          <div className="reports-wrap">
+            <div className="reports-section-head">
+              <h2>За каждым кружком <span className="reports-mark">чья-то жизнь</span></h2>
+              <p>
+                За каждым кружком настоящее животное. Переключайте вкладки: нужные подсветятся, остальные никуда не денутся.
+              </p>
+            </div>
+            <ReportReveal delay={0.05}>
+              <PetCensus pets={censusLite} />
+            </ReportReveal>
+          </div>
+        </section>
+
+        <ReportReveal>
+          <CareDynamics quarters={quarters} covers={dynamicsCovers} />
+        </ReportReveal>
+
+        <ReportReveal>
+          <ReportArchive reports={reports} pendingYears={pendingYears} />
+        </ReportReveal>
 
         {allTimeFinance ? (
           <FinancialFlow
             financialSummary={allTimeFinance}
-            heading="Куда ушли деньги с октября 2024 года"
-            note="Ноль — это тоже результат, и мы его не прячем. Суммы взяты из отчётов, поданных в Управление Минюста по Ярославской области."
+            heading={<>Куда ушли деньги с <span className="reports-mark">октября 2024</span></>}
+            note="Целевых расходов за этот период не было. Единственное движение по счёту: комиссия банка. Цифры взяты из отчётов, которые мы подали в Управление Минюста по Ярославской области."
           />
         ) : null}
 
-        <DocumentStack documents={allDocuments} heading="Не верьте на слово — откройте файлы" />
+        <ReportReveal>
+          <DocumentStack documents={allDocuments} heading={<>Не верьте на слово, откройте <span className="reports-mark">файлы</span></>}
+          />
+        </ReportReveal>
       </main>
     </div>
   );
