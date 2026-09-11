@@ -422,6 +422,7 @@
 
 .reports-total {
   padding: var(--section-gap) 0 0;
+  view-timeline: --total block;
 }
 
 .reports-total h2 {
@@ -453,8 +454,8 @@
   translate: 0 calc(var(--i) % 2 * -0.45rem);
   rotate: calc((var(--i) % 3 - 1) * 9deg);
   animation: reports-paw-step 1ms linear both;
-  animation-timeline: view();
-  animation-range: cover calc(6% + var(--i) * 4%) cover calc(16% + var(--i) * 4%);
+  animation-timeline: --total;
+  animation-range: entry calc(34% + var(--i) * 6%) entry calc(48% + var(--i) * 6%);
 }
 
 @keyframes reports-paw-step {

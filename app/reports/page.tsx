@@ -51,6 +51,10 @@ function totalFinance(summaries: (FinancialSummary | undefined)[]): FinancialSum
   };
 }
 
+/** Рубли с копейками, как в отчётной форме. */
+const money = (value: number) =>
+  `${new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} ₽`;
+
 export default async function ReportsPage() {
   // Новости нужны только мозаике моментов: если они не пришли, страница
   // живёт без неё, а не падает целиком.
@@ -82,6 +86,19 @@ export default async function ReportsPage() {
   const dynamicsCovers = censusPets.flatMap((pet) => (pet.cover ? [pet.cover] : [])).slice(0, 2);
 
   const allTimeFinance = totalFinance(reports.map((report) => report.financialSummary));
+
+  // Карточка про расходы считается из сданных отчётов, а не пишется руками:
+  // иначе на следующий год она осталась бы с прошлыми цифрами.
+  const spentOnSelf = (allTimeFinance?.operatingExpenses ?? 0) + (allTimeFinance?.bankFees ?? 0);
+  const spentOnPets = allTimeFinance?.targetExpenses ?? 0;
+  const feesOnly = spentOnPets === 0 && (allTimeFinance?.operatingExpenses ?? 0) === 0 && (allTimeFinance?.bankFees ?? 0) > 0;
+  const coveredYears = reports.map((report) => report.year).sort((left, right) => left - right);
+  const period =
+    coveredYears.length === 0
+      ? ""
+      : coveredYears.length === 1
+        ? `в ${coveredYears[0]} году`
+        : `с ${coveredYears[0]} по ${coveredYears[coveredYears.length - 1]} год`;
   const allDocuments = reports.flatMap((report) => report.documents);
 
   if (reports.length === 0 && stats.total === 0) {
@@ -135,9 +152,19 @@ export default async function ReportsPage() {
                   <div className="reports-badge">
                     <Wallet className="reports-pic" aria-hidden="true" />
                   </div>
-                  <h3>Ни рубля на себя</h3>
+                  <h3>{feesOnly ? "Ни рубля на себя" : "Куда ушли деньги"}</h3>
                   <p>
-                    Целевых расходов в 2024 году не было вообще. Единственное движение по счёту: <em>банковская комиссия 60,75 ₽</em>.
+                    {feesOnly ? (
+                      <>
+                        Целевых расходов {period} не было вообще. Единственное движение по счёту:{" "}
+                        <em>банковская комиссия {money(allTimeFinance?.bankFees ?? 0)}</em>.
+                      </>
+                    ) : (
+                      <>
+                        На подопечных ушло <em>{money(spentOnPets)}</em>, на работу организации и комиссии банка{" "}
+                        <em>{money(spentOnSelf)}</em>. Цифры {period} из отчётов, сданных в Минюст.
+                      </>
+                    )}
                   </p>
                 </article>
                 <article>
