@@ -145,11 +145,15 @@ test("known narrow-screen grids and controls can shrink to the viewport", async 
   assert.match(reports, /minmax\(min\(100%,\s*290px\),\s*1fr\)/);
   // Сетка считает колонку от ширины экрана: на 320 она схлопывается в одну,
   // а не выпирает наружу.
-  assert.match(campaigns, /minmax\(min\(100%,\s*20rem\),\s*1fr\)/);
+  assert.match(campaigns, /minmax\(min\(100%,\s*[\d.]+rem\),\s*1fr\)/);
   // Фильтр и сортировка переносятся, и вкладки внутри фильтра тоже:
   // раньше это держали служебные классы прямо в разметке.
   assert.match(campaigns, /\.camp-controls \{[^}]*flex-wrap:\s*wrap/);
-  assert.match(reports, /\.reports-tabs \{[^}]*flex-wrap:\s*wrap/);
+  assert.match(campaigns, /\.camp-tabs \{[^}]*flex-wrap:\s*wrap/);
+  // Поле взносов считает колонки само, а метка сжимается вслед за шириной
+  // экрана: пять с половиной сотен меток обязаны улечься и в 320 px.
+  assert.match(campaigns, /\.camp-pledges__field \{[\s\S]*?repeat\(auto-fill, minmax\(var\(--mark\), 1fr\)\)/);
+  assert.match(campaigns, /--mark:\s*clamp\(\s*7px,/);
   assert.match(about, /hyphens:\s*auto/);
   assert.doesNotMatch(about, /\.about-chapter-nav/);
 });

@@ -1,15 +1,19 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowUpRight, CheckCircle2, HandCoins } from "lucide-react";
 
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
+import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
+import { CampaignPledges } from "@/components/campaigns/campaign-pledges";
 import { InnerHeader } from "@/components/layout/inner-header";
-import { ResilientImage } from "@/components/ui/resilient-image";
 import { campaignsService } from "@/lib/api/services/campaigns";
+import { resolveCovers } from "@/lib/campaigns/cover";
+import { getPledgeField } from "@/lib/campaigns/pledges";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
-import { firstAlive } from "@/lib/media/alive";
-import "@/components/reports/reports.css";
+import { plural } from "@/lib/reports/shelter-scales";
 import "@/components/campaigns/campaigns.css";
 
 export const metadata: Metadata = {
@@ -35,14 +39,6 @@ const SORTS: Record<string, string> = {
   collected_asc: "current:asc",
 };
 
-function plural(count: number, one: string, few: string, many: string): string {
-  const mod10 = count % 10;
-  const mod100 = count % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}
-
 export default async function CampaignsPage({ searchParams }: PageProps) {
   const resolved = await searchParams;
   const status = resolved.status === "closed" ? "closed" : "active";
@@ -50,149 +46,171 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
   const parsedPage = typeof resolved.page === "string" ? Number.parseInt(resolved.page, 10) : 1;
   const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
 
-  const campaignsData = await campaignsService.getCampaigns({
-    status,
-    sort: SORTS[sort] ?? SORTS.date_desc,
-    limit: ITEMS_PER_PAGE,
-    start: (page - 1) * ITEMS_PER_PAGE,
-  });
+  /* Сцена считается по всем открытым сборам, а список по фильтру из адреса.
+     Запросы идут разом: последовательно они выстроились бы в лесенку и
+     задержали бы первый байт на время лишнего обхода CMS. */
+  const [campaignsData, field] = await Promise.all([
+    campaignsService.getCampaigns({
+      status,
+      sort: SORTS[sort] ?? SORTS.date_desc,
+      limit: ITEMS_PER_PAGE,
+      start: (page - 1) * ITEMS_PER_PAGE,
+    }),
+    getPledgeField(),
+  ]);
 
-  // Обложки сборов переживают свои файлы: запись в CMS есть, объекта в
-  // бакете нет. Спрашиваем хранилище и при пропаже ставим портрет подопечного.
-  const list = await Promise.all(
-    (campaignsData.data || []).map(normalizeCampaignData).map(async (fund) => ({
-      ...fund,
-      image: (await firstAlive([fund.image, fund.petImage])) ?? "/photo-placeholder.jpg",
-    })),
-  );
+  const list = await resolveCovers((campaignsData.data || []).map(normalizeCampaignData));
   const total = campaignsData.meta?.pagination?.total || 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
 
-  // Сводка считается по показанной странице: это честно, потому что других
-  // сумм у нас на руках нет, и подпись говорит ровно это.
-  const collected = list.reduce((sum, item) => sum + item.current, 0);
-  const goal = list.reduce((sum, item) => sum + item.total, 0);
-  const openNow = list.filter((item) => item.status === "active").length;
-
   return (
-    <div className="surface">
+    <div className="camp">
       <InnerHeader />
       <main id="main-content">
-        <section className="camp-head">
-          <div className="reports-wrap">
-            <h1>
-              Все <span className="reports-mark">сборы</span>
-            </h1>
+        <div className="camp-inner">
+          <section className="camp-head">
+            <div>
+              <p className="camp-kicker">Чем помочь прямо сейчас</p>
+              <h1>
+                Открытые
+                <em>сборы</em>
+              </h1>
+            </div>
             <p className="camp-lead">
-              {total > 0 ? (
+              {field ? (
                 <>
-                  Сейчас в работе <strong>{total}</strong> {plural(total, "сбор", "сбора", "сборов")}. Каждый закрывает
-                  конкретную нужду приюта: корм, лечение, тёплые вольеры. Видно, сколько уже собрано и сколько осталось.
+                  Каждый сбор закрывает одну нужду приюта: корм, лечение, тёплые вольеры. Сейчас открыто{" "}
+                  <strong>
+                    {field.funds} {plural(field.funds, "сбор", "сбора", "сборов")}
+                  </strong>
+                  , и помочь можно любому из них.
                 </>
               ) : (
-                <>Здесь появятся сборы на корм, лечение и содержание приюта. Сейчас открытых сборов нет.</>
+                <>Здесь появятся сборы на корм, лечение и содержание приюта. Открытых сборов сейчас нет.</>
               )}
             </p>
+          </section>
+        </div>
 
-            {list.length > 0 ? (
-              <ul className="camp-totals">
-                <li data-tone="amber">
-                  <b className="reports-num">{money(collected)}</b>
-                  <span>уже собрано на этой странице</span>
-                </li>
-                <li>
-                  <b className="reports-num">{money(Math.max(0, goal - collected))}</b>
-                  <span>осталось до цели</span>
-                </li>
-                <li>
-                  <b className="reports-num">{openNow}</b>
-                  <span>{plural(openNow, "сбор идёт", "сбора идут", "сборов идут")}</span>
-                </li>
-              </ul>
-            ) : null}
-          </div>
-        </section>
+        {/* Поле взносов: сцена страницы. Разбор замысла в самом компоненте. */}
+        {field ? <CampaignPledges field={field} /> : null}
 
-        <section className="camp-list" aria-label="Список сборов">
-          <div className="reports-wrap">
-            <Suspense fallback={null}>
-              <CampaignsControls />
-            </Suspense>
+        <div className="camp-inner">
+          <Suspense fallback={null}>
+            <CampaignsControls />
+          </Suspense>
 
-            {list.length > 0 ? (
-              <ul className="camp-grid">
-                {list.map((fund, index) => {
-                  const share = fund.total > 0 ? Math.min(1, fund.current / fund.total) : 0;
-                  const left = Math.max(0, fund.total - fund.current);
+          {list.length > 0 ? (
+            <ul className="camp-grid">
+              {list.map((fund, index) => {
+                const share = fund.total > 0 ? Math.min(1, fund.current / fund.total) : 0;
+                const rest = Math.max(0, fund.total - fund.current);
 
-                  return (
-                    <li key={fund.id}>
-                      <Link
-                        className="camp"
-                        href={`/campaigns/${fund.id}`}
-                        data-status={fund.status}
-                        style={{ "--i": index } as React.CSSProperties}
-                      >
-                        <span className="camp-shot">
-                          <span className="camp-tag">{fund.tag}</span>
-                          <ResilientImage
-                            src={fund.image}
+                return (
+                  <li key={fund.id}>
+                    <article
+                      className="camp-card"
+                      data-status={fund.status}
+                      style={{ "--i": index } as React.CSSProperties}
+                    >
+                      <div className="camp-card__media">
+                        {fund.shot.src ? (
+                          <Image
+                            src={fund.shot.src}
                             alt=""
-                            fill
+                            width={640}
+                            height={480}
                             sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw"
-                            className="object-cover"
-                            fallbackLabel="Обложка сбора появится позже"
                           />
-                        </span>
+                        ) : null}
+                        <span className="camp-tag">{fund.tag}</span>
+                        {fund.shot.borrowed ? <span className="camp-borrowed">кадр из жизни приюта</span> : null}
+                      </div>
 
-                        <span className="camp-body">
-                          {fund.petName ? <span className="camp-pet">Сбор для {fund.petName}</span> : null}
-                          <h2>{fund.title}</h2>
-                          {fund.desc ? <p className="camp-desc">{fund.desc}</p> : null}
+                      <div className="camp-card__content">
+                        <div className="camp-card__title">
+                          <b>
+                            <Link href={`/campaigns/${fund.id}`}>{fund.title}</Link>
+                          </b>
+                          {fund.petName ? <span className="camp-pet-name">{fund.petName}</span> : null}
+                        </div>
+                        <p className="camp-specs">{fund.desc}</p>
 
-                          <span className="camp-money">
-                            <b className="reports-num">{money(fund.current)}</b>
-                            <span className="reports-num">из {money(fund.total)}</span>
+                        <div
+                          className="camp-bar"
+                          role="progressbar"
+                          aria-valuenow={fund.current}
+                          aria-valuemin={0}
+                          aria-valuemax={fund.total}
+                          aria-label={`Собрано ${fund.current} рублей из ${fund.total}`}
+                        >
+                          <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                        </div>
+
+                        <p className="camp-money">
+                          <b>{money(fund.current)}</b>
+                          <span>
+                            {fund.status === "closed"
+                              ? `цель ${money(fund.total)}`
+                              : rest > 0
+                                ? `осталось ${money(rest)}`
+                                : "цель собрана"}
                           </span>
+                        </p>
+                      </div>
 
-                          <span
-                            className="camp-bar"
-                            role="progressbar"
-                            aria-valuenow={fund.current}
-                            aria-valuemin={0}
-                            aria-valuemax={fund.total}
-                            aria-label={`Собрано ${fund.current} рублей из ${fund.total}`}
-                          >
-                            <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                      <div className="camp-card__actions">
+                        {fund.status === "active" ? (
+                          <CampaignHelpButton id={fund.id} title={fund.title} />
+                        ) : (
+                          <span className="camp-closed">
+                            <CheckCircle2 size={17} aria-hidden="true" /> Сбор закрыт
                           </span>
+                        )}
+                        <Link className="camp-btn camp-btn--quiet" href={`/campaigns/${fund.id}`}>
+                          Подробнее о сборе
+                          <ArrowUpRight size={16} aria-hidden="true" />
+                        </Link>
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
 
-                          <span className="camp-state">
-                            {fund.status === "active"
-                              ? left > 0
-                                ? `Осталось ${money(left)}`
-                                : "Цель собрана"
-                              : "Сбор закрыт"}
-                          </span>
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="camp-empty">
-                {status === "closed"
-                  ? "Закрытых сборов пока нет. Посмотрите те, что идут сейчас."
-                  : "Открытых сборов сейчас нет. Помочь приюту можно на главной странице."}
-              </p>
-            )}
+              {status === "active" ? (
+                <li className="camp-grid__own">
+                  <article className="camp-card camp-card--own" style={{ "--i": list.length } as React.CSSProperties}>
+                    <span className="camp-own-icon" aria-hidden="true">
+                      <HandCoins size={38} />
+                    </span>
+                    <span className="camp-own-text">
+                      <b>Просто помочь</b>
+                      <p>
+                        Не выбрали сбор? Взнос без цели идёт на то, что нужнее прямо сейчас: корм, лекарства, оплату
+                        клиники.
+                      </p>
+                    </span>
+                    <Link className="camp-btn camp-btn--quiet" href="/#donate">
+                      Сделать взнос
+                      <ArrowUpRight size={16} aria-hidden="true" />
+                    </Link>
+                  </article>
+                </li>
+              ) : null}
+            </ul>
+          ) : (
+            <p className="camp-empty">
+              {status === "closed"
+                ? "Закрытых сборов пока нет. Посмотрите те, что идут сейчас."
+                : "Открытых сборов сейчас нет. Помочь приюту можно на главной странице."}
+            </p>
+          )}
 
-            <Suspense fallback={null}>
-              <CampaignsPagination currentPage={safePage} totalPages={totalPages} />
-            </Suspense>
-          </div>
-        </section>
+          <Suspense fallback={null}>
+            <CampaignsPagination currentPage={safePage} totalPages={totalPages} />
+          </Suspense>
+        </div>
       </main>
     </div>
   );

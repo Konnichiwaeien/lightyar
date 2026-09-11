@@ -19,13 +19,21 @@ export async function alive(src: string): Promise<boolean> {
 }
 
 /**
- * Первый живой адрес из списка. Если хранилище молчит целиком, отдаёт
- * первый непустой: пустая страница хуже возможной серой заглушки.
+ * Первый живой адрес из списка.
+ *
+ * По умолчанию, если хранилище молчит целиком, отдаёт первый непустой:
+ * для галереи возможная заглушка лучше пустоты. Со строгим режимом не
+ * отдаёт ничего, и тогда вызывающий рисует своё: плитку цветом вместо
+ * битой картинки.
  */
-export async function firstAlive(candidates: (string | undefined)[]): Promise<string | undefined> {
+export async function firstAlive(
+  candidates: (string | undefined)[],
+  { strict = false } = {},
+): Promise<string | undefined> {
   const list = candidates.filter((item): item is string => Boolean(item));
   if (list.length === 0) return undefined;
 
   const checks = await Promise.all(list.map(alive));
-  return list.find((_, index) => checks[index]) ?? list[0];
+  const found = list.find((_, index) => checks[index]);
+  return found ?? (strict ? undefined : list[0]);
 }

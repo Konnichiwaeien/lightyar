@@ -8,8 +8,8 @@ import { useCallback } from "react";
  * отфильтрованный список можно переслать, а кнопка «назад» возвращает
  * прежний набор.
  *
- * Вкладки те же, что в переписи подопечных: выбор взаимоисключающий,
- * поэтому это переключатель, а не пара независимых кнопок.
+ * Выбор взаимоисключающий, поэтому это переключатель, а не пара
+ * независимых кнопок: скринридер объявит «такой-то из двух».
  */
 export function CampaignsControls() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function CampaignsControls() {
 
   return (
     <div className="camp-controls">
-      <div className="reports-tabs" role="radiogroup" aria-label="Какие сборы показывать">
+      <div className="camp-tabs" role="radiogroup" aria-label="Какие сборы показывать">
         {[
           { key: "active", label: "Идут сейчас" },
           { key: "closed", label: "Закрытые" },
@@ -43,7 +43,6 @@ export function CampaignsControls() {
             type="button"
             role="radio"
             aria-checked={currentStatus === tab.key}
-            aria-pressed={currentStatus === tab.key}
             onClick={() => go("status", tab.key)}
           >
             {tab.label}
