@@ -102,12 +102,16 @@ export function PetCard({ pet, isLarge = false, index = 0 }: PetCardProps) {
       }}
       className={`${colSpanClass} h-full list-none card-lazy ${showBreedTooltip ? "relative z-40" : ""}`}
     >
-      <Link
-        href={`/pets/${pet.id}`}
+      <article
         className="group relative bg-white border border-[#1c1c1c]/5 rounded-[2rem] flex flex-col shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1 pointer-events-auto h-full min-h-[440px] cursor-pointer w-full"
         id={`pet-card-${pet.id}`}
       >
-        <article className="h-full flex flex-col justify-between flex-1">
+        <Link
+          href={`/pets/${pet.id}`}
+          aria-label={`Подробнее о питомце ${pet.name}`}
+          className="absolute inset-0 z-20 rounded-[2rem] focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-amber-600"
+        />
+        <div className="h-full flex flex-col justify-between flex-1">
           <figure 
             className={`w-full ${isLarge ? 'h-96 sm:h-72' : 'h-72 sm:h-56'} shrink-0 overflow-hidden rounded-[2rem] relative select-none`}
             onMouseLeave={() => setActivePhotoIndex(0)}
@@ -146,7 +150,8 @@ export function PetCard({ pet, isLarge = false, index = 0 }: PetCardProps) {
                   fill
                   sizes={isLarge ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
                   className={`object-cover transition-transform duration-1000 ${pet.status === 'home' ? 'grayscale-[30%] opacity-80' : 'group-hover:scale-105'}`}
-                  priority={isLarge}
+                  loading={isLarge ? "eager" : "lazy"}
+                  fetchPriority={isLarge ? "high" : "auto"}
                 />
               </div>
             )}
@@ -253,24 +258,6 @@ export function PetCard({ pet, isLarge = false, index = 0 }: PetCardProps) {
               </>
             )}
 
-            {/* Invisible segment zones for hover switching (desktop only) */}
-            {pet.images && pet.images.length > 1 && !isMobile && (
-              <div 
-                className="absolute inset-0 z-10 flex cursor-pointer select-none"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                {pet.images.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="h-full flex-1"
-                    onMouseEnter={() => setActivePhotoIndex(idx)}
-                  />
-                ))}
-              </div>
-            )}
           </figure>
 
           <div className="p-4 sm:p-6 md:p-8 flex flex-col flex-1 bg-white rounded-b-[2rem] relative z-10 w-full h-full justify-between">
@@ -622,8 +609,8 @@ export function PetCard({ pet, isLarge = false, index = 0 }: PetCardProps) {
               </div>
             </div>
           </div>
-        </article>
-      </Link>
+        </div>
+      </article>
     </motion.li>
   );
 }

@@ -11,7 +11,7 @@ import { PetsGrid } from "@/components/pets/pets-grid";
 import { CatalogUnavailable } from "@/components/pets/catalog-unavailable";
 
 export const metadata: Metadata = {
-  title: "Наши питомцы | Приют для животных «Светлый» Ярославль",
+  title: "Наши питомцы",
   description: "Ищете верного друга? Посмотрите наш каталог собак и кошек из приюта «Светлый» в Ярославле. Все питомцы привиты, социализированы и очень ждут свою любящую семью. Подарите хвостику дом!",
   keywords: ["приют для животных", "взять собаку из приюта", "взять кошку", "ярославль", "светлый", "бездомные животные", "найти друга"],
 };
@@ -24,7 +24,8 @@ export default async function PetsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const status = typeof resolvedSearchParams.status === "string" ? resolvedSearchParams.status : "shelter";
   const sort = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : "name_asc";
-  const page = typeof resolvedSearchParams.page === "string" ? parseInt(resolvedSearchParams.page, 10) : 1;
+  const parsedPage = typeof resolvedSearchParams.page === "string" ? parseInt(resolvedSearchParams.page, 10) : 1;
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
 
   // New filters
   const type = typeof resolvedSearchParams.type === "string" && (resolvedSearchParams.type === "dog" || resolvedSearchParams.type === "cat") ? resolvedSearchParams.type : undefined;
@@ -47,37 +48,32 @@ export default async function PetsPage({ searchParams }: PageProps) {
   };
   const strapiSort = sortMap[sort] || 'name:asc';
 
-  // Fetch filtered pets and all shelter pets for quiz in parallel
-  const [realPetsRaw, allShelterPetsRaw, siteMedia] = await Promise.all([
-    petsService.getPets({
+  // The catalog is paginated in Strapi. The quiz uses a separate lightweight
+  // projection instead of serializing every populated pet into the page.
+  const [petsResponse, allShelterPetsRaw, siteMedia] = await Promise.all([
+    petsService.getPetsCollection({
       status: status === "home" ? "home" : "shelter",
       type,
       sex,
       size,
       search,
       sort: strapiSort,
-      limit: isFavorites ? 200 : undefined,
+      ids: isFavorites ? favoriteIds : undefined,
+      limit: itemsPerPage,
+      start: (page - 1) * itemsPerPage,
     }),
-    petsService.getPets({ status: 'shelter', limit: 150 }),
+    petsService.getQuizPets(),
     siteMediaService.getSiteMedia(),
   ]);
 
-  if (realPetsRaw === null) {
+  if (!petsResponse) {
     return <CatalogUnavailable />;
   }
 
-  // Normalize API data to clean flat structures
-  const petsMapped = realPetsRaw.map(normalizePetData);
-
-  // Filter by favorites if active; re-sort client-side since we filter by IDs locally
-  const petsFiltered = isFavorites
-    ? petsMapped.filter(pet => favoriteIds.includes(pet.id))
-    : petsMapped;
-
-  // Paginate
-  const totalPages = Math.ceil(petsFiltered.length / itemsPerPage);
+  const paginated = (petsResponse.data || []).map(normalizePetData);
+  const totalItems = petsResponse.meta?.pagination?.total || paginated.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
-  const paginated = petsFiltered.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
   const allShelterPetsMapped = (allShelterPetsRaw || []).map(normalizePetData);
 

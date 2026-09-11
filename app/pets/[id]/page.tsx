@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   if (!pet) {
     return {
-      title: "Питомец не найден | Светлый",
+      title: "Питомец не найден",
     };
   }
 
   return {
-    title: `${pet.name} | Наши питомцы | Светлый`,
+    title: `${pet.name} | Наши питомцы`,
     description: pet.shortDescr || pet.descr || `Познакомьтесь с подопечным ${pet.name} в приюте Светлый.`,
   };
 }
