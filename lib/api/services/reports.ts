@@ -24,19 +24,30 @@ const FRESH_POPULATE = ["populate[fundingNote]=true", "populate[teamNote]=true"]
 const REPORT_POPULATE = [...BASE_POPULATE, ...FRESH_POPULATE].join("&");
 const LEGACY_POPULATE = BASE_POPULATE.join("&");
 
+/** Ровно наш код ответа, а не число, случайно попавшее в адрес запроса. */
+const SCHEMA_TOO_OLD = /Strapi API Error: 400/;
+
+/**
+ * Схема без новых полей: узнаём об этом один раз и дальше не спрашиваем.
+ * Иначе каждый показ страницы стоил бы лишнего отказа и записи в журнал.
+ */
+let freshFields = true;
+
 export class ReportsService extends StrapiClient {
   /** Запрос со свежими полями, а если схема их ещё не знает, то без них. */
   private async fetchReports(query: (populate: string) => string) {
+    const ask = (populate: string) =>
+      this.fetchJson<StrapiResponseCollection<StrapiAnnualReport>>(query(populate), { next: { revalidate: 60 } });
+
+    if (!freshFields) return ask(LEGACY_POPULATE);
+
     try {
-      return await this.fetchJson<StrapiResponseCollection<StrapiAnnualReport>>(query(REPORT_POPULATE), {
-        next: { revalidate: 60 },
-      });
+      return await ask(REPORT_POPULATE);
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("400")) throw error;
-      console.warn("[ReportsService] Схема CMS без карточек доверия, повторяю запрос без них.");
-      return await this.fetchJson<StrapiResponseCollection<StrapiAnnualReport>>(query(LEGACY_POPULATE), {
-        next: { revalidate: 60 },
-      });
+      if (!(error instanceof Error) || !SCHEMA_TOO_OLD.test(error.message)) throw error;
+      freshFields = false;
+      console.warn("[ReportsService] Схема CMS без карточек доверия, дальше спрашиваю без них.");
+      return ask(LEGACY_POPULATE);
     }
   }
 
