@@ -31,23 +31,27 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  * Каждая вырезка проходит стандарт из docs/pet-cutout-standard.md: срез,
  * посторонние куски, вуаль, рост, резкость, плита фона, осанка, симметрия.
  * Альма и Джой отсюда ушли: у первой срезан хвост, у второго лапа.
- * Приёмку сторожит hero-cutouts.test.mjs, поэтому список короткий, но чистый.
+ * Приёмку сторожит hero-cutouts.test.mjs.
+ *
+ * Порядок вперемешку: светлые и тёмные подопечные чередуются, и первым
+ * стоит не тот, кто был на странице раньше, иначе смена набора незаметна.
+ *
+ * Смотреть вырезку нужно на янтарном пятне, а не на белом листе: на белом
+ * не видно ни снега на шерсти, ни соломинок у лап. Альва, Матильда и Гуляш
+ * отсеялись именно так, уже после того, как прошли числовую приёмку.
  */
 const PETS = [
-  { src: "/reports/pets/kapral.webp", name: "Капрал" },
-  { src: "/reports/pets/taya.webp", name: "Тая" },
-  { src: "/reports/pets/dzhin.webp", name: "Джин" },
-  { src: "/reports/pets/bobbi.webp", name: "Бобби" },
   { src: "/reports/pets/gerda.webp", name: "Герда" },
-  { src: "/reports/pets/matilda.webp", name: "Матильда" },
-  { src: "/reports/pets/alva.webp", name: "Альва" },
+  { src: "/reports/pets/kapral.webp", name: "Капрал" },
+  { src: "/reports/pets/bobbi.webp", name: "Бобби" },
   { src: "/reports/pets/tisha.webp", name: "Тиша" },
-  { src: "/reports/pets/gulyash.webp", name: "Гуляш" },
-  { src: "/reports/pets/dzhek.webp", name: "Джек" },
+  { src: "/reports/pets/taya.webp", name: "Тая" },
   { src: "/reports/pets/lakki.webp", name: "Лакки" },
+  { src: "/reports/pets/dzhin.webp", name: "Джин" },
+  { src: "/reports/pets/dzhek.webp", name: "Джек" },
 ] as const;
 
-const HOLD_MS = 6200;
+const HOLD_MS = 4200;
 
 const stagger = {
   hidden: {},
