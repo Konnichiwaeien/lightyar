@@ -43,3 +43,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# рабочая папка: черновики, кадры проверок, промежуточные ассеты
+/tmp/
+
+# логи локальных серверов
+*.stdout.log
+*.stderr.log
+
+# локальные помощники агентов: восстанавливаются из skills-lock.json
+/.agents/
+/.claude/skills/
+/.superpowers/
