@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InnerHeader } from "@/components/layout/inner-header";
@@ -26,11 +27,18 @@ function parseYear(value: string): number | undefined {
   return year >= 2000 && year <= 2100 ? year : undefined;
 }
 
+/**
+ * Заголовок страницы и сама страница просят один и тот же отчёт. Без памятки
+ * это два одинаковых запроса в CMS на каждый показ: React держит результат
+ * до конца обработки запроса и второй раз в сеть не ходит.
+ */
+const loadReport = cache((year: number) => reportsService.getReportByYear(year));
+
 export async function generateMetadata({ params }: PageProps<"/reports/[year]">): Promise<Metadata> {
   const { year: yearParam } = await params;
   const year = parseYear(yearParam);
   if (year === undefined) notFound();
-  const report = await reportsService.getReportByYear(year);
+  const report = await loadReport(year);
   if (!report) notFound();
   return {
     title: `${report.title}. ${report.year}`,
@@ -47,7 +55,7 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
   // Лица подопечных этого года: обложка и первая плитка итогов. Если карточки
   // не пришли, страница живёт без фотографий, а не падает.
   const [report, years, censusPets, siteMedia, news] = await Promise.all([
-    reportsService.getReportByYear(year),
+    loadReport(year),
     reportsService.getReportYears(),
     petStatsService.getCensusPets().catch(() => []),
     siteMediaService.getSiteMedia().catch((): SiteMedia => ({})),
@@ -58,6 +66,11 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
   const faces = censusPets
     .filter((pet) => pet.intakeYear === year && pet.cover)
     .map((pet) => ({ src: pet.cover!, name: pet.name }));
+
+  // Обложка забирает первые кадры года, «Год коротко» следующий за ними:
+  // один и тот же портрет в двух соседних секциях читается как промах вёрстки.
+  const facesOnCover = report.coverImage ? 0 : Math.min(3, faces.length);
+  const highlightFace = faces[facesOnCover] ?? faces[0];
 
   // Все разрезы года считаются один раз, секции берут отсюда готовое.
   const data = buildYearReport(year, censusPets, news);
@@ -73,7 +86,7 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
       <main id="main-content">
         <ReportOpening report={report} faces={faces} video={siteMedia.heroVideo} poster={siteMedia.heroPoster} />
 
-        <YearHighlights data={data} finance={report.financialSummary} />
+        <YearHighlights data={data} finance={report.financialSummary} face={highlightFace} />
 
         <YearMoments news={data.news} archive={news} year={report.year} />
 
@@ -96,7 +109,6 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
             </>
           }
           face={faces[0]}
-          note="Цифры взяты из карточек подопечных: даты поступления и пристройства. Ноль здесь настоящий, а не «нет данных»: без данных ячейка осталась бы пустой."
         />
 
         <DonationTill year={report.year} finance={report.financialSummary} />
@@ -119,7 +131,7 @@ export default async function AnnualReportPage({ params }: PageProps<"/reports/[
             <>
               Исходные документы <span className="reports-mark">за {report.year} год</span>
             </>
-          } stamped />
+          } />
 
         <ReportNeighbors olderYear={olderYear} newerYear={newerYear} firstYear={firstYear} />
       </main>

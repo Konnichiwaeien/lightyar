@@ -812,7 +812,6 @@
 .reports-fact-ico[data-icon="feed-bag"],
 .reports-fact-ico[data-icon="van"],
 .reports-fact-ico[data-icon="hands-paw"],
-.reports-fact-ico[data-icon="stamp"],
 .reports-fact-ico[data-icon="pen"],
 .reports-fact-ico[data-icon="heart-pulse"],
 .reports-fact-ico[data-icon="ruble"] {
@@ -820,7 +819,6 @@
 }
 
 /* Значки страницы года: пропорции берём из самих файлов. */
-.reports-fact-ico[data-icon="stamp"] { --icon: url("/reports/marks/stamp.png"); }
 .reports-fact-ico[data-icon="ruble"] { --icon: url("/reports/marks/ruble.png"); }
 
 .reports-fact-ico[data-icon="syringe"] {
@@ -1918,20 +1916,6 @@
   .reports-health-dose {
     transform: scaleX(var(--fill));
   }
-}
-
-.reports-docs-head {
-  display: flex;
-  align-items: center;
-  gap: clamp(1rem, 2vw, 1.75rem);
-}
-
-.reports-docs-stamp {
-  flex: none;
-  margin-left: auto;
-  width: clamp(3.4rem, 5vw, 4.6rem);
-  background: var(--clay);
-  rotate: -8deg;
 }
 
 .reports-year-ages {
@@ -3448,13 +3432,6 @@
   grid-column: span 2;
 }
 
-.reports-outcome-note {
-  margin-top: 2rem;
-  font-size: 0.93rem;
-  color: var(--muted);
-  max-width: 62ch;
-}
-
 .reports-neighbors {
   padding: var(--section-gap) 0;
 }
@@ -3768,6 +3745,7 @@
 .reports-year-moments-grid li {
   position: relative;
   overflow: hidden;
+  border-radius: var(--r-md);
   background: var(--stone);
   animation: reports-fact-in 1ms linear both;
   animation-timeline: view();
@@ -3910,15 +3888,6 @@
 .reports-experience h2 + p strong {
   color: var(--ink);
   font-weight: 600;
-}
-
-/* Шапка документов: штамп рядом с заголовком, шаг после всей шапки. */
-.reports-docs-head {
-  margin-bottom: var(--block-gap);
-}
-
-.reports-docs-head h2 {
-  margin: 0;
 }
 
 /* Шапка переписи стоит столбиком, как у остальных секций: заголовок,

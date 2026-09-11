@@ -12,8 +12,19 @@ const money = (value: number) =>
  * и сколько денег собрали. Крупная плитка слева с настоящим кадром, две
  * цветные справа. Секция прячется, если ни одного числа нет.
  */
-export function YearHighlights({ data, finance }: { data: YearReport; finance?: FinancialSummary }) {
-  const face = data.arrived.find((pet) => pet.cover) ?? data.inCare.find((pet) => pet.cover);
+export function YearHighlights({
+  data,
+  finance,
+  face,
+}: {
+  data: YearReport;
+  finance?: FinancialSummary;
+  /** Кадр для крупной плитки. Страница выбирает его так, чтобы он не повторял обложку. */
+  face?: { src: string };
+}) {
+  // Кадра может не быть: год без карточек с фотографиями оставит плитку цветной.
+  const fallback = data.arrived.find((pet) => pet.cover) ?? data.inCare.find((pet) => pet.cover);
+  const portrait = face ?? (fallback?.cover ? { src: fallback.cover } : undefined);
   const income = finance?.income;
   const hasNumbers = data.arrived.length > 0 || data.inCare.length > 0 || income !== undefined;
   if (!hasNumbers) return null;
@@ -26,10 +37,10 @@ export function YearHighlights({ data, finance }: { data: YearReport; finance?: 
         </h2>
 
         <ul className="reports-curio-grid">
-          <li className="reports-curio" data-tone={face ? "photo" : "card"} data-span="big" style={{ "--i": 0 } as React.CSSProperties}>
-            {face?.cover ? (
+          <li className="reports-curio" data-tone={portrait ? "photo" : "card"} data-span="big" style={{ "--i": 0 } as React.CSSProperties}>
+            {portrait ? (
               <>
-                <Image src={face.cover} alt="" fill sizes="(max-width: 700px) 100vw, 50vw" priority />
+                <Image src={portrait.src} alt="" fill sizes="(max-width: 700px) 100vw, 50vw" />
                 <span className="reports-curio-scrim" aria-hidden="true" />
               </>
             ) : null}

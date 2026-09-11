@@ -38,13 +38,11 @@ export function OutcomeList({
   outcomes,
   customMetrics,
   heading,
-  note,
   face,
 }: {
   outcomes: ReportOutcome[];
   customMetrics: ReportCustomMetric[];
   heading: ReactNode;
-  note?: string;
   face?: { src: string; name: string };
 }) {
   if (outcomes.length === 0 && customMetrics.length === 0) return null;
@@ -98,7 +96,6 @@ export function OutcomeList({
           ))}
         </ul>
 
-        {note ? <p className="reports-outcome-note">{note}</p> : null}
       </div>
     </section>
   );

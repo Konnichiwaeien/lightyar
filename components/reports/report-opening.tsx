@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { AnnualReport } from "@/lib/reports/normalize-report";
+import { markTail, withFigures } from "@/lib/reports/emphasis";
 
 /**
  * Обложка годового отчёта: год огромными цифрами, внутри которых идёт видео.
@@ -57,8 +58,8 @@ export function ReportOpening({
 
         <div className="reports-opening-inner">
           <div className="reports-opening-body">
-            <h1>{report.title}</h1>
-            <p className="reports-opening-lead">{report.summary}</p>
+            <h1>{markTail(report.title)}</h1>
+            <p className="reports-opening-lead">{withFigures(report.summary)}</p>
             {period ? <p className="reports-opening-period">{period}</p> : null}
           </div>
 

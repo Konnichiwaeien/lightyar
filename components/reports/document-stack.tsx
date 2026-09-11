@@ -17,22 +17,16 @@ const TYPE_LABEL: Record<ReportDocument["documentType"], string> = {
 export function DocumentStack({
   documents,
   heading,
-  stamped = false,
 }: {
   documents: ReportDocument[];
   heading: ReactNode;
-  /** Штамп у заголовка: годовой отчёт сдан и подписан, общая страница его не ставит */
-  stamped?: boolean;
 }) {
   if (documents.length === 0) return null;
 
   return (
     <section className="reports-docs" id="dokumenty">
       <div className="reports-wrap">
-        <div className="reports-docs-head">
-          <h2>{heading}</h2>
-          {stamped ? <i className="reports-fact-ico reports-docs-stamp" data-icon="stamp" aria-hidden="true" /> : null}
-        </div>
+        <h2>{heading}</h2>
         {/* Строкой, а не листом: у отчёта нет обложки, и белый прямоугольник
             с иконкой посередине оставался пустым на пол-экрана. */}
         <ul className="reports-doc-list">

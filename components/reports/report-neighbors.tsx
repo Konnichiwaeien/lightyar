@@ -29,7 +29,7 @@ export function ReportNeighbors({
         ) : (
           <div className="reports-neighbor reports-neighbor--empty">
             <span>Предыдущий год</span>
-            <b>первый</b>
+            <b>нет</b>
             <p>{firstYear ? `${firstYear} год стал первым в работе фонда` : "Более ранних отчётов нет"}</p>
           </div>
         )}
