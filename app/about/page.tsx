@@ -4,7 +4,7 @@ import { HomeHeader } from "@/components/home/home-header";
 import { aboutPageService } from "@/lib/api/services/about-page";
 
 export const metadata: Metadata = {
-  title: "О нас | АНБО «Светлый» — Помощь бездомным животным Ярославль",
+  title: "О нас",
   description: "Миссия, история развития и команда благотворительной организации АНБО «Светлый». Узнайте, как стать волонтером, выгуливать собак или помочь приюту в Ярославле и Рыбинске.",
   keywords: [
     "приют для собак",

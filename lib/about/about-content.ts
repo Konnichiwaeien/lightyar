@@ -1,4 +1,5 @@
 import type { Qualifier } from "../reports/report-domain";
+import { applyRussianTypography } from "../typography.ts";
 
 export interface AboutStatistic {
   id?: number;
@@ -55,14 +56,14 @@ export interface AboutPageContent {
 
 export const ABOUT_FALLBACK: AboutPageContent = {
   heroTitle: "АНБО «Светлый»: помогаем животным",
-  heroIntro: "Автономная некоммерческая благотворительная организация «Светлый» создана, чтобы помогать бездомным и попавшим в беду животным. Им дают временный дом и уход. Показывают, что такое любовь и забота. Учат впервые или вновь доверять человеку. И, конечно, ищут ответственных хозяев.",
-  heroVideo: "/hero-video.mp4",
-  missionTitle: "Системная помощь начинается с заботы",
-  missionBody: "Мы стараемся подходить к помощи животным комплексно: даём временный дом и уход, организуем ветеринарную помощь, социализацию и ищем ответственных хозяев.",
-  directionsImage: "/photo-placeholder.jpg",
-  historyTitle: "Молодая организация с большим опытом",
-  historyBody: "АНБО «Светлый» открыта в октябре 2024 года в Ярославле. Однако, будучи официально молодой, организация имеет большой опыт зоозащитной работы. Её основатели — команда волонтёров с многолетним стажем, на счету которых почти сотня спасённых собачьих и кошачьих жизней. Создание благотворительной организации стало новой ступенью этой работы, которая позволит помочь ещё большему числу животных.",
-  historyImage: "/photo-placeholder.jpg",
+  heroIntro: "Мы помогаем бездомным и попавшим в беду животным. Даём дом на время, лечим и выхаживаем, заново учим доверять человеку — и ищем тех, кто заберёт к себе навсегда.",
+  heroPoster: "/about/real/community-care.jpg",
+  missionTitle: "Помощь начинается с заботы",
+  missionBody: "За каждым подопечным стоит одна и та же работа: место, где жить, лечение и терпеливая социализация. Семью ищем только после этого — когда животное к ней готово.",
+  directionsImage: "/about/real/group-training.jpg",
+  historyTitle: "Мы молодые только на бумаге",
+  historyBody: "АНБО «Светлый» зарегистрирована в октябре 2024 года в Ярославле. Но команда собралась намного раньше: основатели волонтёрят много лет и за это время вытащили из беды почти сотню собак и кошек.\n\nОрганизация понадобилась, чтобы делать то же самое, но для большего числа животных — с расчётным счётом, отчётами и правом принимать помощь официально.",
+  historyImage: "/about/real/shelter-yard.jpg",
   currentStats: [
     { label: "собак находятся на кураторстве", value: 60, qualifier: "atLeast", unit: "собак", order: 10 },
     { label: "кошек находятся на кураторстве", value: 25, qualifier: "exact", unit: "кошек", order: 20 },
@@ -72,70 +73,91 @@ export const ABOUT_FALLBACK: AboutPageContent = {
       name: "Марина Морозова",
       role: "Учредитель, предприниматель",
       city: "Рыбинск",
-      bio: "Предприниматель из Рыбинска Ярославской области. Человек с большим сердцем, который очень любит животных и занимается благотворительностью в сфере зоозащиты.",
+      bio: "Предприниматель из Рыбинска Ярославской области. Много лет занимается зоозащитой и вкладывает в неё собственные силы и средства.",
       quote: "Помогать животным — это зов сердца. Когда очередной подопечный обретает семью, понимаешь, ради чего мы всё это делаем.",
-      photo: "/photo-placeholder.jpg",
       order: 10,
     },
     {
       name: "Светлана Клюкина",
       role: "Учредитель, адвокат",
       city: "Ярославль",
-      bio: "Адвокат из Ярославля. Много лет помогает бездомным и оказавшимся в беде животным — на её счету немало спасённых кошачьих и собачьих судеб. Часть подопечных нашла новый дом, а часть продолжает оставаться под кураторством Светланы.",
+      bio: "Адвокат из Ярославля. Много лет вытаскивает животных из беды: кто-то из её подопечных уже дома, кто-то до сих пор на её попечении.",
       quote: "У бездомного животного нет голоса, чтобы защитить себя. Быть этим голосом — и есть наша работа.",
-      photo: "/photo-placeholder.jpg",
+      photo: "/about/real/team/svetlana-klyukina.jpg",
       order: 20,
     },
     {
       name: "Андрей Синицин",
       role: "Учредитель, предприниматель",
       city: "Ярославль",
-      bio: "Предприниматель из Ярославля. Совершенно непубличный человек и крепкий хозяйственник, который помогает «Светлому» с материально-техническим обеспечением.",
+      bio: "Предприниматель из Ярославля. Публичности избегает, зато на нём вольеры, заборы и всё, что нужно чинить и достраивать.",
       quote: "Безопасный вольер, надёжный забор и качественный корм — это то, с чего начинается реальная забота и тепло для каждой собаки.",
-      photo: "/photo-placeholder.jpg",
       order: 30,
     },
   ],
   resultsTitle: "Ежедневная забота в цифрах",
-  resultsBody: "Эти показатели складываются из ежедневного труда волонтёров и поддержки неравнодушных людей. Мы показываем их с понятными оговорками и обновляем по мере появления подтверждённых данных.",
-  resultsImage: "/photo-placeholder.jpg",
+  resultsBody: "За каждой цифрой — прогулки в дождь, поездки в клинику и чьи-то деньги, отправленные незнакомой собаке. Показываем только то, что можем подтвердить, и обновляем, когда появляются новые данные.",
+  resultsImage: "/about/real/care-indoor.jpg",
   volunteerTitle: "Помогать можно по-разному",
-  volunteerBody: "В команде «Светлого» есть прекрасные волонтёры, которым мы бесконечно благодарны за безвозмездную помощь: прогулки с собаками, автоперевозки животных, фотосессии, распространение информации и многое другое. Мы всегда рады новым людям — ждём всех, кто хочет и готов помогать животным.",
-  volunteerVideo: "/hero-video-2.mp4",
+  volunteerBody: "Волонтёры «Светлого» гуляют с собаками, возят их в клинику, снимают для анкет и рассказывают о подопечных друзьям. Всё это — в свободное время и бесплатно.\n\nЕсли хотите присоединиться, опыт не нужен: научим на первой же прогулке.",
+  volunteerPoster: "/about/real/volunteer-walk.jpg",
   faqItems: [
     {
       question: "Как стать волонтёром?",
-      answer: "Напишите нам в социальных сетях или позвоните. Мы приглашаем на первую прогулку с собаками, где вы знакомитесь с командой и подопечными. Никакого специального опыта не нужно — мы всему научим.",
+      answer: "Напишите нам во «ВКонтакте». Позовём на ближайшую прогулку — там познакомитесь с командой и с собаками. Опыта не нужно, всему научим на месте.",
       order: 10,
     },
     {
       question: "Нужен ли опыт работы с животными?",
-      answer: "Нет. Главное — желание помогать и ответственный подход. Опытные волонтёры всегда рядом и помогут освоиться. Вы можете начать с простых задач: прогулки, помощь с кормлением.",
+      answer: "Нет. Нужны желание и обязательность: собака привыкает к человеку и ждёт его. Начать можно с прогулок и помощи с кормлением — рядом всегда будет кто-то из опытных волонтёров.",
       order: 20,
     },
     {
       question: "Где находится приют?",
-      answer: "Приют расположен в Ярославской области. Основные площадки волонтёрской активности находятся в Ярославле и Рыбинске. Точный адрес сообщим при первом контакте.",
+      answer: "Приют в Ярославской области, прогулки проходят в Ярославле и Рыбинске. Точный адрес пришлём, когда договоримся о первой встрече.",
       order: 30,
     },
     {
       question: "Как помочь финансово?",
-      answer: "Вы можете сделать пожертвование на официальные реквизиты АНБО «Светлый» (ОГРН 1247600009590). Все средства идут на корм, ветеринарию и обустройство вольеров.",
+      answer: "Переведите пожертвование на реквизиты АНБО «Светлый» (ОГРН 1247600009590) или оставьте в одном из наших боксов в Ярославле и Рыбинске. Деньги уходят на корм, лечение и вольеры.",
       order: 40,
     },
   ],
-  faqImage: "/photo-placeholder.jpg",
+  faqImage: "/about/real/dog-blackwhite.jpg",
   reportsTitle: "Помощь должна быть видимой",
-  reportsBody: "Мы публикуем годовые документы и подтверждённые показатели, чтобы каждый мог увидеть, как устроена работа АНБО «Светлый».",
+  reportsBody: "Публикуем годовые отчёты и подтверждённые цифры — чтобы каждый, кто помог, видел, куда ушли деньги.",
 };
 
+/** Весь текст страницы проходит через типографику — и из CMS, и запасной. */
 function managedText(value: string | undefined, fallback: string): string {
-  return value?.trim() ? value : fallback;
+  return applyRussianTypography(value?.trim() ? value : fallback);
 }
 
 function managedArray<T extends { order: number }>(value: T[] | undefined, fallback: T[]): T[] {
   const source = value?.length ? value : fallback;
   return [...source].sort((left, right) => left.order - right.order);
+}
+
+function managedTeamMembers(value: AboutTeamMember[] | undefined, fallback: AboutTeamMember[]): AboutTeamMember[] {
+  const fallbackByName = new Map(fallback.map((member) => [member.name, member]));
+  return managedArray(value, fallback).map((member) => {
+    const photo = member.photo || fallbackByName.get(member.name)?.photo;
+    const typographed: AboutTeamMember = {
+      ...member,
+      role: applyRussianTypography(member.role),
+      bio: member.bio ? applyRussianTypography(member.bio) : member.bio,
+      quote: member.quote ? applyRussianTypography(member.quote) : member.quote,
+    };
+    return photo ? { ...typographed, photo } : typographed;
+  });
+}
+
+function managedFaqItems(value: AboutFaqItem[] | undefined, fallback: AboutFaqItem[]): AboutFaqItem[] {
+  return managedArray(value, fallback).map((item) => ({
+    ...item,
+    question: applyRussianTypography(item.question),
+    answer: applyRussianTypography(item.answer),
+  }));
 }
 
 export function mergeAboutContent(content: Partial<AboutPageContent> = {}): AboutPageContent {
@@ -151,7 +173,7 @@ export function mergeAboutContent(content: Partial<AboutPageContent> = {}): Abou
     historyBody: managedText(content.historyBody, ABOUT_FALLBACK.historyBody),
     historyImage: content.historyImage || ABOUT_FALLBACK.historyImage,
     currentStats: managedArray(content.currentStats, ABOUT_FALLBACK.currentStats),
-    teamMembers: managedArray(content.teamMembers, ABOUT_FALLBACK.teamMembers),
+    teamMembers: managedTeamMembers(content.teamMembers, ABOUT_FALLBACK.teamMembers),
     resultsTitle: managedText(content.resultsTitle, ABOUT_FALLBACK.resultsTitle),
     resultsBody: managedText(content.resultsBody, ABOUT_FALLBACK.resultsBody),
     resultsImage: content.resultsImage || ABOUT_FALLBACK.resultsImage,
@@ -159,7 +181,7 @@ export function mergeAboutContent(content: Partial<AboutPageContent> = {}): Abou
     volunteerBody: managedText(content.volunteerBody, ABOUT_FALLBACK.volunteerBody),
     volunteerVideo: content.volunteerVideo || ABOUT_FALLBACK.volunteerVideo,
     volunteerPoster: content.volunteerPoster || ABOUT_FALLBACK.volunteerPoster,
-    faqItems: managedArray(content.faqItems, ABOUT_FALLBACK.faqItems),
+    faqItems: managedFaqItems(content.faqItems, ABOUT_FALLBACK.faqItems),
     faqImage: content.faqImage || ABOUT_FALLBACK.faqImage,
     reportsTitle: managedText(content.reportsTitle, ABOUT_FALLBACK.reportsTitle),
     reportsBody: managedText(content.reportsBody, ABOUT_FALLBACK.reportsBody),
