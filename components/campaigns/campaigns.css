@@ -4,11 +4,10 @@
  * Набрана языком главной: тёплая бумага, кикер янтарём, двухуровневый
  * заголовок, белые карточки со скруглением и янтарная кнопка.
  *
- * Своя сцена у страницы одна: поле взносов. Все открытые сборы разложены на
- * метки по 500 ₽, оплаченные зажигаются по прокрутке одна за другой, а на
- * границе с пустыми светится место следующего взноса. Полоса во всю ширину.
- *
- * Приёмы и грабли разобраны в скилле scroll-scenes.
+ * Первая секция это обложка «Сквозь вещи»: кадр снят из-за предметов, и по
+ * прокрутке они разъезжаются, открывая подопечного. Разбор всех секций
+ * страницы в docs/campaigns-scroll-plan.md, приёмы и грабли в скилле
+ * scroll-scenes.
  */
 
 .camp {
@@ -43,23 +42,8 @@
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ---------------- шапка ---------------- */
-
-.camp-head {
-  display: grid;
-  align-items: end;
-  gap: 1.4rem clamp(2rem, 5vw, 5rem);
-  padding: var(--c-gap) 0;
-}
-
-/* На широком экране подводка уходит вправо: под заголовком оставалась
-   пустая половина листа. */
-@media (min-width: 1000px) {
-  .camp-head {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  }
-}
-
+/* Кикер живёт отдельно от обложки: его же набором подписаны заголовки
+   секций ниже по странице. */
 .camp-kicker {
   margin-bottom: 0.9rem;
   color: var(--c-amber-text);
@@ -69,17 +53,192 @@
   text-transform: uppercase;
 }
 
-.camp-head h1 {
-  max-width: 16ch;
-  margin: 0;
+/* ---------------- обложка «Сквозь вещи» ---------------------------------
+
+   Кадр снят из-за предметов. Вплотную к объективу слева и справа стоят вещи,
+   которые приют собирает, в просвете между ними подопечный, глубже двор. По
+   прокрутке вещи разъезжаются к своим краям и уходят вниз, двор почти стоит,
+   собака слегка растёт. К концу полосы между читателем и собакой чисто.
+
+   Отрезок exit, а не cover и не entry. Обложка стоит первой на странице, и
+   к первому кадру она уже целиком в экране: cover там пройден наполовину, а
+   entry пройден целиком. exit начинается ровно тогда, когда читатель тронул
+   колесо, и кончается, когда полоса уходит за верхнюю кромку. Слои при этом
+   расходятся на глазах у читателя, а не за кадром.
+
+   Конечное состояние объявлено статикой, исходное лежит в keyframes. Поэтому
+   при гашении движения читатель видит итог, а не сведённые вещи, и второй
+   копии правил для этого не нужно.
+
+   Замысел в docs/campaigns-scroll-plan.md, бриф на съёмку в
+   docs/asset-brief-campaigns-cover.md.
+------------------------------------------------------------------------- */
+
+.camp-cover {
+  position: relative;
+  display: grid;
+  align-items: center;
+  isolation: isolate;
+  min-height: clamp(430px, 60svh, 760px);
+  margin-bottom: var(--c-gap);
+  overflow: hidden;
+  background: var(--c-paper);
+  view-timeline: --cover block;
+}
+
+.camp-cover__scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.camp-cover__yard,
+.camp-cover__pet {
+  position: absolute;
+}
+
+.camp-cover__yard {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Двор почти стоит: он дальше всех, и по законам параллакса едет медленнее. */
+.camp-cover__yard {
+  object-fit: cover;
+  scale: 1;
+  animation: camp-cover-yard 1ms linear both;
+  animation-timeline: --cover;
+  animation-range: exit 0% exit 88%;
+}
+
+@keyframes camp-cover-yard {
+  from {
+    scale: 1.07;
+  }
+}
+
+/* Временная замена: вырезка подопечного нарисована не на холсте обложки,
+   поэтому вписывается contain и прижимается к низу. Когда придёт слой по
+   брифу, здесь встанет object-fit: cover без object-position: все четыре
+   слоя нарисованы на одном холсте 2400 на 1350 и обязаны совмещаться. */
+.camp-cover__pet {
+  right: 6%;
+  bottom: 0;
+  width: min(44%, 640px);
+  height: 86%;
+  object-fit: contain;
+  object-position: bottom;
+  scale: 1.07;
+  translate: 0 -1.5%;
+  animation: camp-cover-pet 1ms linear both;
+  animation-timeline: --cover;
+  animation-range: exit 0% exit 88%;
+}
+
+@keyframes camp-cover-pet {
+  from {
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+/* Передние грозди. Они ближе всех к объективу, поэтому едут дальше и быстрее
+   остальных слоёв. Левая уходит влево, правая вправо, обе вниз. */
+.camp-cover__near {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 2%;
+  width: 36%;
+  height: 68%;
+}
+
+.camp-cover__near img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  /* Временная замена: предметы вишлиста сняты резкими, а передний план обязан
+     быть мягким. Размытие статическое и на кадр не считается. Когда придут
+     слои по брифу, мягкость будет запечена в файл и эта строка уйдёт. */
+  filter: blur(7px);
+}
+
+/* Второй предмет грозди стоит ниже и ближе к краю: гроздь должна выглядеть
+   случайно составленной, а не выложенной в ряд. */
+.camp-cover__near img:nth-child(2) {
+  translate: 0 12%;
+  scale: 0.82;
+}
+
+.camp-cover__near--left {
+  left: 0;
+  translate: -26% 16%;
+  scale: 1.18;
+  animation: camp-cover-left 1ms linear both;
+  animation-timeline: --cover;
+  animation-range: exit 0% exit 88%;
+}
+
+@keyframes camp-cover-left {
+  from {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+.camp-cover__near--right {
+  right: 0;
+  translate: 26% 16%;
+  scale: 1.18;
+  animation: camp-cover-right 1ms linear both;
+  animation-timeline: --cover;
+  animation-range: exit 0% exit 88%;
+}
+
+@keyframes camp-cover-right {
+  from {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* Кремовая вуаль слева: заголовок стоит на фотографии, и без неё тёмные буквы
+   тонут в траве. Полоса при этом остаётся бумагой, а не превращается в тёмный
+   баннер с белым текстом, каких на сайте нет. */
+.camp-cover__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(244, 241, 235, 0.96) 0%,
+    rgba(244, 241, 235, 0.86) 28%,
+    rgba(244, 241, 235, 0.3) 54%,
+    rgba(244, 241, 235, 0) 72%
+  );
+}
+
+.camp-cover__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-top: var(--c-gap);
+  padding-bottom: var(--c-gap);
+}
+
+.camp-cover h1 {
+  max-width: 12ch;
+  margin: 0 0 1.1rem;
   font-family: var(--font-sans);
-  font-size: clamp(3.5rem, 8.5vw, 6.4rem);
+  font-size: clamp(3.2rem, 8vw, 6.4rem);
   font-weight: 780;
   line-height: 0.82;
   letter-spacing: -0.04em;
 }
 
-.camp-head h1 em {
+.camp-cover h1 em {
   display: block;
   color: var(--c-amber);
   font-family: var(--font-serif);
@@ -90,312 +249,90 @@
   letter-spacing: -0.035em;
 }
 
-.camp-lead {
-  max-width: 46ch;
-  margin: 0;
-  padding-bottom: 0.4rem;
+.camp-cover__lead {
+  max-width: 40ch;
+  margin: 0 0 1.6rem;
   color: var(--c-muted);
   font-size: 1.05rem;
   line-height: 1.62;
 }
 
-.camp-lead strong {
+.camp-cover__lead strong {
   color: var(--c-ink);
   font-weight: 600;
 }
 
-/* ---------------- поле взносов ------------------------------------------
-
-   Сцена страницы. Все открытые сборы разложены на метки одного размера:
-   метка это взнос в 500 ₽, тот самый, что подставляет кнопка «Помочь».
-   Оплаченные метки зажигаются по прокрутке одна за другой, свободные стоят
-   пустыми кольцами, а на границе между ними светится ближайшая свободная.
-
-   Почему не доля. Собрано от 2 до 21 процента, и сцена, которая рисует долю
-   площадью, на таких числах выглядит незагрузившейся картинкой. Счёт взносов
-   от доли не зависит: поле стоит полным с первого кадра, а «сделано 38 из
-   550» читается одинаково внятно при любом проценте.
-
-   Отрезок cover, а не entry: полоса стоит сразу под шапкой и на широком
-   экране видна уже на загрузке, то есть entry там пройден до первого
-   движения колеса.
-
-   Полоса во всю ширину и своего цвета: страница набрана на светлом листе,
-   поле стоит на бумаге потемнее, поэтому соседние блоки не сливаются.
-------------------------------------------------------------------------- */
-
-.camp-pledges {
-  margin-bottom: var(--c-gap);
-  padding: var(--c-gap) 0;
-  /* Полоса не плоская плита: к низу бумага теплеет, и поле лежит на ней,
-     а не выглядит наклеенным. */
-  background: linear-gradient(176deg, #ece7de 0%, var(--c-paper) 46%, #e2ddd2 100%);
-  view-timeline: --pledges block;
-}
-
-.camp-pledges__head {
-  display: grid;
-  align-items: end;
-  gap: 1rem clamp(2rem, 5vw, 5rem);
-  margin-bottom: var(--c-gap);
-}
-
-@media (min-width: 1000px) {
-  .camp-pledges__head {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  }
-}
-
-.camp-pledges h2 {
-  max-width: 14ch;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: clamp(2.1rem, 4.6vw, 3.6rem);
-  font-weight: 760;
-  line-height: 0.92;
-  letter-spacing: -0.035em;
-}
-
-.camp-pledges h2 em {
-  display: block;
-  color: var(--c-amber-text);
-  font-family: var(--font-serif);
-  font-size: 1.12em;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.camp-pledges__lead {
-  max-width: 48ch;
-  margin: 0;
-  padding-bottom: 0.35rem;
-  color: var(--c-muted);
-  font-size: 1rem;
-  line-height: 1.62;
-}
-
-.camp-pledges__stage {
-  position: relative;
-  isolation: isolate;
-  margin-bottom: var(--c-gap-sm);
-}
-
-/* Тёплое пятно над началом поля: оплаченные метки стоят в первых рядах, и
-   свет садится на них, а не размазывается по всей полосе. Приходит вместе с
-   волной, поэтому полоса до прокрутки остаётся ровной бумагой.
-
-   Пятно держится узким намеренно: широкое и мягкое, оно затуманивало верхнюю
-   четверть поля, и кольца под ним читались грязными, а не свободными. */
-.camp-pledges__light {
-  position: absolute;
-  top: -30%;
-  left: -3%;
-  z-index: -1;
-  width: min(42%, 460px);
-  aspect-ratio: 3 / 1;
-  background: radial-gradient(ellipse at center, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0) 70%);
-  opacity: 0;
-  animation: camp-pledges-dawn 1ms linear both;
-  animation-timeline: --pledges;
-  animation-range: cover 32% cover 60%;
-}
-
-@keyframes camp-pledges-dawn {
-  to {
-    opacity: 1;
-  }
-}
-
-/* Ширину колонки задаёт сама метка, число колонок считает auto-fill: поле
-   переливается в любую ширину без таблицы точек по breakpoint-ам. */
-.camp-pledges__field {
-  --mark: clamp(7px, 1.15vw, 16px);
-  --mark-gap: clamp(3px, 0.45vw, 7px);
-
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--mark), 1fr));
-  gap: var(--mark-gap);
-}
-
-/* Полутень в дальнем углу.
-
-   Свет в полосе один и падает слева сверху, поэтому нижний правый угол поля
-   уходит в тень: без этого пятьсот пятьдесят одинаковых колец читаются
-   плоской сеткой, а не рядами предметов.
-
-   Слоем поверх, а не маской на самом поле: маска режется по коробке поля, и
-   ореол вокруг свободного места в первом ряду срезало по верхней кромке. */
-.camp-pledges__shade {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(158deg, rgba(232, 228, 220, 0) 42%, rgba(226, 221, 210, 0.62) 100%);
-}
-
-/* Свободная метка: пустое кольцо тёплого чернильного тона.
-
-   Плотность кольца подбиралась к полю целиком, а не к одной метке. Светлее
-   выходит туман вместо рядов, плотнее выходит перфокарта, и янтарь в начале
-   поля перестаёт быть громче остального. */
-.camp-pledges__field i {
-  aspect-ratio: 1;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 max(1px, 0.11vw) rgba(96, 88, 76, 0.58);
-}
-
-/* Оплаченная метка.
-
-   Не плоский кружок: блик слева сверху и контактная тень снизу, иначе поле
-   читается заливкой, а не рядом предметов. Источник света один на всё поле.
-
-   Шаг очереди приходит из разметки: он считается от числа оплаченных меток,
-   иначе на трёх сотнях взносов очередь уехала бы далеко за конец отрезка. */
-.camp-pledges__field i[data-got] {
-  background: radial-gradient(circle at 34% 28%, #fcc55f 0%, var(--c-amber) 54%, var(--c-amber-deep) 100%);
-  box-shadow:
-    inset 0 0 0 max(1px, 0.08vw) rgba(180, 96, 6, 0.5),
-    0 2px 3px -1px rgba(120, 72, 10, 0.5);
-  animation: camp-pledges-land 1ms linear both;
-  animation-timeline: --pledges;
-  animation-range: cover calc(34% + var(--i) * var(--step)) cover calc(46% + var(--i) * var(--step));
-}
-
-/* Метка падает сверху и перелетает на 62 процентах, а не подставляется:
-   без перелёта очередь читается как мигание, а не как волна.
-
-   Пол у прозрачности обязателен, и это не украшение. Полоса стоит высоко на
-   странице, и на высоком окне отрезок cover частью пройден уже на загрузке:
-   на экране 1440 на 1200 это 37 процентов, на портретном мониторе почти
-   половина. Начинайся метка с нуля, читатель такого окна увидел бы поле, где
-   оплачено меньше, чем оплачено на самом деле. С полом невыигранная метка
-   стоит бледной, но стоит: поле не врёт ни в одном кадре, а волна только
-   зажигает то, что уже есть. */
-@keyframes camp-pledges-land {
-  0% {
-    opacity: 0.26;
-    scale: 0.5;
-    translate: 0 -26%;
-  }
-
-  62% {
-    opacity: 1;
-    scale: 1.24;
-    translate: 0 0;
-  }
-
-  100% {
-    opacity: 1;
-    scale: 1;
-    translate: 0 0;
-  }
-}
-
-/* Ближайшая свободная метка: место следующего взноса. Кольцо потолще, тёплый
-   ореол под ним и медленная волна от него. */
-.camp-pledges__field i[data-next] {
-  position: relative;
-  box-shadow: inset 0 0 0 max(2px, 0.17vw) var(--c-amber);
-}
-
-.camp-pledges__field i[data-next]::before,
-.camp-pledges__field i[data-next]::after {
-  position: absolute;
-  border-radius: 50%;
-  content: "";
-}
-
-.camp-pledges__field i[data-next]::before {
-  z-index: -1;
-  inset: -280%;
-  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0) 64%);
-  opacity: 0;
-  animation: camp-pledges-dawn 1ms linear both;
-  animation-timeline: --pledges;
-  animation-range: cover 46% cover 68%;
-}
-
-.camp-pledges__field i[data-next]::after {
-  inset: -75%;
-  box-shadow: 0 0 0 max(1px, 0.09vw) rgba(245, 158, 11, 0.6);
-  opacity: 0;
-  animation: camp-pledges-ripple 3.2s ease-out infinite;
-}
-
-@keyframes camp-pledges-ripple {
-  0% {
-    opacity: 0.6;
-    scale: 0.4;
-  }
-
-  72% {
-    opacity: 0;
-    scale: 1.16;
-  }
-
-  100% {
-    opacity: 0;
-    scale: 1.16;
-  }
-}
-
-.camp-pledges__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1.2rem clamp(2rem, 5vw, 4rem);
-}
-
-.camp-pledges__rest {
-  display: flex;
-  flex: 1 1 20rem;
-  align-items: baseline;
-  gap: clamp(0.9rem, 2vw, 1.6rem);
-  max-width: 44rem;
-  margin: 0;
-}
-
-/* Итог сцены и самая крупная цифра полосы.
-
-   Цифру не проявляем по прокрутке, хотя первым заходом проявляли. Полоса на
-   широком экране умещается в один экран целиком, поэтому подпись «взносов до
-   того, как закроются все сборы» стояла у читателя перед глазами без числа и
-   не читалась вовсе. Движение здесь несёт волна меток, а число это факт. */
-.camp-pledges__rest b {
-  flex: none;
-  font-family: var(--font-serif);
-  font-size: clamp(3rem, 8vw, 6rem);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  line-height: 0.84;
-  letter-spacing: -0.03em;
-}
-
-.camp-pledges__rest span {
-  color: var(--c-muted);
-  font-size: 1rem;
-  line-height: 1.55;
-}
-
-/* Кнопка стоит рядом с числом, а не растягивается во всю полосу: во всю
-   ширину она читалась пустой плашкой и спорила с янтарной карточкой внизу
-   страницы. Селектор с родителем нарочно: у .camp-btn ширина в сто
-   процентов, и по одному классу она перебивала бы это правило. */
-.camp-pledges__foot .camp-pledges__cta {
-  flex: none;
+/* Селектор с родителем нарочно: у .camp-btn ширина в сто процентов, и по
+   одному классу она перебивала бы это правило по порядку в файле. */
+.camp-cover .camp-cover__cta {
   width: auto;
-  /* Главный призыв полосы, поэтому янтарь заливкой, а не каймой: бледная
-     кнопка рядом с цифрой в шесть сантиметров читалась подписью. */
   border-color: var(--c-amber);
   background: var(--c-amber);
 }
 
-.camp-pledges__foot .camp-pledges__cta:hover {
+.camp-cover .camp-cover__cta:hover {
   border-color: var(--c-amber-deep);
   background: var(--c-amber-deep);
   color: #fff;
+}
+
+/* Вход обложки: строки поднимаются очередью, кнопка последней. Это часы, а не
+   прокрутка, и так и должно быть: полоса стоит первой на странице, и её вход
+   происходит на загрузке, а не по колесу. */
+.camp-cover__copy > * {
+  animation: camp-cover-in 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.camp-cover__copy > :nth-child(1) {
+  animation-delay: 80ms;
+}
+
+.camp-cover__copy > :nth-child(2) {
+  animation-delay: 190ms;
+}
+
+.camp-cover__copy > :nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.camp-cover__copy > :nth-child(4) {
+  animation-delay: 400ms;
+}
+
+@keyframes camp-cover-in {
+  from {
+    opacity: 0;
+    translate: 0 22px;
+  }
+}
+
+/* На узком экране грозди занимают половину ширины и уходят вниз: собака между
+   ними иначе не помещается. Вуаль разворачивается снизу вверх, потому что
+   текст встаёт над сценой, а не слева от неё. */
+@media (max-width: 780px) {
+  .camp-cover {
+    align-items: end;
+    min-height: clamp(460px, 66svh, 700px);
+  }
+
+  .camp-cover__near {
+    width: 48%;
+    height: 58%;
+  }
+
+  .camp-cover__veil {
+    background: linear-gradient(
+      180deg,
+      rgba(244, 241, 235, 0.97) 0%,
+      rgba(244, 241, 235, 0.9) 34%,
+      rgba(244, 241, 235, 0.35) 62%,
+      rgba(244, 241, 235, 0) 84%
+    );
+  }
+
+  .camp-cover__copy {
+    align-self: start;
+  }
 }
 
 /* ---------------- фильтр и сортировка ---------------- */
@@ -799,26 +736,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .camp-pledges__light,
-  .camp-pledges__field i[data-got],
-  .camp-pledges__field i[data-next]::before,
-  .camp-pledges__field i[data-next]::after,
+  .camp-cover__yard,
+  .camp-cover__pet,
+  .camp-cover__near,
+  .camp-cover__copy > *,
   .camp-card,
   .camp-bar i {
     animation: none;
   }
 
-  /* Гасить мало: без этих строк свет не зажёгся бы вовсе, а шкалы остались
-     бы нулевыми. Показываем итог, а не исходное состояние. */
-  .camp-pledges__light,
-  .camp-pledges__field i[data-next]::before {
-    opacity: 1;
-  }
-
-  .camp-pledges__field i[data-next]::after {
-    opacity: 0;
-  }
-
+  /* Слои обложки итог держат статикой, поэтому им хватает снятой анимации.
+     Шкале не хватает: без второй строки она осталась бы нулевой. */
   .camp-bar i {
     transform: none;
   }

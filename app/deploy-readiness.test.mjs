@@ -150,10 +150,12 @@ test("known narrow-screen grids and controls can shrink to the viewport", async 
   // раньше это держали служебные классы прямо в разметке.
   assert.match(campaigns, /\.camp-controls \{[^}]*flex-wrap:\s*wrap/);
   assert.match(campaigns, /\.camp-tabs \{[^}]*flex-wrap:\s*wrap/);
-  // Поле взносов считает колонки само, а метка сжимается вслед за шириной
-  // экрана: пять с половиной сотен меток обязаны улечься и в 320 px.
-  assert.match(campaigns, /\.camp-pledges__field \{[\s\S]*?repeat\(auto-fill, minmax\(var\(--mark\), 1fr\)\)/);
-  assert.match(campaigns, /--mark:\s*clamp\(\s*7px,/);
+  // Слои обложки уезжают за края полосы, и полоса обязана их резать: иначе
+  // передние грозди вылезают за правый край окна на узком экране.
+  assert.match(campaigns, /\.camp-cover \{[\s\S]*?overflow:\s*hidden/);
+  // Конечное состояние обложки объявлено статикой, исходное лежит в keyframes.
+  // Поэтому при гашении движения читатель видит итог, а не сведённые вещи.
+  assert.match(campaigns, /@keyframes camp-cover-left \{\s*from \{/);
   assert.match(about, /hyphens:\s*auto/);
   assert.doesNotMatch(about, /\.about-chapter-nav/);
 });

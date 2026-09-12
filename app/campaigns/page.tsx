@@ -7,13 +7,12 @@ import { ArrowUpRight, CheckCircle2, HandCoins } from "lucide-react";
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
 import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
-import { CampaignPledges } from "@/components/campaigns/campaign-pledges";
+import { CampaignCover } from "@/components/campaigns/campaign-cover";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
-import { getPledgeField } from "@/lib/campaigns/pledges";
+import { getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
-import { plural } from "@/lib/reports/shelter-scales";
 import "@/components/campaigns/campaigns.css";
 
 export const metadata: Metadata = {
@@ -46,17 +45,17 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
   const parsedPage = typeof resolved.page === "string" ? Number.parseInt(resolved.page, 10) : 1;
   const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
 
-  /* Сцена считается по всем открытым сборам, а список по фильтру из адреса.
+  /* Обложка считается по всем открытым сборам, а список по фильтру из адреса.
      Запросы идут разом: последовательно они выстроились бы в лесенку и
      задержали бы первый байт на время лишнего обхода CMS. */
-  const [campaignsData, field] = await Promise.all([
+  const [campaignsData, summary] = await Promise.all([
     campaignsService.getCampaigns({
       status,
       sort: SORTS[sort] ?? SORTS.date_desc,
       limit: ITEMS_PER_PAGE,
       start: (page - 1) * ITEMS_PER_PAGE,
     }),
-    getPledgeField(),
+    getCampaignSummary(),
   ]);
 
   const list = await resolveCovers((campaignsData.data || []).map(normalizeCampaignData));
@@ -68,33 +67,27 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
     <div className="camp">
       <InnerHeader />
       <main id="main-content">
-        <div className="camp-inner">
-          <section className="camp-head">
-            <div>
-              <p className="camp-kicker">Чем помочь прямо сейчас</p>
-              <h1>
-                Открытые
-                <em>сборы</em>
-              </h1>
-            </div>
-            <p className="camp-lead">
-              {field ? (
-                <>
-                  Каждый сбор закрывает одну нужду приюта: корм, лечение, тёплые вольеры. Сейчас открыто{" "}
-                  <strong>
-                    {field.funds} {plural(field.funds, "сбор", "сбора", "сборов")}
-                  </strong>
-                  , и помочь можно любому из них.
-                </>
-              ) : (
-                <>Здесь появятся сборы на корм, лечение и содержание приюта. Открытых сборов сейчас нет.</>
-              )}
-            </p>
-          </section>
-        </div>
-
-        {/* Поле взносов: сцена страницы. Разбор замысла в самом компоненте. */}
-        {field ? <CampaignPledges field={field} /> : null}
+        {/* Обложка «Сквозь вещи»: секция 1 плана. Разбор в самом компоненте.
+            Открытых сборов нет, значит и показывать нечего: страница уходит
+            сразу в список с пустым состоянием. */}
+        {summary ? (
+          <CampaignCover summary={summary} />
+        ) : (
+          <div className="camp-inner">
+            <section className="camp-cover camp-cover--empty">
+              <div className="camp-cover__copy">
+                <p className="camp-kicker">Чем помочь прямо сейчас</p>
+                <h1>
+                  Открытые
+                  <em>сборы</em>
+                </h1>
+                <p className="camp-cover__lead">
+                  Здесь появятся сборы на корм, лечение и содержание приюта. Открытых сборов сейчас нет.
+                </p>
+              </div>
+            </section>
+          </div>
+        )}
 
         <div className="camp-inner">
           <Suspense fallback={null}>
