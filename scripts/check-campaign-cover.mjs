@@ -51,13 +51,18 @@ async function progress(page) {
       return value === null || value === undefined ? null : Math.round(value * 100);
     });
 
-  const first = await read();
-  await page.waitForTimeout(140);
-  const second = await read();
+  /* Четыре чтения с паузой, берётся наибольшее. Сразу после перемотки шкала
+     прокрутки успевает отдать и пустой прогресс, и ноль, хотя элемент уже
+     стоит в новом положении. Двух чтений не хватало: оба попадали в один и
+     тот же плохой кадр примерно раз на тридцать замеров. */
+  const reads = [];
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if (attempt > 0) await page.waitForTimeout(120);
+    reads.push(await read());
+  }
 
-  if (first === null) return second ?? -1;
-  if (second === null) return first;
-  return Math.max(first, second);
+  const useful = reads.filter((value) => value !== null);
+  return useful.length === 0 ? -1 : Math.max(...useful);
 }
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });

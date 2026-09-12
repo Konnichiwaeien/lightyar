@@ -11,7 +11,7 @@ import { plural } from "@/lib/reports/shelter-scales";
  * мягко не в фокусе стоят вещи, которые приют собирает. В просвете между ними,
  * в фокусе, подопечный смотрит на читателя. Глубже двор.
  *
- * По прокрутке передние вещи разъезжаются к своим краям и уходят вниз, двор
+ * По прокрутке передние грозди разъезжаются к своим краям и уходят вниз, двор
  * почти стоит, собака слегка растёт. К концу полосы между читателем и собакой
  * чисто. Смысл без подписи: между нуждой и животным стоят эти вещи, и их можно
  * купить.
@@ -23,21 +23,17 @@ import { plural } from "@/lib/reports/shelter-scales";
 const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
 
 /**
- * Временная замена, пока не пришли четыре слоя из брифа.
+ * Четыре слоя одного кадра.
  *
- * Собрана из того, что уже лежит в public: панорама двора, вырезка подопечного
- * и предметы вишлиста вместо передних гроздей. Годится, чтобы смотреть ход
- * движения, и не годится, чтобы судить о композиции: предметы вишлиста сняты
- * почти белыми на белом и резкими, а передний план обязан быть мягким.
- *
- * Когда файлы придут, здесь меняются только пути, а гроздь из двух предметов
- * схлопывается в один слой на каждую сторону.
+ * Все нарисованы на одном холсте 2400 на 1350 и вписываются одинаково, поэтому
+ * совмещаются при любой ширине полосы. Порядок в разметке снизу вверх: двор,
+ * подопечный, ближние грозди.
  */
-const STAND_IN = {
-  yard: "/about/panorama.jpg",
-  pet: "/pets/cutout-lakki.webp",
-  left: ["/wishlist/item-bowl.webp", "/wishlist/item-dry-food.webp"],
-  right: ["/wishlist/item-medicine.webp", "/wishlist/item-blanket.webp"],
+const LAYERS = {
+  yard: "/campaigns/cover-yard.webp",
+  pet: "/campaigns/cover-pet.webp",
+  left: "/campaigns/cover-near-left.png",
+  right: "/campaigns/cover-near-right.png",
 };
 
 export function CampaignCover({ summary }: { summary: CampaignSummary }) {
@@ -46,27 +42,27 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
       {/* Сцена целиком декоративна: всё, что она говорит, сказано текстом
           рядом, поэтому читалке она не нужна. */}
       <div aria-hidden="true" className="camp-cover__scene">
+        {/* Слои идут обычными img, а не next/image: они уже нарезаны под холст
+            сцены, и подстановка размеров под брейкпоинты сдвинула бы их друг
+            относительно друга. */}
         {/* eslint-disable @next/next/no-img-element */}
-        <img alt="" className="camp-cover__yard" src={STAND_IN.yard} />
-        <img alt="" className="camp-cover__pet" src={STAND_IN.pet} />
-
-        <span className="camp-cover__near camp-cover__near--left">
-          {STAND_IN.left.map((src, index) => (
-            <img alt="" key={src} src={src} style={{ "--n": index } as React.CSSProperties} />
-          ))}
-        </span>
-
-        <span className="camp-cover__near camp-cover__near--right">
-          {STAND_IN.right.map((src, index) => (
-            <img alt="" key={src} src={src} style={{ "--n": index } as React.CSSProperties} />
-          ))}
-        </span>
+        <img alt="" className="camp-cover__yard" fetchPriority="high" src={LAYERS.yard} />
+        <img alt="" className="camp-cover__pet" fetchPriority="high" src={LAYERS.pet} />
         {/* eslint-enable @next/next/no-img-element */}
 
         {/* Кремовая вуаль слева: заголовок стоит на фотографии, и без неё
-            тёмные буквы тонут в траве. Полоса остаётся бумагой, а не
-            превращается в тёмный баннер. */}
+            тёмные буквы тонут в земле. Полоса остаётся бумагой, а не
+            превращается в тёмный баннер.
+
+            Стоит под ближними гроздями, а не поверх всего. Перед ними ей
+            стоять нечем: они ближе всех к объективу, и вуаль поверх съедала
+            левую гроздь целиком. */}
         <span className="camp-cover__veil" />
+
+        {/* eslint-disable @next/next/no-img-element */}
+        <img alt="" className="camp-cover__near camp-cover__near--left" src={LAYERS.left} />
+        <img alt="" className="camp-cover__near camp-cover__near--right" src={LAYERS.right} />
+        {/* eslint-enable @next/next/no-img-element */}
       </div>
 
       <div className="camp-inner camp-cover__copy">

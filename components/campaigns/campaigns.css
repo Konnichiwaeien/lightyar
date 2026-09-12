@@ -92,20 +92,23 @@
   z-index: -1;
 }
 
+/* Четыре слоя одного холста 2400 на 1350. Вписываются одинаково, поэтому
+   совмещаются при любой ширине полосы: любое расхождение поехало бы на
+   первом же кадре анимации. */
 .camp-cover__yard,
-.camp-cover__pet {
+.camp-cover__pet,
+.camp-cover__near {
   position: absolute;
-}
-
-.camp-cover__yard {
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
-/* Двор почти стоит: он дальше всех, и по законам параллакса едет медленнее. */
+/* Двор дальше всех и почти стоит: по законам параллакса он едет медленнее
+   остальных слоёв. */
 .camp-cover__yard {
-  object-fit: cover;
   scale: 1;
   animation: camp-cover-yard 1ms linear both;
   animation-timeline: --cover;
@@ -118,19 +121,9 @@
   }
 }
 
-/* Временная замена: вырезка подопечного нарисована не на холсте обложки,
-   поэтому вписывается contain и прижимается к низу. Когда придёт слой по
-   брифу, здесь встанет object-fit: cover без object-position: все четыре
-   слоя нарисованы на одном холсте 2400 на 1350 и обязаны совмещаться. */
 .camp-cover__pet {
-  right: 6%;
-  bottom: 0;
-  width: min(44%, 640px);
-  height: 86%;
-  object-fit: contain;
-  object-position: bottom;
-  scale: 1.07;
-  translate: 0 -1.5%;
+  scale: 1.06;
+  translate: 0 -1%;
   animation: camp-cover-pet 1ms linear both;
   animation-timeline: --cover;
   animation-range: exit 0% exit 88%;
@@ -143,40 +136,13 @@
   }
 }
 
-/* Передние грозди. Они ближе всех к объективу, поэтому едут дальше и быстрее
-   остальных слоёв. Левая уходит влево, правая вправо, обе вниз. */
-.camp-cover__near {
-  position: absolute;
-  bottom: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 2%;
-  width: 36%;
-  height: 68%;
-}
-
-.camp-cover__near img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom;
-  /* Временная замена: предметы вишлиста сняты резкими, а передний план обязан
-     быть мягким. Размытие статическое и на кадр не считается. Когда придут
-     слои по брифу, мягкость будет запечена в файл и эта строка уйдёт. */
-  filter: blur(7px);
-}
-
-/* Второй предмет грозди стоит ниже и ближе к краю: гроздь должна выглядеть
-   случайно составленной, а не выложенной в ряд. */
-.camp-cover__near img:nth-child(2) {
-  translate: 0 12%;
-  scale: 0.82;
-}
-
+/* Передние грозди ближе всех к объективу, поэтому едут дальше и быстрее
+   остальных слоёв. Левая уходит влево, правая вправо, обе вниз. Смещение
+   считается от ширины полосы, а не от предмета: слой размером с холст, и
+   девяти процентов хватает, чтобы вынести гроздь за кромку. */
 .camp-cover__near--left {
-  left: 0;
-  translate: -26% 16%;
-  scale: 1.18;
+  translate: -10% 7%;
+  scale: 1.14;
   animation: camp-cover-left 1ms linear both;
   animation-timeline: --cover;
   animation-range: exit 0% exit 88%;
@@ -190,9 +156,8 @@
 }
 
 .camp-cover__near--right {
-  right: 0;
-  translate: 26% 16%;
-  scale: 1.18;
+  translate: 10% 7%;
+  scale: 1.14;
   animation: camp-cover-right 1ms linear both;
   animation-timeline: --cover;
   animation-range: exit 0% exit 88%;
@@ -226,6 +191,28 @@
   width: 100%;
   padding-top: var(--c-gap);
   padding-bottom: var(--c-gap);
+}
+
+/* Своя подложка под текстом.
+
+   Общая вуаль лежит под ближними гроздями, иначе левая гроздь пропадала бы
+   за ней целиком. Но тогда бумажный мешок наезжает на подводку, и первые
+   слова тонут. Поэтому под самим текстом стоит вторая, узкая подложка: она
+   выше всей сцены и держит ровно ту колонку, в которой стоят буквы. */
+.camp-cover__copy::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  width: min(46rem, 78%);
+  background: linear-gradient(
+    92deg,
+    rgba(242, 238, 231, 0.92) 0%,
+    rgba(242, 238, 231, 0.86) 46%,
+    rgba(242, 238, 231, 0) 100%
+  );
+  content: "";
 }
 
 .camp-cover h1 {
@@ -315,9 +302,18 @@
     min-height: clamp(460px, 66svh, 700px);
   }
 
+  /* На телефоне полоса почти квадратная, и холст 16 на 9 вписывается в неё
+     по высоте: около трети кадра срезается по горизонтали. Показать сразу
+     обе грозди и собаку между ними на такой ширине нельзя.
+
+     Поэтому кадр сдвигается вправо: в окно попадают собака и правая гроздь,
+     левая уходит за кромку. Смысл сцены сохраняется, читатель по-прежнему
+     смотрит из-за вещей, просто вещь одна. Все слои сдвигаются одинаково,
+     иначе они разъедутся между собой. */
+  .camp-cover__yard,
+  .camp-cover__pet,
   .camp-cover__near {
-    width: 48%;
-    height: 58%;
+    object-position: 72% bottom;
   }
 
   .camp-cover__veil {
