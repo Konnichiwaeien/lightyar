@@ -186,8 +186,14 @@ try {
         blackButtons: [...document.querySelectorAll(".camp .camp-btn")].filter(
           (btn) => getComputedStyle(btn).backgroundColor === "rgb(28, 28, 28)",
         ).length,
+        cta: document.querySelector(".camp-cover__cta")?.textContent.trim() ?? "",
+        dialogHidden: document.querySelector(".camp-donate")?.hidden ?? null,
       };
     });
+
+    // Кнопка обложки: «Помочь», ведёт к каталогу на этой же странице.
+    assert.equal(shape.cta, "Помочь", `${viewport.name}: кнопка обложки «${shape.cta}»`);
+    assert.equal(shape.dialogHidden, true, `${viewport.name}: диалог помощи открыт при загрузке`);
 
     /* Поле у каждой секции своё, и это часть языка, а не украшение: в
        референсах цвет меняется от секции к секции. */
@@ -209,7 +215,9 @@ try {
        это же, и держать обе означало сказать одно дважды. */
     assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
-    assert.ok(shape.pets >= 2, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы две`);
+    // На телефоне остаётся один Капрал: вторая вырезка в углу наступала на кикер.
+    const leastPets = viewport.width <= 600 ? 1 : 2;
+    assert.ok(shape.pets >= leastPets, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы ${leastPets}`);
     assert.ok(shape.discs >= 3, `${viewport.name}: кругов ${shape.discs}, по одному на секцию`);
     assert.ok(shape.dots >= 2, `${viewport.name}: сеток точек ${shape.dots}`);
     assert.ok(shape.items >= 1, `${viewport.name}: вещей на сцене нет вовсе`);
@@ -224,7 +232,7 @@ try {
     }
 
     // Плашки на словах прочерчены до конца.
-    assert.ok(shape.marks.length >= 3, `${viewport.name}: плашек на обложке ${shape.marks.length}`);
+    assert.ok(shape.marks.length >= 2, `${viewport.name}: плашек на обложке ${shape.marks.length}`);
     assert.ok(
       shape.marks.every((size) => size.startsWith("100%")),
       `${viewport.name}: плашка не прочерчена: ${shape.marks.join(" | ")}`,
@@ -351,6 +359,37 @@ try {
       counted.every((sum) => /\d/.test(sum) && !/^0\s*₽/.test(sum)),
       `${viewport.name}: сумма осталась на нуле: ${counted.join(", ")}`,
     );
+
+    // Кнопка обложки везёт к каталогу: после нажатия его верх у верха экрана.
+    await scrollTo(page, 0, viewport.name);
+    await page.locator(".camp-cover__cta").click();
+    await page.waitForTimeout(1600);
+    const listTop = await page.$eval("#camp-list", (node) => Math.round(node.getBoundingClientRect().top));
+    assert.ok(Math.abs(listTop) <= 40, `${viewport.name}: кнопка обложки не привезла к каталогу (верх на ${listTop}px)`);
+
+    // «Помочь» на карточке открывает панель помощи с этим сбором, Escape закрывает.
+    const firstTitle = (await page.locator(".camp-item__title a").first().textContent()).trim();
+    await page.locator(".camp-item .camp-btn").first().click();
+    await page.waitForTimeout(300);
+    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), false, `${viewport.name}: панель помощи не открылась с карточки`);
+    // Панель грузится динамически: ждём её, а не фиксированную паузу.
+    await page.locator(".camp-donate .donation-intent strong").waitFor({ state: "visible", timeout: 20_000 });
+    const intentTitle = (await page.locator(".camp-donate .donation-intent strong").textContent()).trim();
+    assert.equal(intentTitle, firstTitle, `${viewport.name}: в панели не тот сбор: «${intentTitle}»`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), true, `${viewport.name}: панель не закрылась по Escape`);
+
+    // «Сделать взнос» в финале открывает панель без назначения.
+    await page.locator(".camp-call__cta").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    await page.locator(".camp-call__cta").click();
+    await page.waitForTimeout(400);
+    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), false, `${viewport.name}: панель помощи не открылась из финала`);
+    await page.locator(".camp-donate__close").click();
+    await page.waitForTimeout(300);
+    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), true, `${viewport.name}: панель не закрылась крестиком`);
+    console.log(`${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает панель со сбором «${intentTitle.slice(0, 24)}…», финал открывает панель`);
 
     // Финал: миска падает, пока секция входит в экран. Внизу экрана её ещё
     // нет, к середине входа она на месте.

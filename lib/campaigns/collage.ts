@@ -23,12 +23,23 @@ const ART: Record<string, string> = {
   Срочно: "need-warm",
 };
 
+/* Ответ по каждому тегу кэшируется на минуту: диск не опрашивается на каждый
+   запрос страницы, а файл, положенный в папку, всё равно подхватывается. */
+const TTL = 60_000;
+const cache = new Map<string, { value: string | null; at: number }>();
+
 export function needArt(tag: string): string | null {
   const name = ART[tag];
   if (!name) return null;
+  const hit = cache.get(name);
+  const now = Date.now();
+  if (hit && now - hit.at < TTL) return hit.value;
+  let value: string | null = null;
   try {
-    return fs.existsSync(path.join(ART_DIR, `${name}.webp`)) ? `/campaigns/${name}.webp` : null;
+    value = fs.existsSync(path.join(ART_DIR, `${name}.webp`)) ? `/campaigns/${name}.webp` : null;
   } catch {
-    return null;
+    value = null;
   }
+  cache.set(name, { value, at: now });
+  return value;
 }

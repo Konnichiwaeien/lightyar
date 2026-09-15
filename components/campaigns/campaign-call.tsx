@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { useScroll } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { HeartHandshake } from "lucide-react";
 
 import { Drift } from "@/components/campaigns/collage-drift";
 import { useMotionPreference } from "@/components/reports/use-motion-preference";
+import { preloadDonatePanel, requestDonateOpen } from "@/lib/donations/donation-intent";
 
 /**
  * Секция 5: финальный призыв.
@@ -59,10 +59,18 @@ export function CampaignCall() {
           Взнос без цели идёт на то, что <mark className="camp-mark camp-mark--sheet">нужнее прямо сейчас</mark>:
           корм, лекарства, оплату клиники. Приют сам решит, какую миску наполнить первой.
         </p>
-        <Link className="camp-btn camp-call__cta" href="/#donate">
+        {/* Кнопка открывает панель помощи прямо здесь, в диалоге, а не уводит
+            на главную: до этого читатель терял страницу, с которой пришёл. */}
+        <button
+          className="camp-btn camp-call__cta"
+          onClick={requestDonateOpen}
+          onFocus={preloadDonatePanel}
+          onMouseEnter={preloadDonatePanel}
+          type="button"
+        >
+          <HeartHandshake aria-hidden="true" size={18} />
           Сделать взнос
-          <ArrowUpRight aria-hidden="true" size={17} />
-        </Link>
+        </button>
       </div>
     </section>
   );

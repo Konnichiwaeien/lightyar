@@ -1,25 +1,27 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { MotionConfig, motion, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 import type { MotionValue } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns/summary";
 import { plural } from "@/lib/reports/shelter-scales";
 import { Drift } from "@/components/campaigns/collage-drift";
 import { useMotionPreference } from "@/components/reports/use-motion-preference";
+import { useLenis } from "@/components/ui/smooth-scroll";
 
 /**
  * Обложка страницы сборов: коллаж.
  *
  * Устройство с обоих референсов. Типографика по центру поля, как у Vogue и
  * Wikimedia: «Все» гротеском и «сборы» на янтарной плашке в одну строку,
- * строка под ними с плашками на ключевых словах. Вырезки подопечных стоят по
- * краям поля и уходят за его кромки, каждая на своей фигуре: Капрал на
- * янтарном круге справа, Мира на моховом слева, Тесси с сеткой точек в
- * левом верхнем углу, Джек на светлом кружке в правом.
+ * строка под ними с плашками на ключевых словах. По четырём углам поля
+ * вырезки подопечных, каждая на своей фигуре, и уходят за кромки: Тесси на
+ * точках слева вверху, Джек на светлом кружке справа вверху, Мира на
+ * моховом круге слева внизу, Капрал на янтарном круге справа внизу, лапами
+ * через шов. Четыре угла сопоставимого веса, как на обложке отчёта
+ * Wikimedia; до этого Капрал в полный рост перевешивал всё поле.
  *
  * Механики оттуда же. Мышиный параллакс: вырезки едут за курсором, каждая
  * на свою глубину, как головы на обложке Vogue (там сдвиг доходит до ста
@@ -27,13 +29,15 @@ import { useMotionPreference } from "@/components/reports/use-motion-preference"
  * вырезки вскакивают на поле по очереди. Дрейф по прокрутке с разной
  * скоростью и поворотом.
  *
- * Вырезки настоящие: подопечные приюта из `public/pets`. Капрал лапами
- * выходит за нижнюю кромку на поле каталога; под них у каталога отступ.
+ * Строка под заголовком не перечисляет нужды: сборы бывают на что угодно,
+ * от корма до машины, и список из трёх слов врал бы. Кнопка ведёт к
+ * каталогу на этой же странице, а не на главную.
  *
  * Разбор секций в docs/campaigns-scroll-plan.md.
  */
 
-const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
+const RUB = new Intl.NumberFormat("ru-RU");
+const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 
 /**
  * Кто лежит на поле. Места заданы в стилях по модификатору, здесь движение:
@@ -74,6 +78,7 @@ function Mouse({
 export function CampaignCover({ summary }: { summary: CampaignSummary }) {
   const still = useMotionPreference();
   const sectionRef = useRef<HTMLElement>(null);
+  const { getLenis } = useLenis();
 
   /* Прогресс идёт по уходу обложки вверх: она стоит первой на странице, и
      ничего другого у неё нет. К первому кадру обложка уже целиком в экране,
@@ -89,6 +94,18 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
   const mouseY = useMotionValue(0);
   const softX = useSpring(mouseX, { stiffness: 55, damping: 16, mass: 0.6 });
   const softY = useSpring(mouseY, { stiffness: 55, damping: 16, mass: 0.6 });
+
+  /* Кнопка ведёт к каталогу ниже на этой же странице. Ссылка, а не кнопка:
+     без JS якорь всё равно приводит куда нужно; с плавной прокруткой едет
+     через неё, без неё нативно. */
+  const goToList = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = document.getElementById("camp-list");
+    if (!target) return;
+    event.preventDefault();
+    const lenis = getLenis();
+    if (lenis) lenis.scrollTo(target, { offset: -8, duration: 1.1 });
+    else target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+  };
 
   return (
     <MotionConfig reducedMotion="user">
@@ -163,18 +180,18 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
             Все <em>сборы</em>
           </h1>
           <p className="camp-cover__lead">
-            Каждый сбор закрывает одну нужду приюта: <mark className="camp-mark camp-mark--amber">корм</mark>,{" "}
-            <mark className="camp-mark camp-mark--moss">лечение</mark>,{" "}
-            <mark className="camp-mark camp-mark--sheet">тёплые вольеры</mark>. Сейчас открыто{" "}
+            Каждый сбор закрывает <mark className="camp-mark camp-mark--amber">одну конкретную нужду</mark> приюта,
+            и по каждому видно, <mark className="camp-mark camp-mark--moss">сколько уже собрано</mark> и сколько
+            осталось. Сейчас открыто{" "}
             <strong>
               {summary.funds} {plural(summary.funds, "сбор", "сбора", "сборов")}
             </strong>
-            , и до всех целей не хватает <strong>{money(summary.rest)}</strong>.
+            , до всех целей не хватает <strong>{money(summary.rest)}</strong>.
           </p>
-          <Link className="camp-btn camp-cover__cta" href="/#donate">
-            Помочь · 500 ₽
-            <ArrowUpRight aria-hidden="true" size={17} />
-          </Link>
+          <a className="camp-btn camp-cover__cta" href="#camp-list" onClick={goToList}>
+            Помочь
+            <ArrowDown aria-hidden="true" size={17} />
+          </a>
         </div>
       </section>
     </MotionConfig>

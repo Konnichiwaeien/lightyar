@@ -195,8 +195,8 @@
 }
 
 .camp-cover__disc--lead {
-  top: 12%;
-  right: -2%;
+  right: -3%;
+  bottom: 8%;
   width: min(27%, 24rem);
 }
 
@@ -215,9 +215,9 @@
 }
 
 .camp-cover__disc--dzhek {
-  top: 3%;
-  right: 16%;
-  width: min(9.5%, 8.5rem);
+  top: 4%;
+  right: 8%;
+  width: min(9%, 8rem);
 }
 
 .camp-cover__disc--dzhek i {
@@ -225,9 +225,9 @@
 }
 
 .camp-cover__dots--lead {
-  top: 4%;
-  right: 14%;
-  width: min(12%, 11rem);
+  right: 16%;
+  bottom: 52%;
+  width: min(11%, 10rem);
 }
 
 .camp-cover__dots--tessi {
@@ -249,18 +249,19 @@
   transform-origin: 50% 85%;
 }
 
-/* Капрал главный: крупно справа, на круге, лапами через шов. */
+/* Капрал главный: справа внизу, на круге, лапами через шов. Не в полный
+   рост: в полный он перевешивал всё поле. */
 .camp-cover__pet--lead {
-  right: -3%;
+  right: 1%;
   bottom: calc(-1 * var(--c-bleed));
-  height: calc(78% + var(--c-bleed));
+  height: calc(60% + var(--c-bleed));
 }
 
 /* Мира слева, уходит за левую кромку поля. */
 .camp-cover__pet--mira {
-  bottom: -3%;
-  left: -7%;
-  height: 54%;
+  bottom: -2%;
+  left: -6%;
+  height: 50%;
 }
 
 /* Тесси мелкая в левом верхнем углу, на точках. */
@@ -272,9 +273,9 @@
 
 /* Джек мелкий в правом верхнем, на светлом кружке. */
 .camp-cover__pet--dzhek {
-  top: 3%;
-  right: 17%;
-  height: 18%;
+  top: 5%;
+  right: 9%;
+  height: 17%;
 }
 
 .camp-cover__copy {
@@ -331,10 +332,6 @@
   animation-delay: 1100ms;
 }
 
-.camp-cover__lead .camp-mark:nth-of-type(3) {
-  animation-delay: 1300ms;
-}
-
 /* Селектор с родителем нарочно: у .camp-btn ширина в сто процентов, и по
    одному классу она перебивала бы это правило по порядку в файле. */
 .camp-cover .camp-cover__cta {
@@ -378,20 +375,20 @@
   }
 
   .camp-cover__pet--lead {
-    right: -5%;
-    height: calc(58% + var(--c-bleed));
+    right: -2%;
+    height: calc(48% + var(--c-bleed));
   }
 
   .camp-cover__disc--lead {
-    top: 22%;
-    right: -4%;
+    right: -5%;
+    bottom: 6%;
     width: 24%;
   }
 
   .camp-cover__dots--lead {
-    top: 14%;
-    right: 12%;
-    width: 11%;
+    right: 13%;
+    bottom: 48%;
+    width: 10%;
   }
 
   .camp-cover__pet--mira {
@@ -436,11 +433,13 @@
     padding-bottom: clamp(200px, 52vw, 280px);
   }
 
+  /* Круг правее, чем на телефоне: на планшете кнопка «Помочь» по центру
+     наезжала на его кромку, и янтарь сливался с янтарём. */
   .camp-cover__disc--lead {
     top: auto;
-    right: -12%;
+    right: -16%;
     bottom: 3%;
-    width: 58%;
+    width: 54%;
   }
 
   .camp-cover__dots--lead {
@@ -468,9 +467,38 @@
   }
 
   /* Убирают по признаку в разметке, а не по порядковому номеру: все слои
-     поля это div, и nth-of-type считал среди них же. */
+     поля это div, и nth-of-type считал среди них же. На планшете Мира
+     остаётся: слева внизу было пусто. */
+  .camp-cover__pet--dzhek,
+  .camp-cover__disc--dzhek {
+    display: none;
+  }
+
+  .camp-cover__pet--mira {
+    bottom: -2%;
+    left: -10%;
+    height: 34%;
+  }
+
+  .camp-cover__disc--mira {
+    bottom: 10%;
+    left: -2%;
+    width: 26%;
+  }
+}
+
+/* На телефоне остаётся один Капрал: Тесси в углу наступала на кикер, Мира
+   не помещалась рядом с текстом. Круг снова ближе к краю. */
+@media (max-width: 600px) {
+  .camp-cover__disc--lead {
+    right: -12%;
+    width: 58%;
+  }
+
   .camp-cover__pet[data-small="true"],
-  .camp-cover__disc[data-small="true"] {
+  .camp-cover__disc[data-small="true"],
+  .camp-cover__pet--tessi,
+  .camp-cover__dots--tessi {
     display: none;
   }
 }
@@ -1472,6 +1500,137 @@
   .camp-item:hover .camp-item__shot,
   .camp-item:hover .camp-item__shot img,
   .camp-btn:hover {
+    transform: none;
+  }
+}
+
+/* ---------------- панель помощи в диалоге --------------------------------
+
+   Та же панель, что секцией стоит на главной, здесь поверх страницы.
+   Переменные панели объявлены на её секции на главной, поэтому здесь они
+   объявлены заново на диалоге: без них панель теряет цвета.
+------------------------------------------------------------------------- */
+
+.camp-donate {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: start center;
+  padding: clamp(1rem, 3vh, 2.5rem) clamp(0.75rem, 2vw, 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(28, 28, 28, 0.55);
+  backdrop-filter: blur(4px);
+  animation: camp-donate-in 240ms ease-out both;
+}
+
+.camp-donate[hidden] {
+  display: none;
+}
+
+@keyframes camp-donate-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.camp-donate__panel {
+  --donation-ink: #27221d;
+  --donation-muted: #746c62;
+  --donation-paper: #fffdf8;
+  --donation-wash: #fff8e8;
+  --donation-line: rgba(54, 46, 38, 0.16);
+  --donation-amber: #f3a400;
+
+  position: relative;
+  width: min(100%, 74rem);
+  padding: clamp(1rem, 2.5vw, 2rem);
+  border-radius: 32px;
+  background: var(--c-sheet);
+  box-shadow: 0 30px 80px rgba(28, 28, 28, 0.35);
+  animation: camp-donate-rise 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes camp-donate-rise {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+
+.camp-donate__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.camp-donate__head h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Подопечный панели стоит над её верхней кромкой, как на главной: панели
+   оставлен запас сверху, чтобы он не лез на заголовок диалога. На узком
+   экране запаса нет и подопечный снимается. Крестик поверх него. */
+.camp-donate .donation-experience {
+  margin-top: clamp(5rem, 11vw, 8.5rem);
+}
+
+@media (max-width: 860px) {
+  .camp-donate .donation-experience {
+    margin-top: 0.5rem;
+  }
+
+  .camp-donate .donation-pet {
+    display: none;
+  }
+}
+
+/* Панель грузится по первому клику; пока едет, стоит одна строка. */
+.camp-donate__loading {
+  margin: 2rem 0;
+  color: var(--c-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.camp-donate__close {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(28, 28, 28, 0.14);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--c-ink);
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.camp-donate__close:hover {
+  background: var(--c-ink);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camp-donate,
+  .camp-donate__panel {
+    animation: none;
+  }
+
+  .camp-donate__close:hover {
     transform: none;
   }
 }

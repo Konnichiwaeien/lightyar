@@ -10,8 +10,11 @@ import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button"
 import { CampaignCover } from "@/components/campaigns/campaign-cover";
 import { CampaignRoute } from "@/components/campaigns/campaign-route";
 import { CampaignCall } from "@/components/campaigns/campaign-call";
+import { CampaignDonateDialog } from "@/components/campaigns/campaign-donate-dialog";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
+import { donationsService } from "@/lib/api/services/donations";
+import type { DonationFeedState } from "@/lib/donations/donation-feed-state";
 import { resolveCovers } from "@/lib/campaigns/cover";
 import { needArt } from "@/lib/campaigns/collage";
 import { getCampaignSummary } from "@/lib/campaigns/summary";
@@ -33,8 +36,10 @@ interface PageProps {
    растёт, а страница не должна расти вместе с ним. */
 const ITEMS_PER_PAGE = 8;
 
-/** Рубли без копеек: у сборов суммы круглые, копейки только шумят. */
-const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
+/** Рубли без копеек: у сборов суммы круглые, копейки только шумят. Форматтер
+    один на модуль: создавать его на каждый вызов дорого. */
+const RUB = new Intl.NumberFormat("ru-RU");
+const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 
 /** Сортировка из адреса в запрос к CMS. Неизвестное значение не ломает страницу. */
 const SORTS: Record<string, string> = {
@@ -55,7 +60,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
      а число закрытых нужно вкладке фильтра. Запросы идут разом:
      последовательно они выстроились бы в лесенку и задержали бы первый байт
      на время лишнего обхода CMS. */
-  const [campaignsData, summary, closedData] = await Promise.all([
+  const [campaignsData, summary, closedData, donationsRaw] = await Promise.all([
     campaignsService.getCampaigns({
       status,
       sort: SORTS[sort] ?? SORTS.date_desc,
@@ -64,7 +69,21 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
     }),
     getCampaignSummary(),
     campaignsService.getCampaigns({ status: "closed", limit: 1 }),
+    donationsService.getRecentDonations(20),
   ]);
+
+  /* Лента помощников для панели помощи в диалоге: та же, что на главной. */
+  const feed: DonationFeedState =
+    donationsRaw.status === "ready"
+      ? {
+          status: "ready",
+          items: donationsRaw.donations.map((donation) => ({
+            name: donation.donorName || "Анонимный помощник",
+            amount: donation.amount,
+            type: donation.type,
+          })),
+        }
+      : { status: donationsRaw.status, items: [] };
 
   const list = await resolveCovers((campaignsData.data || []).map(normalizeCampaignData));
   const total = campaignsData.meta?.pagination?.total || 0;
@@ -98,7 +117,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
         {/* Каталог: секция 2 плана. Верхний отступ держит место под лапы
             вырезок, которые выходят с обложки через шов: фильтр стоит ниже
             их, и ни одна кнопка не оказывается под собакой. */}
-        <section aria-labelledby="camp-list-title" className="camp-list">
+        <section aria-labelledby="camp-list-title" className="camp-list" id="camp-list">
           <div className="camp-inner">
             <header className="camp-list__head">
               <div className="camp-list__title">
@@ -228,6 +247,10 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             ровно это же. */}
         <CampaignCall />
       </main>
+
+      {/* Панель помощи в диалоге: кнопки «Помочь» на карточках и «Сделать
+          взнос» в финале открывают её здесь, а не уводят на главную. */}
+      <CampaignDonateDialog feed={feed} />
     </div>
   );
 }

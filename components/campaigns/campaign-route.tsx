@@ -32,7 +32,8 @@ import { useMotionPreference } from "@/components/reports/use-motion-preference"
  * Strapi. Нужда без своих сборов на сцену не приезжает.
  */
 
-const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
+const RUB = new Intl.NumberFormat("ru-RU");
+const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 
 /** Доля пути от a до b, срезанная в [0, 1], с мягким подходом к концу. */
 const ease = (p: number, a: number, b: number) => {
@@ -112,7 +113,7 @@ function Item({
     >
       {station.art ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img alt="" src={station.art} />
+        <img alt="" decoding="async" loading="lazy" src={station.art} />
       ) : null}
     </motion.div>
   );
@@ -122,12 +123,13 @@ function Label({
   station,
   index,
   progress,
-  still,
+  animated,
 }: {
   station: RouteStation;
   index: number;
   progress: MotionValue<number>;
-  still: boolean;
+  /** Живое число и въезд подписи; иначе стоит итог. */
+  animated: boolean;
 }) {
   const [a, b] = PHASE.label(index);
   const [c, d] = PHASE.count(index);
@@ -137,15 +139,6 @@ function Label({
   const y = useTransform(progress, (p) => 24 * (1 - ease(p, a, b)));
   const sum = useTransform(progress, (p) => money(station.collected * ease(p, c, d)));
   const fill = useTransform(progress, (p) => share * ease(p, c, d));
-
-  /* На сервере и до первого кадра стоит итог: без JS страница показывает
-     настоящие суммы, а не нули. Живое число подставляется после монтажа. */
-  const [live, setLive] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLive(true);
-  }, []);
-  const animated = live && !still;
 
   return (
     <motion.li
@@ -173,6 +166,16 @@ export function CampaignRoute({ stations }: { stations: (RouteStation & { art: s
   const still = useMotionPreference();
   const compact = useCompact();
   const sectionRef = useRef<HTMLElement>(null);
+
+  /* На сервере и до первого кадра в подписях стоит итог: без JS страница
+     показывает настоящие суммы, а не нули. Живое число подставляется после
+     монтажа, и состояние на это одно на всю сцену, а не по одному на подпись. */
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLive(true);
+  }, []);
+  const animated = live && !still;
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -203,7 +206,7 @@ export function CampaignRoute({ stations }: { stations: (RouteStation & { art: s
             />
             <motion.div className="camp-route__dog" style={still ? { y: 0 } : { y: dogY }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="" src="/pets/cutout-serkan.webp" />
+              <img alt="" decoding="async" loading="lazy" src="/pets/cutout-serkan.webp" />
             </motion.div>
             {stations.map((station, index) => (
               <Item index={index} key={station.tag} progress={scrollYProgress} station={station} still={still} />
@@ -212,7 +215,7 @@ export function CampaignRoute({ stations }: { stations: (RouteStation & { art: s
 
           <ul className="camp-route__labels">
             {stations.map((station, index) => (
-              <Label index={index} key={station.tag} progress={scrollYProgress} station={station} still={still} />
+              <Label animated={animated} index={index} key={station.tag} progress={scrollYProgress} station={station} />
             ))}
           </ul>
         </div>
