@@ -50,14 +50,15 @@ test("campaign donate dialog keeps its scroll, its motion and the shared donatio
   assert.doesNotMatch(form, /DonationPet|DonationFeed|role="tablist"/);
   assert.doesNotMatch(dialog, /DonationPet|DonationExperience/);
 
-  /* Раскладка панели под окно переопределена: одна колонка вместо второй,
-     столбец вместо карусели со снапом. */
+  /* Раскладка панели переопределена и в окне, и в форме на самой странице
+     сбора: одна колонка вместо второй, карточки вместо ленты со снапом. */
   assert.match(
     css,
-    /\.camp-donate__body \.donation-tier-picker,\s*\n\.camp-donate__body \.donation-fields\s*\{[\s\S]*?grid-column:\s*auto;[\s\S]*?grid-row:\s*auto/,
+    /\.camp-donate__body \.donation-tier-picker,[\s\S]{0,120}\.donation-fields\s*\{[\s\S]*?grid-column:\s*auto;[\s\S]*?grid-row:\s*auto/,
   );
-  const tierList = css.match(/\.camp-donate__body \.donation-tier-picker__list\s*\{([\s\S]*?)\}/);
+  const tierList = css.match(/\.camp-donate__body \.donation-tier-picker__list,[\s\S]{0,80}\{([\s\S]*?)\}/);
   assert.ok(tierList, "в окне нет переопределения списка ступеней");
+  assert.match(css, /\.fund-form \.donation-tier-picker__list/);
   for (const rule of [
     /grid-auto-flow:\s*row/,
     // Карточками в две колонки, как в форме на главной.
@@ -70,9 +71,12 @@ test("campaign donate dialog keeps its scroll, its motion and the shared donatio
   // На телефоне колонка остаётся одна: в половину ширины сумма не влезает.
   assert.match(
     css,
-    /@media \(max-width: 560px\)\s*\{\s*\.camp-donate__body \.donation-tier-picker__list\s*\{[\s\S]*?grid-template-columns:\s*1fr/,
+    /@media \(max-width: 560px\)\s*\{[\s\S]{0,200}\.donation-tier-picker__list[\s\S]{0,120}grid-template-columns:\s*1fr/,
   );
-  assert.match(css, /\.camp-donate__body \.donation-fields__person\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
+  assert.match(
+    css,
+    /\.camp-donate__body \.donation-fields__person,[\s\S]{0,80}\{[\s\S]{0,80}grid-template-columns:\s*1fr/,
+  );
 
   /* Ряд управления каталога: вкладки и список сортировки одной высоты. Список
      общий с каталогом питомцев и приносит свою, на 13 пикселей меньше. */

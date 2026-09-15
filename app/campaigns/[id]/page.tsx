@@ -8,11 +8,14 @@ import { CampaignCall } from "@/components/campaigns/campaign-call";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
 import { CampaignCountdown } from "@/components/campaigns/campaign-countdown";
 import { CampaignDonateDialog } from "@/components/campaigns/campaign-donate-dialog";
+import { CampaignDonateForm } from "@/components/campaigns/campaign-donate-form";
 import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
 import { CampaignMobileCta } from "@/components/campaigns/campaign-mobile-cta";
 import { CampaignPhotos } from "@/components/campaigns/campaign-photos";
 import { CampaignShare } from "@/components/campaigns/campaign-share";
+import { FundTabs } from "@/components/campaigns/fund-tabs";
 import { InnerHeader } from "@/components/layout/inner-header";
+import { aboutPageService } from "@/lib/api/services/about-page";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
 import { fundDate, fundPhotos, loadFund } from "@/lib/campaigns/fund";
@@ -83,9 +86,12 @@ export default async function FundPage({ params }: PageProps) {
 
   /* Сбор и соседние сборы едут разом: второй запрос не зависит от первого, а
      последовательно они складывались в лесенку из двух обходов CMS. */
-  const [fund, othersData] = await Promise.all([
+  const [fund, othersData, about] = await Promise.all([
     loadFund(id),
     campaignsService.getCampaigns({ status: "active", limit: 4 }),
+    /* Текст вкладки «О фонде» ведётся в CMS вместе со страницей фонда: своя
+       копия здесь разошлась бы с ней на первой же правке. */
+    aboutPageService.getAboutPage(),
   ]);
 
   if (!fund) notFound();
@@ -109,6 +115,12 @@ export default async function FundPage({ params }: PageProps) {
     .split(/\n{2,}/)
     .map((piece) => piece.trim())
     .filter(Boolean);
+
+  /* Про фонд коротко: чем занимаемся, как работаем и откуда взялись. Дальше
+     читателя ведёт ссылка на страницу фонда. */
+  const shelter = [about.heroIntro, about.missionBody, about.historyBody.split(/\n{2,}/)[0]]
+    .map((piece) => piece?.trim())
+    .filter((piece): piece is string => Boolean(piece));
 
   /* Взносы в сбор: свежие сверху. Имена приходят такими, какими их оставил
      помощник, безымянный взнос подписан приютом. */
@@ -233,93 +245,140 @@ export default async function FundPage({ params }: PageProps) {
 
               <p className="fund-dates">
                 <span>
-                  <CalendarDays aria-hidden="true" size={14} />
-                  Открыт {started}
+                  <CalendarDays aria-hidden="true" size={18} />
+                  <small>Открыт</small>
+                  <b>{started}</b>
                 </span>
                 <span>
-                  <Flag aria-hidden="true" size={14} />
-                  {closed
-                    ? "Сбор завершён"
-                    : deadline
-                      ? `Срок до ${fundDate(fund.deadline)}`
-                      : "Идёт до сбора цели"}
+                  <Flag aria-hidden="true" size={18} />
+                  <small>{closed ? "Итог" : "Срок"}</small>
+                  <b>
+                    {closed
+                      ? "Сбор завершён"
+                      : deadline
+                        ? `до ${fundDate(fund.deadline)}`
+                        : "до сбора цели"}
+                  </b>
                 </span>
               </p>
             </div>
           </div>
         </section>
 
-        {story.length > 0 ? (
-          <section aria-labelledby="fund-story-title" className="fund-story">
-            <div className="camp-inner">
-              <h2 className="fund-title" id="fund-story-title">
-                О <em>сборе</em>
-              </h2>
-              <div className="fund-story__text">
-                {story.map((paragraph) => (
-                  <p key={paragraph.slice(0, 40)}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        <section aria-labelledby="fund-backers-title" className="fund-backers">
+        {/* Две вкладки вместо заголовка: сам сбор и фонд, который его ведёт.
+            Второе читателю нужно ровно тогда, когда он решает, можно ли сюда
+            переводить деньги, и отдельной страницей это вопрос не снимает. */}
+        <section aria-labelledby="fund-story-title" className="fund-story">
           <div className="camp-inner">
-            <h2 className="fund-title" id="fund-backers-title">
-              {backers.length > 0 ? (
-                <>
-                  {backers.length} {plural(backers.length, "взнос", "взноса", "взносов")} <em>в этот сбор</em>
-                </>
-              ) : (
-                <>
-                  Взносов <em>пока нет</em>
-                </>
-              )}
+            <h2 className="sr-only" id="fund-story-title">
+              Подробности сбора
             </h2>
+            <FundTabs
+              label="О сборе и о фонде"
+              tabs={[
+                {
+                  key: "fund",
+                  label: "О сборе",
+                  panel: (
+                    <div className="fund-story__text">
+                      {story.length > 0 ? (
+                        story.map((paragraph) => <p key={paragraph.slice(0, 40)}>{paragraph}</p>)
+                      ) : (
+                        <p>{fund.shortDesc}</p>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: "shelter",
+                  label: "О фонде",
+                  panel: (
+                    <div className="fund-story__text">
+                      {shelter.map((paragraph) => (
+                        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+                      ))}
+                      <p>
+                        <Link className="fund-story__more" href="/about">
+                          Всё о фонде: команда, отчёты, документы
+                          <ArrowUpRight aria-hidden="true" size={16} />
+                        </Link>
+                      </p>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </section>
 
-            {backers.length > 0 ? (
-              <ul className="fund-backers__list">
-                {shownBackers.map((backer) => (
-                  <li key={backer.id}>
-                    <span className="fund-backer__who">
-                      <span aria-hidden="true" className="fund-backer__mark">
-                        <HandHeart size={16} />
-                      </span>
-                      {backer.name}
-                    </span>
-                    <span className="fund-backer__when">
-                      {backer.date}
-                      {backer.monthly ? " · ежемесячно" : ""}
-                    </span>
-                    <b>{money(backer.amount)}</b>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {restBackers > 0 ? (
-              <p className="fund-backers__more">
-                и ещё {restBackers} {plural(restBackers, "взнос", "взноса", "взносов")} до них
-              </p>
-            ) : null}
-
-            {backers.length === 0 ? (
-              /* Пустое состояние карточкой, как в каталоге: строка текста
-                 посреди пустого поля читается сбоем загрузки. */
-              <div className="camp-blank">
-                <span aria-hidden="true" className="camp-blank__badge">
-                  <HandHeart size={30} />
-                </span>
-                <h3>Этот сбор ещё никто не поддержал</h3>
-                <p>
-                  {closed
-                    ? "Сбор закрыт без взносов через сайт: на нужду нашлись другие деньги."
-                    : "Первый взнос виден остальным и обычно тянет за собой следующие. Любая сумма идёт этому сбору."}
-                </p>
-                {closed ? null : <CampaignHelpButton id={fund.documentId} title={fund.title} />}
-              </div>
-            ) : null}
+        {/* Взнос и помощники тоже парой: форма та же, что на главной, без
+            вкладок панели и без подопечного над кромкой. */}
+        <section aria-labelledby="fund-help-title" className="fund-backers">
+          <div className="camp-inner">
+            <h2 className="sr-only" id="fund-help-title">
+              Поддержать сбор
+            </h2>
+            <FundTabs
+              label="Взнос и помощники сбора"
+              tabs={[
+                {
+                  key: "give",
+                  label: "Сделать взнос",
+                  panel: (
+                    <div className="fund-form">
+                      <CampaignDonateForm
+                        initial={{ kind: "campaign", id: fund.documentId, title: fund.title, amount: 500 }}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: "heroes",
+                  label: "Наши герои",
+                  panel:
+                    backers.length > 0 ? (
+                      <div>
+                        <ul className="fund-backers__list">
+                          {shownBackers.map((backer) => (
+                            <li key={backer.id}>
+                              <span className="fund-backer__who">
+                                <span aria-hidden="true" className="fund-backer__mark">
+                                  <HandHeart size={16} />
+                                </span>
+                                {backer.name}
+                              </span>
+                              <span className="fund-backer__when">
+                                {backer.date}
+                                {backer.monthly ? " · ежемесячно" : ""}
+                              </span>
+                              <b>{money(backer.amount)}</b>
+                            </li>
+                          ))}
+                        </ul>
+                        {restBackers > 0 ? (
+                          <p className="fund-backers__more">
+                            и ещё {restBackers} {plural(restBackers, "взнос", "взноса", "взносов")} до них
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      /* Пустое состояние карточкой, как в каталоге: строка
+                         текста посреди пустого поля читается сбоем загрузки. */
+                      <div className="camp-blank">
+                        <span aria-hidden="true" className="camp-blank__badge">
+                          <HandHeart size={30} />
+                        </span>
+                        <h3>Этот сбор ещё никто не поддержал</h3>
+                        <p>
+                          {closed
+                            ? "Сбор закрыт без взносов через сайт: на нужду нашлись другие деньги."
+                            : "Первый взнос виден остальным и обычно тянет за собой следующие. Любая сумма идёт этому сбору."}
+                        </p>
+                      </div>
+                    ),
+                },
+              ]}
+            />
           </div>
         </section>
 

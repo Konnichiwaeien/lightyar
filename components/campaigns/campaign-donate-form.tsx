@@ -30,10 +30,22 @@ import "@/components/donations/donation-experience.css";
  * полей, она выключена и подписана.
  */
 
-export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; onReady: () => void }) {
-  const [intent, setIntent] = useState<DonationIntent | null>(null);
+/* Форма живёт в двух местах: в окне помощи и прямо на странице сбора,
+   вкладкой рядом с ленты помощников. В окне у неё есть выход и сигнал
+   готовности, на странице ни того, ни другого не нужно, зато назначение
+   известно заранее — это тот сбор, который читатель и открыл. */
+export function CampaignDonateForm({
+  initial = null,
+  onClose,
+  onReady,
+}: {
+  initial?: DonationIntent | null;
+  onClose?: () => void;
+  onReady?: () => void;
+}) {
+  const [intent, setIntent] = useState<DonationIntent | null>(initial);
   const [cadence, setCadence] = useState<"monthly" | "once">("once");
-  const [amount, setAmount] = useState(500);
+  const [amount, setAmount] = useState(initial?.amount || 500);
   const [customAmount, setCustomAmount] = useState("");
   const [donorName, setDonorName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,7 +67,7 @@ export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; 
     window.addEventListener(DONATION_INTENT_EVENT, receive);
     /* Окно ждёт этого сигнала: событие с назначением могло прийти раньше, чем
        форма догрузилась, и тогда окно повторяет его сюда. */
-    onReady();
+    onReady?.();
     return () => window.removeEventListener(DONATION_INTENT_EVENT, receive);
   }, [onReady]);
 
@@ -120,12 +132,14 @@ export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; 
       />
 
       {/* Про то, что оплата не подключена, говорит сама кнопка платежа внутри
-          полей; здесь только выход. */}
+          полей; здесь только выход, и он нужен лишь в окне. */}
       <p className="camp-form__note">
         Перевести можно по реквизитам из подвала сайта.{" "}
-        <button onClick={onClose} type="button">
-          Закрыть окно
-        </button>
+        {onClose ? (
+          <button onClick={onClose} type="button">
+            Закрыть окно
+          </button>
+        ) : null}
       </p>
     </form>
   );

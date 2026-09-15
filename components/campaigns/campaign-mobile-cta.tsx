@@ -39,10 +39,19 @@ export function CampaignMobileCta({ anchor, id, title }: { anchor: string; id: s
        случаются в одном кадре, состояние «не пересекается» не меняется, и
        кнопка не появляется вовсе. Замер снимается раз в кадр, пока идёт
        прокрутка. */
+    /* Пока на экране форма взноса, догонялка прячется: она ведёт к тому же
+       действию и вдобавок закрывает собой нижние ступени. Форма появляется и
+       исчезает вместе со своей вкладкой, поэтому ищется каждый раз заново. */
+    const onScreen = (node: Element | null) => {
+      if (!node) return false;
+      const box = node.getBoundingClientRect();
+      return box.top < window.innerHeight - 80 && box.bottom > 80;
+    };
+
     let frame = 0;
     const measure = () => {
       frame = 0;
-      setShown(target.getBoundingClientRect().bottom < 0);
+      setShown(target.getBoundingClientRect().bottom < 0 && !onScreen(document.querySelector(".fund-form")));
     };
     const queue = () => {
       if (!frame) frame = window.requestAnimationFrame(measure);

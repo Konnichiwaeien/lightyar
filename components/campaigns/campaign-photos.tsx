@@ -1,28 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { ResilientImage } from "@/components/ui/resilient-image";
 
 /**
- * Кадры сбора на его странице.
+ * Кадры сбора: половина первого экрана под снимок.
  *
- * Снимок здесь круг, как в каталоге и как везде на этой странице: снимок в
- * прямоугольной рамке с тенью — тот самый фотоблок, ради отказа от которого
- * переделывалась вся страница сборов. За кругом лежит плоская фигура, и это
- * та же пара «фигура за кадром», что держит поля выше и ниже.
+ * Полоса уходит под правый край окна и ничем не скруглена: это разворот, а не
+ * карточка. Круг, стоявший здесь сначала, держал грамматику каталога, но на
+ * странице одного сбора съедал кадр: лица и обстановка уходили за кромку,
+ * ради которой их и снимали.
  *
- * Остальные кадры стоят рядом малыми кругами и меняются местами с большим по
- * нажатию. Это кнопки, а не карусель: библиотека каруселей тянула бы в
- * страницу свой пакет ради пяти снимков, а переключение кнопками работает с
- * клавиатуры без единой строки обработчиков клавиш.
+ * Кадры лежат стопкой, виден один. Так подмена идёт растворением и без второй
+ * загрузки: браузер уже держит их. Ленту это делает дороже на старте, поэтому
+ * кадров берётся не больше шести.
  *
- * Все кадры лежат в круге стопкой, виден один. Так подмена идёт растворением
- * и без второй загрузки: браузер уже держит их. Ленту это делает дороже на
- * старте, поэтому кадров берётся не больше пяти.
+ * Переключают две кнопки со счётчиком между ними. Библиотека каруселей тянула
+ * бы в страницу свой пакет ради шести снимков, а кнопки работают с клавиатуры
+ * без единой строки обработчиков клавиш.
  */
 
-const LIMIT = 5;
+const LIMIT = 6;
 
 export function CampaignPhotos({ photos, title }: { photos: string[]; title: string }) {
   const list = photos.slice(0, LIMIT);
@@ -30,43 +30,43 @@ export function CampaignPhotos({ photos, title }: { photos: string[]; title: str
 
   if (list.length === 0) return null;
 
+  const turn = (step: number) => setShown((now) => (now + step + list.length) % list.length);
+
   return (
     <div className="fund-shots">
-      <div className="fund-shots__frame">
-        <i aria-hidden="true" className="fund-shots__disc" />
-        <div className="fund-shots__stack">
-          {list.map((src, index) => (
-            <ResilientImage
-              alt={index === 0 ? title : `${title}: кадр ${index + 1}`}
-              aria-hidden={index === shown ? undefined : "true"}
-              className="fund-shots__img"
-              data-shown={index === shown ? "true" : undefined}
-              fetchPriority={index === 0 ? "high" : "low"}
-              height={760}
-              key={src}
-              loading={index === 0 ? "eager" : "lazy"}
-              sizes="(max-width: 860px) 86vw, 34vw"
-              src={src}
-              width={760}
-            />
-          ))}
-        </div>
+      <i aria-hidden="true" className="fund-shots__disc" />
+
+      <div className="fund-shots__stack">
+        {list.map((src, index) => (
+          <ResilientImage
+            alt={index === 0 ? title : `${title}: кадр ${index + 1}`}
+            aria-hidden={index === shown ? undefined : "true"}
+            className="fund-shots__img"
+            data-shown={index === shown ? "true" : undefined}
+            fetchPriority={index === 0 ? "high" : "low"}
+            height={1200}
+            key={src}
+            loading={index === 0 ? "eager" : "lazy"}
+            sizes="(max-width: 980px) 100vw, 48vw"
+            src={src}
+            width={1200}
+          />
+        ))}
       </div>
 
       {list.length > 1 ? (
-        <div aria-label="Другие кадры сбора" className="fund-shots__rail" role="group">
-          {list.map((src, index) => (
-            <button
-              aria-current={index === shown ? "true" : undefined}
-              aria-label={`Показать кадр ${index + 1} из ${list.length}`}
-              className="fund-shots__pick"
-              key={src}
-              onClick={() => setShown(index)}
-              type="button"
-            >
-              <ResilientImage alt="" height={160} sizes="80px" src={src} width={160} />
-            </button>
-          ))}
+        <div className="fund-shots__nav">
+          <button aria-label="Предыдущий кадр" onClick={() => turn(-1)} type="button">
+            <ChevronLeft aria-hidden="true" size={20} />
+          </button>
+          {/* Счётчик говорит вслух: без него читалка на нажатие кнопки молчит,
+              картинка ведь меняется без перехода. */}
+          <span aria-live="polite">
+            {shown + 1} <i aria-hidden="true">/</i> {list.length}
+          </span>
+          <button aria-label="Следующий кадр" onClick={() => turn(1)} type="button">
+            <ChevronRight aria-hidden="true" size={20} />
+          </button>
         </div>
       ) : null}
     </div>
