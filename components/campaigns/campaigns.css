@@ -6,11 +6,14 @@
  * переходят через шов между секциями, типографика крупная и смешанная.
  *
  * Прямоугольных фотоблоков в сценах нет, и это главное правило: за них
- * отклонены семь предыдущих заходов. Каталог сборов тоже переведён в этот
- * язык, кадр сбора там круг.
+ * отклонены семь предыдущих заходов. Каталог сборов тоже в этом языке: кадр
+ * сбора там круг, за ним выглядывает малый круг.
  *
- * Разбор секций в docs/campaigns-scroll-plan.md, приёмы и грабли в скилле
- * scroll-scenes.
+ * Движение двух родов. Слои полей плывут по прокрутке с разной скоростью,
+ * это framer, потому что один прогресс кормит все слои секции разом. Всё,
+ * что въезжает, встаёт и наполняется, сделано шкалой просмотра CSS: одно
+ * свойство одного элемента от его собственного прохода через экран. Разбор
+ * в скилле scroll-scenes, план секций в docs/campaigns-scroll-plan.md.
  */
 
 .camp {
@@ -27,30 +30,41 @@
   --c-amber-text: #a85406;
   --c-moss: #6f7355;
 
-  /* Один вертикальный шаг на всю страницу: поля полос, зазоры между
-     блоками и отступ под сеткой считаются от него. */
-  --c-gap: clamp(3rem, 7vh, 4.5rem);
-  --c-gap-sm: clamp(1.5rem, 3.5vh, 2.25rem);
+  /* Один вертикальный шаг на всю страницу: поля секций, зазоры между блоками
+     и отступ под сеткой считаются от него. */
+  --c-gap: clamp(4rem, 9vh, 6.5rem);
+  --c-gap-sm: clamp(1.75rem, 4vh, 2.75rem);
+  --c-inner: clamp(1.25rem, 4vw, 3rem);
 
-  --c-r-md: 24px;
-  --c-r-lg: 36px;
-  --c-lift: 0 1px 2px rgba(28, 28, 28, 0.05), 0 8px 20px -14px rgba(28, 28, 28, 0.25);
+  /* На сколько вырезки обложки выходят за её нижнюю кромку. Число одно на
+     вырезку и на отступ каталога под ней: лапы ложатся на пустой лист, а не
+     на фильтр. */
+  --c-bleed: clamp(44px, 6vw, 80px);
+
+  /* Радиус верха подвала, он общий для сайта. Янтарное поле финала уходит
+     под него ровно на эту величину. */
+  --c-footer-r: 2.5rem;
 
   min-height: 100vh;
   background: var(--c-sheet);
   color: var(--c-ink);
 }
 
+@media (min-width: 768px) {
+  .camp {
+    --c-footer-r: 3.5rem;
+  }
+}
+
 .camp-inner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  padding: 0 var(--c-inner);
 }
 
-/* Шапка ложится поверх обложки, а не занимает свою полосу.
-   Она состоит из одной кнопки меню у правого края, и в потоке это давало
-   сто двадцать пустых пикселей над страницей: первое, что видел читатель,
-   была пустота. В референсах кнопка и логотип висят прямо над обложкой. */
+/* Шапка ложится поверх обложки, а не занимает свою полосу. Она состоит из
+   одной кнопки меню у правого края, и в потоке это давало сто двадцать
+   пустых пикселей над страницей. */
 .camp > header {
   position: absolute;
   top: 0;
@@ -62,7 +76,7 @@
 /* Кикер живёт отдельно от обложки: его же набором подписаны заголовки
    секций ниже по странице. */
 .camp-kicker {
-  margin-bottom: 0.9rem;
+  margin: 0 0 0.9rem;
   color: var(--c-amber-text);
   font-size: 0.72rem;
   font-weight: 700;
@@ -70,62 +84,95 @@
   text-transform: uppercase;
 }
 
+/* ---------------- общее для полей коллажа ---------------------------------
+
+   Поле каждой секции лежит слоем под текстом и ограничено шириной
+   контейнера: на широком экране фигуры и вырезки стоят там же, где текст, а
+   не разбегаются к краям окна. Цвет при этом тянется на всю ширину.
+------------------------------------------------------------------------- */
+
+.camp-cover__field,
+.camp-route__field,
+.camp-call__field {
+  position: absolute;
+  inset: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Круги. Сама фигура лежит на вложенном элементе: framer двигает обёртку
+   трансформацией, а въезд фигуры идёт своим свойством на ребёнке, и они не
+   спорят за одно поле стиля. */
+.camp-cover__disc,
+.camp-route__disc,
+.camp-call__disc {
+  position: absolute;
+  aspect-ratio: 1;
+}
+
+.camp-cover__disc i,
+.camp-route__disc i,
+.camp-call__disc i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+/* Сетка из точек. Второй тип геометрии: держит пустой угол и не даёт полю
+   выглядеть незаполненным. */
+.camp-cover__dots,
+.camp-route__dots,
+.camp-call__dots {
+  position: absolute;
+  background-image: radial-gradient(circle, var(--dot, rgba(168, 84, 6, 0.32)) 1.7px, transparent 1.8px);
+  background-size: 21px 21px;
+}
+
 /* ---------------- обложка: коллаж ---------------------------------------
 
-   Грамматика с референсов, подтверждена владельцем 15 сентября: плоское
-   цветное поле, поверх него свободно лежащие вырезки, за ними геометрические
-   фигуры, крупная смешанная типографика в пустой середине, вырезки переходят
-   через шов между секциями.
-
-   Прямоугольников здесь нет ни одного, и это главное отличие от шести
-   предыдущих заходов. Фотополоса, сетка карточек и лента-полоса отклонены
-   владельцем именно за это: в референсах прямоугольных фотоблоков нет, там
-   всё вырезано и лежит на цвете.
+   Плоское поле, поверх него три вырезки, за ними янтарный круг и сетка
+   точек, слева крупная типографика. Капрал и Лакки выходят за нижнюю кромку
+   и ложатся на поле каталога.
 
    Поле режется только по горизонтали. По вертикали оно нарочно открыто:
-   главная вырезка выходит за нижнюю кромку и ложится на следующее поле.
-
-   Замысел в docs/campaigns-scroll-plan.md.
+   hidden по одной оси заставил бы вторую стать auto и срезал бы вырезки.
 ------------------------------------------------------------------------- */
 
 .camp-cover {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   align-items: center;
-  min-height: clamp(480px, 62svh, 800px);
-  /* clip, а не hidden: hidden по одной оси заставляет вторую стать auto, и
-     вырезка, выходящая за нижнюю кромку, была бы срезана вместе с ней. */
+  min-height: clamp(560px, 68svh, 840px);
+  padding: clamp(5rem, 11vh, 6.5rem) 0 var(--c-gap-sm);
   overflow-x: clip;
   background: #ece3d2;
 }
 
-.camp-cover__field {
-  position: absolute;
-  inset: 0;
+.camp-cover__disc {
+  top: 8%;
+  right: 5%;
+  width: min(36%, 31rem);
 }
 
-/* Плоский янтарный круг за главной вырезкой. Фигура, а не подложка: у неё нет
-   ни тени, ни градиента, ни рамки. */
-.camp-cover__disc {
-  position: absolute;
-  top: 6%;
-  right: 4%;
-  width: min(34%, 30rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
+.camp-cover__disc i {
   background: var(--c-amber);
 }
 
-/* Сетка из точек. Второй тип геометрии: она держит пустой угол и не даёт полю
-   выглядеть незаполненным. */
 .camp-cover__dots {
-  position: absolute;
-  top: 10%;
-  left: 53%;
-  width: min(21%, 18rem);
-  aspect-ratio: 5 / 4;
-  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.32) 1.7px, transparent 1.8px);
+  top: 5%;
+  left: 62%;
+  width: min(15%, 13rem);
+  aspect-ratio: 4 / 3;
+  background-image: none;
+}
+
+.camp-cover__dots i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
   background-size: 21px 21px;
 }
 
@@ -139,24 +186,45 @@
   height: 100%;
   object-fit: contain;
   object-position: bottom;
+  transform-origin: 50% 85%;
+}
+
+/* Капрал главный: крупно справа, на круге, лапами через шов. */
+.camp-cover__pet--lead {
+  right: 7%;
+  bottom: calc(-1 * var(--c-bleed));
+  height: calc(90% + var(--c-bleed));
+}
+
+/* Лакки у середины, стоит на шве и чуть выходит за него. */
+.camp-cover__pet--lakki {
+  left: 40%;
+  bottom: -5%;
+  height: 46%;
+}
+
+/* Джек мельче всех и выше всех: то, что мельче, читается ближним и уезжает
+   дальше. */
+.camp-cover__pet--dzhek {
+  left: 45%;
+  top: 11%;
+  height: 29%;
 }
 
 .camp-cover__copy {
   position: relative;
   z-index: 1;
   width: 100%;
-  padding-top: var(--c-gap);
-  padding-bottom: var(--c-gap);
 }
 
 .camp-cover h1 {
   max-width: 11ch;
   /* Плашка красит всю строчную коробку, и при плотном интерлиньяже соседние
      строки налезают друг на друга. Ниже 1.06 не опускать. */
-  margin: 0 0 1.2rem;
+  margin: 0 0 1.4rem;
   font-family: var(--font-sans);
-  font-size: clamp(3rem, 7.6vw, 6.2rem);
-  font-weight: 780;
+  font-size: clamp(3.2rem, 7.4vw, 6.4rem);
+  font-weight: 800;
   line-height: 1.06;
   letter-spacing: -0.04em;
 }
@@ -178,9 +246,9 @@
 
 .camp-cover__lead {
   max-width: 34ch;
-  margin: 0 0 1.6rem;
+  margin: 0 0 1.8rem;
   color: var(--c-muted);
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   line-height: 1.62;
 }
 
@@ -233,35 +301,76 @@
   }
 }
 
-/* На узком экране коллаж не помещается рядом с текстом: вырезки уходят под
-   него, а мелкие снимаются вовсе. Две вырезки на телефоне это каша. */
+/* На ноутбуке поле уже, и три вырезки в полный рост ложились друг на друга:
+   Джек на голову Капрала, Лакки на его бок. Капрал ниже, мелкие левее и
+   мельче, текст короче по строке. */
+@media (min-width: 861px) and (max-width: 1200px) {
+  .camp-cover__pet--lead {
+    right: 3%;
+    height: calc(80% + var(--c-bleed));
+  }
+
+  .camp-cover__pet--lakki {
+    left: 38%;
+    height: 38%;
+  }
+
+  .camp-cover__pet--dzhek {
+    left: 46%;
+    top: 8%;
+    height: 22%;
+  }
+
+  .camp-cover__disc {
+    right: 3%;
+    width: 38%;
+  }
+
+  .camp-cover__dots {
+    left: 58%;
+    width: 13%;
+  }
+
+  .camp-cover__lead {
+    max-width: 30ch;
+  }
+}
+
+/* На узком экране текст занимает верх, а под ним полоса для одной вырезки:
+   Капрал на круге у правого края, лапами через шов. Мелкие вырезки сняты,
+   две собаки рядом с текстом на телефоне это каша. */
 @media (max-width: 860px) {
   .camp-cover {
     align-items: start;
-    min-height: clamp(520px, 74svh, 760px);
+    min-height: 0;
+    padding-top: clamp(5.5rem, 14vh, 7rem);
+  }
+
+  .camp-cover__copy {
+    padding-bottom: clamp(190px, 50vw, 270px);
   }
 
   .camp-cover__disc {
     top: auto;
-    right: -8%;
-    bottom: 4%;
+    right: -10%;
+    bottom: 3%;
     width: 56%;
   }
 
   .camp-cover__dots {
-    top: 4%;
+    top: 3%;
     left: auto;
     right: 4%;
-    width: 38%;
+    width: 28%;
   }
 
-  /* На телефоне остаётся одна вырезка, главная. Две мелкие рядом с текстом
-     превращаются в кашу.
+  .camp-cover__pet--lead {
+    right: 3%;
+    height: clamp(230px, 58vw, 310px);
+  }
 
-     Убирают их по признаку в разметке, а не по порядковому номеру: все слои
-     поля это div, и `nth-of-type` считал среди них же, поэтому прежнее
-     правило прятало не мелких собак, а Капрала с Джеком и оставляло на поле
-     пустой янтарный круг. */
+  /* Убирают по признаку в разметке, а не по порядковому номеру: все слои
+     поля это div, и nth-of-type считал среди них же. */
   .camp-cover__pet[data-small="true"] {
     display: none;
   }
@@ -271,407 +380,157 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .camp-cover__copy > * {
-    animation: none;
-  }
-}
+/* ---------------- каталог сборов ------------------------------------------
 
-/* ---------------- секция «Куда уходит взнос»: коллаж --------------------
+   Секция на листе. Сверху заголовок с числом сборов и панель фильтра, ниже
+   сетка. Верхний отступ держит место под лапы вырезок с обложки.
+------------------------------------------------------------------------- */
 
-   Та же грамматика, что у обложки, но своё поле: цвет меняется от секции к
-   секции, и это часть языка референсов, а не украшение.
-
-   Раньше здесь была лента: длинная картина ехала влево по прокрутке. Она
-   отклонена вместе с обложкой за то же самое, за что и всё остальное: лента
-   это прямоугольник.
-
-   Числа настоящие, предметы придут вырезками по брифу
-   docs/asset-brief-campaigns-collage.md. Пока их нет, поле держат числа и
-   геометрия, и выглядит оно законченным.
------------------------------------------------------------------------- */
-
-.camp-route {
+.camp-list {
   position: relative;
   z-index: 1;
-  min-height: clamp(560px, 82svh, 900px);
-  padding: var(--c-gap) 0;
-  overflow-x: clip;
-  background: #f3e6cd;
+  padding: calc(var(--c-bleed) + var(--c-gap-sm)) 0 var(--c-gap);
 }
 
-.camp-route__field {
-  position: absolute;
-  inset: 0;
+.camp-list__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  margin-bottom: var(--c-gap-sm);
 }
 
-/* Приглушённый зелёный круг. Второй цвет поля: на одном янтаре страница
-   начинает звенеть, а в референсах на поле всегда больше одной фигуры. */
-.camp-route__disc {
-  position: absolute;
-  top: 12%;
-  right: -6%;
-  width: min(38%, 34rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(111, 115, 85, 0.22);
-}
-
-.camp-route__dots {
-  position: absolute;
-  bottom: 8%;
-  left: 3%;
-  width: min(24%, 20rem);
-  aspect-ratio: 4 / 3;
-  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.3) 1.7px, transparent 1.8px);
-  background-size: 21px 21px;
-}
-
-.camp-route__copy {
-  position: relative;
-  z-index: 1;
-}
-
-.camp-route__copy h2 {
-  max-width: 13ch;
+.camp-list__title h2 {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 760;
-  line-height: 0.96;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
   letter-spacing: -0.04em;
 }
 
-.camp-route__copy h2 em {
-  display: block;
+.camp-list__title h2 em {
   color: var(--c-amber-text);
   font-family: var(--font-serif);
-  font-size: 1.1em;
+  font-size: 0.92em;
   font-style: italic;
   font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-/* Поле нужд. Высота своя, потому что блоки стоят по местам, а не в потоке:
-   в потоке они выстроятся в ряд, а ряд это таблица. */
-.camp-route__needs {
-  position: relative;
-  z-index: 1;
-  height: clamp(540px, 64svh, 780px);
-  margin-top: var(--c-gap-sm);
-}
-
-.camp-route__need {
-  position: absolute;
-}
-
-/* Нужда это ссылка на свой сбор, а не подпись. До этого на полях коллажа не
-   было ни одной живой точки: читатель наводил курсор и ничего не происходило. */
-.camp-route__link {
-  display: grid;
-  justify-items: start;
-  gap: 0.6rem;
-  color: inherit;
-  text-decoration: none;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.camp-route__link:hover,
-.camp-route__link:focus-visible {
-  transform: translateY(-6px);
-}
-
-.camp-route__link:hover b,
-.camp-route__link:focus-visible b {
-  color: var(--c-amber-text);
-}
-
-/* Размер задаёт высота, а не ширина: предметы сняты и вертикально, и
-   горизонтально, и по ширине мешок вышел бы вдвое выше миски. Множитель
-   у каждого места свой, потому что одинаковый размер это ряд, а не коллаж. */
-.camp-route__link img {
-  display: block;
-  width: auto;
-  max-width: min(22rem, 24vw);
-  height: calc(clamp(120px, 15vw, 210px) * var(--art, 1));
-  object-fit: contain;
-  object-position: bottom left;
-}
-
-.camp-route__link figure {
-  margin: 0;
-}
-
-.camp-route__link figcaption {
-  color: var(--c-amber-text);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.camp-route__link b {
-  display: block;
-  margin-top: 0.35rem;
-  font-family: var(--font-serif);
-  font-size: clamp(1.8rem, 3.4vw, 3rem);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  line-height: 0.92;
   letter-spacing: -0.02em;
 }
 
-.camp-route__link span {
-  display: block;
-  margin-top: 0.25rem;
-  color: var(--c-muted);
-  font-size: 0.82rem;
-}
+/* ---------------- фильтр и сортировка ----------------
 
-/* На узком экране разбросанный коллаж не читается: блоки налезают друг на
-   друга, а места сдвинуть их некуда. Поле становится обычным столбиком, и это
-   честнее, чем каша. */
-@media (max-width: 860px) {
-  .camp-route__needs {
-    display: grid;
-    gap: var(--c-gap-sm);
-    height: auto;
-    padding: 0 clamp(1.25rem, 4vw, 3rem);
-  }
-
-  .camp-route__need {
-    position: static;
-    width: auto !important;
-    max-width: 22rem;
-  }
-
-  .camp-route__need:nth-child(even) {
-    justify-self: end;
-    text-align: right;
-    justify-items: end;
-  }
-
-  .camp-route__disc {
-    right: -22%;
-    width: 64%;
-  }
-}
-
-/* ---------------- секция 5: финальный призыв ----------------------------
-
-   Третье поле страницы. Обложка стоит на кремовом, «Куда уходит взнос» на
-   тёплом кремовом, финал на янтаре: цвет меняется от секции к секции и к
-   концу доходит до полного акцента. Это часть грамматики, а не украшение.
-
-   Пустая миска выходит за верхнюю кромку и ложится на предыдущее поле. Это
-   последний переход через шов.
-
-   Секция заменила янтарную карточку «Просто помочь», которая стояла последней
-   в сетке сборов: карточка говорила ровно это же.
------------------------------------------------------------------------- */
-
-.camp-call {
-  position: relative;
-  z-index: 1;
-  min-height: clamp(460px, 62svh, 720px);
-  padding: var(--c-gap) 0;
-  overflow-x: clip;
-  background: var(--c-amber);
-  color: var(--c-ink);
-}
-
-.camp-call__field {
-  position: absolute;
-  inset: 0;
-}
-
-/* Кремовый круг на янтаре: на цветном поле фигура обязана быть светлее его,
-   иначе она читается пятном грязи, а не формой. */
-.camp-call__disc {
-  position: absolute;
-  right: 6%;
-  bottom: -14%;
-  width: min(36%, 32rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(244, 241, 235, 0.55);
-}
-
-.camp-call__dots {
-  position: absolute;
-  top: 14%;
-  right: 34%;
-  width: min(20%, 17rem);
-  aspect-ratio: 1;
-  background-image: radial-gradient(circle, rgba(28, 28, 28, 0.26) 1.7px, transparent 1.8px);
-  background-size: 21px 21px;
-}
-
-/* Миска висит над верхней кромкой и заходит на поле предыдущей секции. */
-.camp-call__bowl {
-  position: absolute;
-  top: -9%;
-  right: 8%;
-  width: min(26%, 23rem);
-}
-
-.camp-call__bowl img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.camp-call__copy {
-  position: relative;
-  z-index: 1;
-}
-
-.camp-call .camp-kicker {
-  color: rgba(28, 28, 28, 0.62);
-}
-
-.camp-call__copy h2 {
-  max-width: 12ch;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: clamp(2.4rem, 6vw, 5rem);
-  font-weight: 780;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
-}
-
-/* Слово вынуто светлым, а не на плашку: плашка уже занята на обложке, и вторая
-   на странице читалась бы приёмом, а не акцентом. */
-.camp-call__copy h2 em {
-  display: block;
-  color: var(--c-sheet);
-  font-family: var(--font-serif);
-  font-size: 1.1em;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.camp-call__lead {
-  max-width: 42ch;
-  margin: 1.2rem 0 1.8rem;
-  color: rgba(28, 28, 28, 0.78);
-  font-size: 1.05rem;
-  line-height: 1.6;
-}
-
-/* Селектор с родителем нарочно: у .camp-btn ширина в сто процентов, и по
-   одному классу она перебивала бы это правило по порядку в файле. */
-.camp-call .camp-call__cta {
-  width: auto;
-  border-color: var(--c-ink);
-  background: var(--c-ink);
-  color: var(--c-sheet);
-}
-
-.camp-call .camp-call__cta:hover {
-  border-color: #000;
-  background: #000;
-  color: #fff;
-}
-
-@media (max-width: 860px) {
-  .camp-call__bowl {
-    top: -6%;
-    right: 4%;
-    width: 42%;
-  }
-
-  .camp-call__disc {
-    right: -14%;
-    bottom: -18%;
-    width: 62%;
-  }
-
-  .camp-call__dots {
-    top: auto;
-    right: auto;
-    bottom: 6%;
-    left: 4%;
-    width: 34%;
-  }
-}
-
-/* ---------------- фильтр и сортировка ---------------- */
+   Переключатель и список из каталога питомцев: белая пилюля, капитель,
+   значок у пункта. Один язык на оба каталога.
+------------------------------------------------------------------------- */
 
 .camp-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: var(--c-gap-sm);
+  gap: 0.75rem 1.25rem;
 }
 
 .camp-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.camp-tabs button {
-  min-height: 44px;
-  padding: 0.7rem 1.35rem;
-  border: 1px solid var(--c-rule);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(28, 28, 28, 0.06);
   border-radius: 999px;
   background: var(--c-card);
-  color: var(--c-muted);
+  box-shadow: 0 1px 2px rgba(28, 28, 28, 0.05);
+}
+
+.camp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  padding: 0.55rem 1.1rem 0.55rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(28, 28, 28, 0.55);
   font: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   cursor: pointer;
   transition:
     background 0.3s,
-    border-color 0.3s,
-    color 0.3s,
-    transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+    color 0.3s;
 }
 
-.camp-tabs button:hover {
-  border-color: var(--c-ink);
+.camp-tab svg {
+  color: rgba(28, 28, 28, 0.4);
+  transition: color 0.3s;
+}
+
+.camp-tab b {
+  min-width: 1.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(28, 28, 28, 0.07);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.camp-tab:hover {
+  background: rgba(28, 28, 28, 0.04);
   color: var(--c-ink);
-  transform: translateY(-2px);
 }
 
-.camp-tabs button[aria-checked="true"] {
-  border-color: var(--c-ink);
-  background: var(--c-ink);
-  color: var(--c-sheet);
+.camp-tab[aria-checked="true"] {
+  background: #2e2620;
+  color: #fff;
+}
+
+.camp-tab[aria-checked="true"] svg {
+  color: var(--c-amber);
+}
+
+.camp-tab[aria-checked="true"] b {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .camp-sort {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  min-height: 44px;
-  padding: 0 1.15rem;
-  border: 1px solid var(--c-rule);
-  border-radius: 999px;
-  background: var(--c-card);
+  gap: 0.75rem;
+}
+
+/* На телефоне две вкладки не встают в ряд внутри пилюли и вторая падала на
+   новую строку. Пилюля растягивается на всю ширину, вкладки делят её пополам. */
+@media (max-width: 600px) {
+  .camp-controls {
+    width: 100%;
+  }
+
+  .camp-tabs {
+    width: 100%;
+  }
+
+  .camp-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 0.45rem;
+    padding-inline: 0.7rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
 }
 
 .camp-sort > span {
-  color: var(--c-muted);
-  font-size: 0.72rem;
+  color: rgba(28, 28, 28, 0.45);
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-.camp-sort select {
-  border: 0;
-  background: transparent;
-  color: var(--c-ink);
-  font: inherit;
-  font-size: 0.95rem;
-  cursor: pointer;
 }
 
 /* ---------------- кнопки ------------------------------------------------
@@ -724,64 +583,118 @@
   color: var(--c-sheet);
 }
 
-/* ---------------- каталог сборов в языке коллажа ------------------------
+/* ---------------- сетка сборов ------------------------------------------
 
-   Раньше здесь стояли белые карточки со скруглением, тенью и прямоугольным
-   кадром внутри. На полном снимке страницы это оказалось самым слабым местом:
-   между тремя цветными полями шла полоса из четырёх прямоугольников, то есть
-   ровно то, чего в грамматике нет.
-
-   Контейнеров больше нет. Кадр сбора это круг, такая же плоская фигура, как
-   круги на полях выше и ниже. Подписи лежат прямо на листе. Прямоугольник
-   остался один, шкала сбора, и он толщиной в три пикселя.
+   Контейнеров нет. Кадр сбора это круг, за ним выглядывает малый янтарный
+   круг: та же пара «фигура за вырезкой», что держит поля выше и ниже. Чётные
+   сборы опущены на ступень, чтобы ряд не читался строкой одинаковых кругов.
+   Прямоугольник остался один, шкала сбора, и он толщиной в четыре пикселя.
 ------------------------------------------------------------------------ */
 
 .camp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
-  gap: var(--c-gap) clamp(1.5rem, 3vw, 3rem);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: clamp(2.5rem, 5vh, 3.5rem) clamp(1.5rem, 3vw, 3rem);
   margin: 0;
-  padding: 0 0 var(--c-gap);
+  padding: 0;
   list-style: none;
 }
 
 .camp-item {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.85rem;
+  /* Сбор поднимается, пока входит в экран. Очередь по номеру в сетке. */
   animation: camp-item-in 1ms linear both;
   animation-timeline: view();
-  animation-range: entry calc(4% + var(--i, 0) * 2%) entry calc(30% + var(--i, 0) * 2%);
+  animation-range: entry calc(0% + var(--i, 0) * 4%) entry calc(60% + var(--i, 0) * 4%);
+}
+
+@media (min-width: 900px) {
+  .camp-item:nth-child(even) {
+    margin-top: 3rem;
+  }
+}
+
+/* На ноутбуке авторазбивка давала три колонки и одинокий четвёртый сбор
+   в новом ряду. Две колонки, два ряда. */
+@media (min-width: 900px) and (max-width: 1240px) {
+  .camp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @keyframes camp-item-in {
   from {
     opacity: 0;
-    translate: 0 20px;
+    translate: 0 64px;
   }
 }
 
-/* Кадр сбора: круг, а не прямоугольник со скруглением. Фигура здесь та же,
-   что держит поля выше и ниже, поэтому каталог перестал выпадать из языка. */
+.camp-item__figure {
+  position: relative;
+  margin-bottom: 0.4rem;
+}
+
+/* Малый круг за кадром. На наведении отъезжает дальше из-под него. */
+.camp-item__figure::before {
+  content: "";
+  position: absolute;
+  bottom: -3%;
+  left: -5%;
+  width: 40%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c-amber);
+  transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.camp-item[data-status="closed"] .camp-item__figure::before {
+  background: var(--c-moss);
+}
+
+.camp-item:hover .camp-item__figure::before {
+  translate: -7% 6%;
+}
+
 .camp-item__shot {
   position: relative;
+  z-index: 1;
   display: block;
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 50%;
   background: var(--c-paper);
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Круг растёт, пока сбор входит в экран: иначе он появлялся бы готовым. */
+  animation: camp-shot-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 80%;
+}
+
+@keyframes camp-shot-in {
+  from {
+    scale: 0.8;
+  }
 }
 
 .camp-item__shot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Морда обычно в верхней трети кадра, и круг режет по краям сильнее
+     прямоугольника: центр тяжести кадра сдвинут вверх. */
+  object-position: 50% 35%;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .camp-item:hover .camp-item__shot,
 .camp-item__shot:focus-visible {
   transform: translateY(-6px);
+}
+
+.camp-item:hover .camp-item__shot img {
+  transform: scale(1.05);
 }
 
 .camp-item[data-status="closed"] .camp-item__shot img {
@@ -790,8 +703,7 @@
 }
 
 /* Тег и пометка о чужом кадре стоят строкой на листе, а не на снимке.
-   На круге их срезало кромкой: угол, в котором они сидели, лежит за пределами
-   окружности, а круг обрезает всё лишнее. */
+   На круге их срезало кромкой. */
 .camp-item__meta {
   display: flex;
   flex-wrap: wrap;
@@ -802,7 +714,7 @@
 
 .camp-item__tag {
   color: var(--c-amber-text);
-  font-size: 0.64rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -810,7 +722,7 @@
 
 .camp-item__borrowed {
   color: var(--c-muted);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
 }
 
 .camp-item__title {
@@ -820,7 +732,7 @@
   gap: 0.6rem;
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 1.22rem;
+  font-size: 1.3rem;
   font-weight: 600;
   line-height: 1.16;
   letter-spacing: -0.01em;
@@ -852,15 +764,16 @@
   flex: 1;
   margin: 0;
   color: var(--c-muted);
-  font-size: 0.86rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .camp-item__bar {
   position: relative;
-  height: 3px;
+  height: 4px;
   overflow: hidden;
-  background: rgba(28, 28, 28, 0.14);
+  border-radius: 2px;
+  background: rgba(28, 28, 28, 0.12);
 }
 
 .camp-item__bar i {
@@ -868,11 +781,12 @@
   inset: 0 auto 0 0;
   width: var(--fill);
   min-width: 6px;
+  border-radius: 2px;
   background: var(--c-amber);
   transform-origin: 0 50%;
   animation: camp-item-fill 1ms linear both;
   animation-timeline: view();
-  animation-range: entry 22% entry 64%;
+  animation-range: entry 30% entry 90%;
 }
 
 @keyframes camp-item-fill {
@@ -896,23 +810,31 @@
 
 .camp-item__money b {
   font-family: var(--font-serif);
-  font-size: 1.3rem;
+  font-size: 1.45rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .camp-item__money span {
   color: var(--c-muted);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
 }
 
 .camp-item__actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.2rem;
+  margin-top: 0.3rem;
+}
+
+.camp-item__actions .camp-btn {
+  flex: 1 1 auto;
+  width: auto;
 }
 
 .camp-item__closed {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
@@ -923,33 +845,442 @@
 }
 
 .camp-empty {
-  margin: 0 0 var(--c-gap);
+  margin: 0;
   color: var(--c-muted);
   font-size: 1.05rem;
 }
+
+/* ---------------- секция «Куда уходит взнос»: коллаж --------------------
+
+   Своё поле, теплее обложки: цвет меняется от секции к секции, и это часть
+   языка референсов, а не украшение. Нужды стоят по местам, а не в потоке:
+   в потоке они выстроились бы в ряд, а ряд это таблица.
+------------------------------------------------------------------------ */
+
+.camp-route {
+  position: relative;
+  z-index: 1;
+  padding: var(--c-gap) 0;
+  overflow-x: clip;
+  background: #f3e6cd;
+}
+
+/* Приглушённый зелёный круг. Второй цвет поля: на одном янтаре страница
+   начинает звенеть, а в референсах на поле всегда больше одной фигуры. */
+.camp-route__disc {
+  top: 3%;
+  right: -4%;
+  width: min(42%, 36rem);
+}
+
+.camp-route__disc i {
+  background: rgba(111, 115, 85, 0.22);
+  animation: camp-shape-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 40%;
+}
+
+@keyframes camp-shape-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+.camp-route__dots {
+  bottom: 5%;
+  left: 3%;
+  width: min(22%, 19rem);
+  aspect-ratio: 5 / 3;
+}
+
+.camp-route__copy {
+  position: relative;
+  z-index: 1;
+}
+
+.camp-route__copy h2 {
+  max-width: 13ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-weight: 800;
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.camp-route__copy h2 em {
+  display: block;
+  color: var(--c-amber-text);
+  font-family: var(--font-serif);
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* Поле нужд. Высота своя, потому что нужды стоят по местам. */
+.camp-route__needs {
+  position: relative;
+  z-index: 1;
+  height: clamp(560px, 66svh, 800px);
+  margin-top: var(--c-gap-sm);
+}
+
+.camp-route__need {
+  position: absolute;
+}
+
+/* Места нарочно неровные: ровный ряд из четырёх нужд превращает коллаж
+   обратно в таблицу. */
+.camp-route__need--1 {
+  top: 4%;
+  left: 0;
+}
+
+.camp-route__need--2 {
+  top: 42%;
+  left: 27%;
+}
+
+.camp-route__need--3 {
+  top: 0;
+  left: 52%;
+}
+
+.camp-route__need--4 {
+  top: 36%;
+  left: 75%;
+}
+
+/* Нужда это ссылка на свой сбор. Она въезжает снизу с наклоном и встаёт
+   ровно, пока входит в экран: шкала её собственного прохода. */
+.camp-route__link {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: camp-need-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 38%;
+}
+
+@keyframes camp-need-in {
+  from {
+    opacity: 0;
+    translate: 0 90px;
+    rotate: var(--tilt, -6deg);
+  }
+}
+
+.camp-route__link:hover,
+.camp-route__link:focus-visible {
+  transform: translateY(-6px);
+}
+
+.camp-route__link:hover b,
+.camp-route__link:focus-visible b {
+  color: var(--c-amber-text);
+}
+
+/* Размер задаёт высота, а не ширина: предметы сняты и вертикально, и
+   горизонтально, и по ширине мешок вышел бы вдвое выше миски. Множитель
+   у каждого места свой, потому что одинаковый размер это ряд, а не коллаж. */
+.camp-route__link img {
+  display: block;
+  width: auto;
+  max-width: min(22rem, 24vw);
+  height: calc(clamp(130px, 16vw, 230px) * var(--art, 1));
+  object-fit: contain;
+  object-position: bottom left;
+}
+
+.camp-route__link figure {
+  margin: 0;
+}
+
+.camp-route__link figcaption {
+  color: var(--c-amber-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.camp-route__link b {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  transition: color 0.3s;
+}
+
+.camp-route__link > figure > span {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--c-muted);
+  font-size: 0.84rem;
+}
+
+/* На узком экране разбросанный коллаж не читается: нужды становятся сеткой
+   в две колонки, чётные опущены на ступень, чтобы это осталось коллажем, а
+   не таблицей. */
+@media (max-width: 860px) {
+  .camp-route__needs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem 1.25rem;
+    height: auto;
+  }
+
+  .camp-route__need {
+    position: static;
+  }
+
+  .camp-route__need:nth-child(even) {
+    margin-top: 3rem;
+  }
+
+  .camp-route__link img {
+    max-width: 100%;
+    height: calc(clamp(110px, 30vw, 150px) * var(--art, 1));
+  }
+
+  .camp-route__disc {
+    top: 6%;
+    right: -24%;
+    width: 66%;
+  }
+
+  .camp-route__dots {
+    bottom: 3%;
+    width: 40%;
+  }
+}
+
+/* ---------------- секция 5: финальный призыв ----------------------------
+
+   Третье поле страницы, янтарное. Миска падает сверху на кремовый круг,
+   пока секция входит в экран, и верхом заходит на предыдущее поле. Поле
+   уходит под скруглённый верх подвала, иначе в его углах был бы серый лист.
+------------------------------------------------------------------------ */
+
+.camp-call {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-items: center;
+  min-height: clamp(500px, 66svh, 780px);
+  margin-bottom: calc(-1 * var(--c-footer-r));
+  padding: var(--c-gap) 0 calc(var(--c-gap) + var(--c-footer-r));
+  overflow-x: clip;
+  background: var(--c-amber);
+  color: var(--c-ink);
+  view-timeline: --call block;
+}
+
+/* Кремовый круг на янтаре: на цветном поле фигура обязана быть светлее его,
+   иначе она читается пятном грязи, а не формой. */
+.camp-call__disc {
+  top: 12%;
+  right: 6%;
+  width: min(36%, 31rem);
+}
+
+.camp-call__disc i {
+  background: rgba(244, 241, 235, 0.55);
+  animation: camp-shape-in 1ms linear both;
+  animation-timeline: --call;
+  animation-range: entry 0% entry 75%;
+}
+
+.camp-call__dots {
+  right: 3%;
+  bottom: 14%;
+  width: min(15%, 13rem);
+  aspect-ratio: 1;
+  --dot: rgba(28, 28, 28, 0.26);
+}
+
+/* Миска висит над верхней кромкой, ложится на круг и заходит на поле
+   предыдущей секции. Падение идёт от шкалы секции, а не от своей: сама
+   миска низкая, и её собственный отрезок кончался бы за полсотни пикселей. */
+.camp-call__bowl {
+  position: absolute;
+  top: -9%;
+  right: 14%;
+  width: min(24%, 21rem);
+}
+
+.camp-call__bowl img {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: camp-bowl-in 1ms linear both;
+  animation-timeline: --call;
+  animation-range: entry 0% entry 70%;
+}
+
+@keyframes camp-bowl-in {
+  from {
+    opacity: 0;
+    translate: 0 -180px;
+    rotate: -16deg;
+  }
+}
+
+/* Ширина явная: в сетке блок с auto-полями ужимается до содержимого и
+   встаёт по центру, а текст должен стоять слева, как во всех секциях. */
+.camp-call__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* Строки поднимаются очередью по шкале секции: сами строки низкие, и их
+   собственный отрезок кончался бы мгновенно. */
+.camp-call__copy > * {
+  animation: camp-rise 1ms linear both;
+  animation-timeline: --call;
+  animation-range: entry calc(6% + var(--n, 0) * 7%) entry calc(46% + var(--n, 0) * 7%);
+}
+
+.camp-call__copy > :nth-child(2) {
+  --n: 1;
+}
+
+.camp-call__copy > :nth-child(3) {
+  --n: 2;
+}
+
+.camp-call__copy > :nth-child(4) {
+  --n: 3;
+}
+
+@keyframes camp-rise {
+  from {
+    opacity: 0;
+    translate: 0 40px;
+  }
+}
+
+.camp-call .camp-kicker {
+  color: rgba(28, 28, 28, 0.62);
+}
+
+.camp-call__copy h2 {
+  max-width: 12ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2.6rem, 6vw, 5.2rem);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+/* Слово вынуто светлым, а не на плашку: плашка уже занята на обложке, и вторая
+   на странице читалась бы приёмом, а не акцентом. */
+.camp-call__copy h2 em {
+  display: block;
+  color: var(--c-sheet);
+  font-family: var(--font-serif);
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.camp-call__lead {
+  max-width: 42ch;
+  margin: 1.3rem 0 1.9rem;
+  color: rgba(28, 28, 28, 0.78);
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+/* Селектор с родителем нарочно: у .camp-btn ширина в сто процентов, и по
+   одному классу она перебивала бы это правило по порядку в файле. */
+.camp-call .camp-call__cta {
+  width: auto;
+  border-color: var(--c-ink);
+  background: var(--c-ink);
+  color: var(--c-sheet);
+}
+
+.camp-call .camp-call__cta:hover {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+}
+
+/* На узком экране миска с кругом занимают верх, текст идёт под ними. */
+@media (max-width: 860px) {
+  .camp-call {
+    align-items: start;
+  }
+
+  .camp-call__copy {
+    padding-top: clamp(150px, 44vw, 230px);
+  }
+
+  .camp-call__bowl {
+    top: -4%;
+    right: 6%;
+    width: 46%;
+  }
+
+  .camp-call__disc {
+    top: 1%;
+    right: -12%;
+    width: 62%;
+  }
+
+  .camp-call__dots {
+    right: 5%;
+    bottom: 5%;
+    width: 30%;
+  }
+}
+
+/* ---------------- общее ------------------------------------------------- */
 
 .camp :focus-visible {
   outline: 3px solid var(--c-amber-text);
   outline-offset: 3px;
 }
 
+/* Меньше движения: сцены показывают итог. Кадры заданы только от начального
+   состояния, поэтому снятая анимация и есть итог; шкале сбора этого мало, без
+   второй строки она осталась бы нулевой. */
 @media (prefers-reduced-motion: reduce) {
-  .camp-cover__yard,
-  .camp-cover__pet,
-  .camp-cover__near,
   .camp-cover__copy > *,
-  .camp-card,
-  .camp-bar i {
+  .camp-item,
+  .camp-item__shot,
+  .camp-item__bar i,
+  .camp-route__disc i,
+  .camp-route__link,
+  .camp-call__disc i,
+  .camp-call__bowl img,
+  .camp-call__copy > * {
     animation: none;
   }
 
-  /* Слои обложки итог держат статикой, поэтому им хватает снятой анимации.
-     Шкале не хватает: без второй строки она осталась бы нулевой. */
-  .camp-bar i {
+  .camp-item__bar i {
     transform: none;
   }
 
-  .camp-card:hover {
+  .camp-item:hover .camp-item__shot,
+  .camp-item:hover .camp-item__shot img,
+  .camp-route__link:hover,
+  .camp-btn:hover {
     transform: none;
   }
 }

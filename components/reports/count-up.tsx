@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useMotionPreference } from "./use-motion-preference";
 
-type Kind = "int" | "money" | "percent";
+type Kind = "int" | "money" | "rub" | "percent";
 
 const rub = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* Целые рубли для сборов: там суммы круглые, и копейки только шумят. */
+const whole = new Intl.NumberFormat("ru-RU");
 
 function render(value: number, kind: Kind): string {
   if (kind === "money") return `${rub.format(value)} ₽`;
+  if (kind === "rub") return `${whole.format(Math.round(value))} ₽`;
   if (kind === "percent") return `${value.toFixed(1).replace(".", ",")}%`;
   return String(Math.round(value));
 }
