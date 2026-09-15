@@ -133,12 +133,14 @@ try {
          слои коллажа сдвинуты трансформацией дрейфа. По offsetTop дрейфа
          не видно, а видно именно то, что задано в стилях. */
       const coverField = document.querySelector(".camp-cover__field");
-      const pets = [...document.querySelectorAll(".camp-cover__pet")].map((node) =>
+      const pets = [...document.querySelectorAll(".camp-cover__unit")].map((node) =>
         Math.round(node.offsetTop + node.offsetHeight - coverField.offsetHeight),
       );
-      const shown = [...document.querySelectorAll(".camp-cover__pet")].filter(
+      const shown = [...document.querySelectorAll(".camp-cover__unit")].filter(
         (node) => getComputedStyle(node).display !== "none",
       );
+      /* Фигура есть у каждой видимой группы: круг или сетка точек. */
+      const shapeless = shown.filter((node) => !node.querySelector("i")).length;
       const landed = shown.map((node) => {
         const img = node.querySelector("img");
         const style = getComputedStyle(img);
@@ -150,11 +152,11 @@ try {
       const marks = [...document.querySelectorAll(".camp-cover .camp-mark")].map(
         (mark) => getComputedStyle(mark).backgroundSize,
       );
-      const lead = document.querySelector(".camp-cover__pet--lead img");
+      const lead = document.querySelector(".camp-cover__unit--lead img");
       const controls = document.querySelector(".camp-controls");
       const call = document.querySelector(".camp-call");
       const footer = document.querySelector("footer");
-      const bowl = document.querySelector(".camp-call__bowl");
+      const bowl = document.querySelector(".camp-call__unit");
       return {
         coverPaint: paint(".camp-cover"),
         routePaint: paint(".camp-route"),
@@ -165,8 +167,10 @@ try {
         pets: shown.length,
         landed,
         marks,
-        discs: document.querySelectorAll(".camp-cover__disc, .camp-route__disc, .camp-call__disc").length,
-        dots: document.querySelectorAll(".camp-cover__dots, .camp-call__dots").length,
+        // Фигура без предмета не встречается: круги и точки лежат внутри
+        // групп, по одной фигуре на вырезку.
+        discs: document.querySelectorAll(".camp-cover__unit i, .camp-route__disc, .camp-call__disc").length,
+        dots: document.querySelectorAll(".camp-cover__unit--dzhessi i, .camp-call__dots").length,
         items: document.querySelectorAll(".camp-route__item img").length,
         labels: document.querySelectorAll(".camp-route__label").length,
         links: document.querySelectorAll(".camp-route a").length,
@@ -183,6 +187,19 @@ try {
         cards: document.querySelectorAll(".camp-item").length,
         shots: document.querySelectorAll(".camp-item__shot img").length,
         heading: document.querySelector("#camp-list-title")?.textContent.trim() ?? "",
+        /* Круги за кадрами сборов: место, размер и цвет должны различаться,
+           иначе это штамп, а не коллаж. Заодно ни один не уходит за боковую
+           кромку страницы. */
+        orbs: [...document.querySelectorAll(".camp-item__figure")].map((fig) => {
+          const cs = getComputedStyle(fig, "::before");
+          const r = fig.getBoundingClientRect();
+          const width = parseFloat(cs.width);
+          const left = cs.left === "auto" ? null : parseFloat(cs.left);
+          const right = cs.right === "auto" ? null : parseFloat(cs.right);
+          const x0 = left !== null ? r.left + left : r.right - right - width;
+          return { x0: Math.round(x0), x1: Math.round(x0 + width), size: Math.round(width), tone: cs.backgroundColor, side: left !== null ? "left" : "right" };
+        }),
+        shapeless,
         blackButtons: [...document.querySelectorAll(".camp .camp-btn")].filter(
           (btn) => getComputedStyle(btn).backgroundColor === "rgb(28, 28, 28)",
         ).length,
@@ -218,8 +235,17 @@ try {
     // На телефоне остаётся один Капрал: вторая вырезка в углу наступала на кикер.
     const leastPets = viewport.width <= 600 ? 1 : 2;
     assert.ok(shape.pets >= leastPets, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы ${leastPets}`);
-    assert.ok(shape.discs >= 3, `${viewport.name}: кругов ${shape.discs}, по одному на секцию`);
-    assert.ok(shape.dots >= 2, `${viewport.name}: сеток точек ${shape.dots}`);
+    assert.equal(shape.shapeless, 0, `${viewport.name}: ${shape.shapeless} вырезок без своей фигуры`);
+
+    // Круги каталога стоят вразнобой и не режутся боковой кромкой.
+    if (shape.orbs.length >= 4) {
+      const spots = new Set(shape.orbs.map((orb) => `${orb.side}:${orb.size}:${orb.tone}`));
+      assert.ok(spots.size >= 3, `${viewport.name}: круги каталога одинаковы (${spots.size} вида на ${shape.orbs.length})`);
+    }
+    const cut = shape.orbs.filter((orb) => orb.x0 < -6 || orb.x1 > viewport.width + 6);
+    assert.equal(cut.length, 0, `${viewport.name}: ${cut.length} кругов каталога срезаны кромкой`);
+    assert.ok(shape.discs >= 3, `${viewport.name}: фигур на обложке и в секциях ${shape.discs}`);
+    assert.ok(shape.dots >= 1, `${viewport.name}: сеток точек ${shape.dots}`);
     assert.ok(shape.items >= 1, `${viewport.name}: вещей на сцене нет вовсе`);
     assert.equal(shape.labels, shape.items, `${viewport.name}: подписей ${shape.labels} при ${shape.items} вещах`);
     assert.equal(shape.links, 0, `${viewport.name}: на сцене есть ссылки, а она не кликается`);
@@ -288,10 +314,10 @@ try {
       });
       await page.mouse.move(cover.left + cover.width * 0.08, cover.top + cover.height * 0.5, { steps: 8 });
       await page.waitForTimeout(900);
-      const [leftX] = await shift(page, ".camp-cover__pet--lead .camp-cover__mouse", "x");
+      const [leftX] = await shift(page, ".camp-cover__unit--lead > .camp-cover__mouse", "x");
       await page.mouse.move(cover.left + cover.width * 0.92, cover.top + cover.height * 0.5, { steps: 8 });
       await page.waitForTimeout(900);
-      const [rightX] = await shift(page, ".camp-cover__pet--lead .camp-cover__mouse", "x");
+      const [rightX] = await shift(page, ".camp-cover__unit--lead > .camp-cover__mouse", "x");
       mouse = `${leftX} → ${rightX}`;
       if (reduced) {
         assert.ok(leftX === 0 && rightX === 0, `reduced motion: вырезки едут за мышью (${mouse})`);
@@ -306,10 +332,10 @@ try {
     // её ухода. Раньше отсчёт шёл от середины пути, и при загрузке всё было
     // уже сдвинуто.
     const cover = await passage(page, ".camp-cover");
-    const restingLead = (await shift(page, ".camp-cover__pet--lead"))[0];
+    const restingLead = (await shift(page, ".camp-cover__unit--lead"))[0];
     assert.equal(restingLead, 0, `${viewport.name}: вырезка при загрузке уже сдвинута на ${restingLead}px`);
     await scrollTo(page, Math.min(cover.max, Math.round(cover.height * 0.5)), viewport.name);
-    const movedLead = (await shift(page, ".camp-cover__pet--lead"))[0];
+    const movedLead = (await shift(page, ".camp-cover__unit--lead"))[0];
     if (reduced) {
       assert.equal(movedLead, 0, "reduced motion: обложка плывёт");
     } else {
@@ -395,9 +421,9 @@ try {
     // нет, к середине входа она на месте.
     const call = await passage(page, ".camp-call");
     await scrollTo(page, through(call, 0), viewport.name);
-    const bowlBefore = await page.$eval(".camp-call__bowl img", (img) => Number(getComputedStyle(img).opacity));
+    const bowlBefore = await page.$eval(".camp-call__unit img", (img) => Number(getComputedStyle(img).opacity));
     await scrollTo(page, through(call, 0.5), viewport.name);
-    const bowlAfter = await page.$eval(".camp-call__bowl img", (img) => Number(getComputedStyle(img).opacity));
+    const bowlAfter = await page.$eval(".camp-call__unit img", (img) => Number(getComputedStyle(img).opacity));
     if (reduced) {
       assert.ok(bowlBefore > 0.98 && bowlAfter > 0.98, "reduced motion: миска не показана итогом");
     } else {

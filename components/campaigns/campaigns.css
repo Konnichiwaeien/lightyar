@@ -118,7 +118,7 @@
   }
 }
 
-/* ---------------- общее для полей коллажа ---------------------------------
+/* ---------------- поле секции --------------------------------------------
 
    Поле каждой секции лежит слоем под текстом и ограничено шириной
    контейнера: на широком экране фигуры и вырезки стоят там же, где текст, а
@@ -133,50 +133,58 @@
   margin: 0 auto;
 }
 
-/* Круги. Сама фигура лежит на вложенном элементе: framer двигает обёртку
-   трансформацией, а въезд фигуры идёт своим свойством на ребёнке, и они не
-   спорят за одно поле стиля. */
-.camp-cover__disc,
-.camp-call__disc {
+/* ---------------- общее для групп ----------------------------------------
+
+   Группа это связка «фигура и вырезка на ней». Собрана разметкой, а не
+   процентами по полю, и вот почему: холст у всех вырезок квадратный, 620 на
+   620, а собака внутри занимает от трети ширины (Капрал) до девяти десятых
+   (Мира). Круг, поставленный процентами от поля, совпадал с боксом вырезки,
+   но не с самой собакой, и группы разъезжались тем сильнее, чем уже была
+   вырезка. Внутри группы фигура считается от её размера и не разъезжается.
+
+   Размер группы задан по стороне бокса вырезки, а не по видимой собаке:
+   бокс квадратный, и высота собаки в нём одна на все вырезки, 88 процентов.
+------------------------------------------------------------------------- */
+
+.camp-cover__unit {
   position: absolute;
   aspect-ratio: 1;
 }
 
-.camp-cover__disc i,
-.camp-call__disc i {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
+.camp-cover__unit > .camp-cover__mouse,
+.camp-cover__unit > .camp-cover__shape {
+  position: absolute;
+  inset: 0;
 }
 
-/* Сетка из точек. Второй тип геометрии, стоит за вырезкой. */
-.camp-cover__dots,
-.camp-call__dots {
+/* Фигура под вырезкой лежит ниже её по слоям и едет вдвое медленнее. */
+.camp-cover__unit > .camp-cover__shape {
+  z-index: 0;
+}
+
+.camp-cover__unit > .camp-cover__mouse {
+  z-index: 1;
+}
+
+.camp-cover__unit i {
   position: absolute;
+  display: block;
   aspect-ratio: 1;
 }
 
-.camp-cover__dots i,
-.camp-call__dots {
+.camp-cover__unit img {
   display: block;
   width: 100%;
   height: 100%;
-  background-image: radial-gradient(circle, var(--dot, rgba(168, 84, 6, 0.34)) 1.7px, transparent 1.8px);
-  background-size: 21px 21px;
-}
-
-/* Слой под мышь: framer двигает его отдельно от дрейфа по прокрутке, и они
-   не спорят за одно поле стиля. */
-.camp-cover__mouse {
-  width: 100%;
-  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 85%;
 }
 
 /* ---------------- обложка: коллаж ---------------------------------------
 
-   Типографика по центру, вырезки по краям поля на своих фигурах и уходят за
-   кромки, как на обеих обложках референсов. Капрал лапами через шов.
+   Типографика по центру, по углам поля четыре группы сопоставимого веса,
+   и каждая уходит за свою кромку, как на обеих обложках референсов.
+   Капрал лапами через шов.
 
    Поле режется только по горизонтали. По вертикали оно нарочно открыто:
    hidden по одной оси заставил бы вторую стать auto и срезал бы вырезки.
@@ -194,93 +202,71 @@
   text-align: center;
 }
 
-.camp-cover__disc--lead {
-  right: -3%;
-  bottom: 8%;
-  width: min(27%, 24rem);
+/* Капрал, главная группа: справа внизу, лапами через шов. Круг чуть правее
+   и выше собаки, лапы ломают его нижнюю кромку. */
+.camp-cover__unit--lead {
+  right: 3%;
+  bottom: calc(-1 * var(--c-bleed));
+  width: clamp(280px, 30vw, 440px);
 }
 
-.camp-cover__disc--lead i {
+.camp-cover__unit--lead i {
+  top: 16%;
+  left: 25%;
+  width: 58%;
+  border-radius: 50%;
   background: var(--c-amber);
 }
 
-.camp-cover__disc--mira {
-  bottom: 12%;
+/* Мира, слева внизу: вырезка широкая, круг под ней тоже шире. */
+.camp-cover__unit--mira {
+  bottom: 4%;
   left: 1%;
-  width: min(21%, 19rem);
+  width: clamp(200px, 21vw, 310px);
 }
 
-.camp-cover__disc--mira i {
+.camp-cover__unit--mira i {
+  top: 16%;
+  left: 6%;
+  width: 84%;
+  border-radius: 50%;
   background: rgba(111, 115, 85, 0.42);
 }
 
-.camp-cover__disc--dzhek {
-  top: 4%;
-  right: 8%;
-  width: min(9%, 8rem);
-}
-
-.camp-cover__disc--dzhek i {
-  background: var(--c-sheet);
-}
-
-.camp-cover__dots--lead {
-  right: 16%;
-  bottom: 52%;
-  width: min(11%, 10rem);
-}
-
-.camp-cover__dots--tessi {
-  top: 4%;
-  left: 4%;
-  width: min(11%, 10rem);
-}
-
-.camp-cover__pet {
-  position: absolute;
-}
-
-.camp-cover__pet img {
-  display: block;
-  width: auto;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom;
-  transform-origin: 50% 85%;
-}
-
-/* Капрал главный: справа внизу, на круге, лапами через шов. Не в полный
-   рост: в полный он перевешивал всё поле. */
-.camp-cover__pet--lead {
-  right: 1%;
-  bottom: calc(-1 * var(--c-bleed));
-  height: calc(60% + var(--c-bleed));
-}
-
-/* Мира слева, уходит за левую кромку поля. */
-.camp-cover__pet--mira {
-  bottom: -2%;
-  left: -6%;
-  height: 50%;
-}
-
-/* Тесси мелкая в левом верхнем углу, на точках. */
-.camp-cover__pet--tessi {
-  top: 7%;
-  left: 8%;
-  height: 24%;
-}
-
-/* Джек мелкий в правом верхнем, на светлом кружке. */
-.camp-cover__pet--dzhek {
+/* Джесси, слева вверху: за ней сетка точек, а не круг. Второй тип
+   геометрии, иначе все четыре угла читаются одним приёмом. */
+.camp-cover__unit--dzhessi {
   top: 5%;
-  right: 9%;
-  height: 17%;
+  left: 6%;
+  width: clamp(130px, 13.5vw, 200px);
+}
+
+.camp-cover__unit--dzhessi i {
+  top: 0;
+  left: -12%;
+  width: 82%;
+  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
+  background-size: 19px 19px;
+}
+
+/* Джек, справа вверху: почти квадратная вырезка, круг ровно под ней. */
+.camp-cover__unit--dzhek {
+  top: 7%;
+  right: 14%;
+  width: clamp(110px, 11.5vw, 170px);
+}
+
+.camp-cover__unit--dzhek i {
+  top: 10%;
+  left: 12%;
+  width: 78%;
+  border-radius: 50%;
+  background: #fbf6ec;
 }
 
 .camp-cover__copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   max-width: 42rem;
 }
@@ -367,61 +353,38 @@
   }
 }
 
-/* На ноутбуке поле уже: текст короче по строке, боковые вырезки мельче и
-   дальше за кромкой, Джек снимается. */
+/* На ноутбуке поле уже: текст короче по строке, группы по краям мельче и
+   ближе к кромкам, Джек снимается. */
 @media (min-width: 861px) and (max-width: 1200px) {
   .camp-cover__copy {
-    max-width: 34rem;
+    max-width: 33rem;
   }
 
-  .camp-cover__pet--lead {
-    right: -2%;
-    height: calc(48% + var(--c-bleed));
+  .camp-cover__unit--lead {
+    right: 0;
+    width: clamp(240px, 26vw, 300px);
   }
 
-  .camp-cover__disc--lead {
-    right: -5%;
-    bottom: 6%;
-    width: 24%;
+  .camp-cover__unit--mira {
+    bottom: 3%;
+    left: -1%;
+    width: clamp(170px, 19vw, 230px);
   }
 
-  .camp-cover__dots--lead {
-    right: 13%;
-    bottom: 48%;
-    width: 10%;
+  .camp-cover__unit--dzhessi {
+    top: 4%;
+    left: 3%;
+    width: clamp(120px, 13vw, 160px);
   }
 
-  .camp-cover__pet--mira {
-    left: -11%;
-    height: 40%;
-  }
-
-  .camp-cover__disc--mira {
-    bottom: 10%;
-    left: -2%;
-    width: 18%;
-  }
-
-  .camp-cover__pet--tessi {
-    top: 6%;
-    left: 4%;
-    height: 20%;
-  }
-
-  .camp-cover__dots--tessi {
-    left: 1%;
-    width: 10%;
-  }
-
-  .camp-cover__pet--dzhek,
-  .camp-cover__disc--dzhek {
+  .camp-cover__unit--dzhek {
     display: none;
   }
 }
 
-/* На узком экране текст занимает верх, а под ним полоса для главной вырезки:
-   Капрал на круге у правого края, лапами через шов. Тесси остаётся в углу,
-   остальные сняты: три собаки рядом с текстом на телефоне это каша. */
+/* На планшете текст занимает верх, под ним полоса: Капрал справа лапами
+   через шов, Мира слева. Мелкие группы сняты, две собаки рядом с текстом
+   это каша. */
 @media (max-width: 860px) {
   .camp-cover {
     align-items: start;
@@ -430,75 +393,35 @@
   }
 
   .camp-cover__copy {
-    padding-bottom: clamp(200px, 52vw, 280px);
+    padding-bottom: clamp(200px, 45vw, 280px);
   }
 
-  /* Круг правее, чем на телефоне: на планшете кнопка «Помочь» по центру
-     наезжала на его кромку, и янтарь сливался с янтарём. */
-  .camp-cover__disc--lead {
-    top: auto;
-    right: -16%;
-    bottom: 3%;
-    width: 54%;
+  .camp-cover__unit--lead {
+    right: -1%;
+    width: clamp(240px, 48vw, 320px);
   }
 
-  .camp-cover__dots--lead {
-    top: auto;
-    right: 36%;
-    bottom: 20%;
-    width: 26%;
-  }
-
-  .camp-cover__pet--lead {
-    right: -4%;
-    height: clamp(230px, 56vw, 300px);
-  }
-
-  .camp-cover__pet--tessi {
-    top: 5%;
-    left: 4%;
-    height: 14%;
-  }
-
-  .camp-cover__dots--tessi {
-    top: 3%;
-    left: 1%;
-    width: 24%;
-  }
-
-  /* Убирают по признаку в разметке, а не по порядковому номеру: все слои
-     поля это div, и nth-of-type считал среди них же. На планшете Мира
-     остаётся: слева внизу было пусто. */
-  .camp-cover__pet--dzhek,
-  .camp-cover__disc--dzhek {
-    display: none;
-  }
-
-  .camp-cover__pet--mira {
-    bottom: -2%;
-    left: -10%;
-    height: 34%;
-  }
-
-  .camp-cover__disc--mira {
-    bottom: 10%;
+  .camp-cover__unit--mira {
+    bottom: 2%;
     left: -2%;
-    width: 26%;
+    width: clamp(150px, 27vw, 200px);
+  }
+
+  /* Снимаются по признаку в разметке, а не по порядковому номеру: все слои
+     поля это div, и nth-of-type считал среди них же. */
+  .camp-cover__unit[data-small="true"] {
+    display: none;
   }
 }
 
-/* На телефоне остаётся один Капрал: Тесси в углу наступала на кикер, Мира
-   не помещалась рядом с текстом. Круг снова ближе к краю. */
+/* На телефоне остаётся один Капрал: Мира не помещается рядом с текстом. */
 @media (max-width: 600px) {
-  .camp-cover__disc--lead {
-    right: -12%;
-    width: 58%;
+  .camp-cover__unit--lead {
+    right: -2%;
+    width: clamp(215px, 58vw, 280px);
   }
 
-  .camp-cover__pet[data-small="true"],
-  .camp-cover__disc[data-small="true"],
-  .camp-cover__pet--tessi,
-  .camp-cover__dots--tessi {
+  .camp-cover__unit--mira {
     display: none;
   }
 }
@@ -747,6 +670,23 @@
   }
 }
 
+/* На узком экране круг у крайнего сбора уходил за боковую кромку страницы:
+   колонка там шириной в пол-экрана, и вылет режется краем. Вылет меньше. */
+@media (max-width: 860px) {
+  .camp-item {
+    --o-left: -2%;
+    --o-right: -2%;
+  }
+
+  .camp-item:nth-child(4n + 3) {
+    --o-left: auto;
+  }
+
+  .camp-item:nth-child(4n + 2) {
+    --o-left: auto;
+  }
+}
+
 @keyframes camp-item-in {
   from {
     opacity: 0;
@@ -759,17 +699,54 @@
   margin-bottom: 0.4rem;
 }
 
-/* Малый круг за кадром. На наведении отъезжает дальше из-под него. */
+/* Малый круг за кадром. На наведении отъезжает дальше из-под него.
+
+   Место, размер и цвет круга у каждого четвёртого сбора свои: один и тот же
+   круг в одном и том же углу читается штампом, а не коллажем. Числа заданы
+   переменными и разбираются ниже по nth-child, поэтому правило одно, а вид
+   разный. */
 .camp-item__figure::before {
   content: "";
   position: absolute;
-  bottom: -3%;
-  left: -5%;
-  width: 40%;
+  top: var(--o-top, auto);
+  right: var(--o-right, auto);
+  bottom: var(--o-bottom, -3%);
+  left: var(--o-left, -5%);
+  width: var(--o-size, 40%);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--c-amber);
+  background: var(--o-tone, var(--c-amber));
   transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.camp-item:nth-child(4n + 2) {
+  --o-top: -6%;
+  --o-right: -4%;
+  --o-bottom: auto;
+  --o-left: auto;
+  --o-size: 32%;
+  --o-tone: rgba(111, 115, 85, 0.5);
+  --o-shift: 6% -6%;
+}
+
+.camp-item:nth-child(4n + 3) {
+  --o-top: auto;
+  --o-right: -6%;
+  --o-bottom: 4%;
+  --o-left: auto;
+  --o-size: 46%;
+  --o-tone: var(--c-amber-deep);
+  --o-shift: 7% 5%;
+}
+
+.camp-item:nth-child(4n + 4) {
+  --o-top: 2%;
+  --o-right: auto;
+  --o-bottom: auto;
+  --o-left: -7%;
+  --o-size: 28%;
+  --o-tone: var(--c-amber);
+  --o-shift: -7% -5%;
 }
 
 .camp-item[data-status="closed"] .camp-item__figure::before {
@@ -777,7 +754,7 @@
 }
 
 .camp-item:hover .camp-item__figure::before {
-  translate: -7% 6%;
+  translate: var(--o-shift, -7% 6%);
 }
 
 .camp-item__shot {
@@ -992,13 +969,16 @@
   background: #f3e6cd;
 }
 
+/* Снизу у сцены запас: в конце прокрутки закреплённая сцена отлипает, и её
+   дно совпадает с кромкой секции. Без запаса предметы натюрморта упирались
+   прямо в шов и читались срезанными по линейке. */
 .camp-route__stage {
   position: sticky;
   top: 0;
   display: grid;
   grid-template-rows: auto 1fr;
   height: 100vh;
-  padding: clamp(1.5rem, 4vh, 3rem) 0 clamp(1.25rem, 3vh, 2.5rem);
+  padding: clamp(1.5rem, 4vh, 3rem) 0 clamp(2.5rem, 8vh, 5.5rem);
 }
 
 .camp-route__head {
@@ -1109,7 +1089,7 @@
    лекарства, рядом со своими вещами. */
 .camp-route__labels {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--c-inner);
   z-index: 5;
   margin: 0;
   padding: 0;
@@ -1268,10 +1248,15 @@
 
 /* ---------------- секция 5: финальный призыв ----------------------------
 
-   Третье поле страницы, янтарное. Одна группа справа: миска на кремовом
-   круге размером с неё, за ними точки. Миска падает сверху по шкале секции
-   и верхом заходит на предыдущее поле. Поле уходит под скруглённый верх
-   подвала, иначе в его углах был бы серый лист.
+   Третье поле страницы, янтарное. Справа одна группа: миска на кремовом
+   круге, за ними точки. Круг и точки лежат внутри группы, а не расставлены
+   процентами по полю: порознь они ехали по прокрутке в разные стороны и к
+   середине прохода расходились на полтораста пикселей, отчего миска висела
+   в воздухе над собственным кругом.
+
+   Миска верхом заходит на предыдущее поле: последний переход через шов.
+   Поле уходит под скруглённый верх подвала, иначе в его углах был бы
+   серый лист.
 ------------------------------------------------------------------------ */
 
 .camp-call {
@@ -1288,17 +1273,50 @@
   view-timeline: --call block;
 }
 
-/* Кремовый круг на янтаре: на цветном поле фигура обязана быть светлее его,
-   иначе она читается пятном грязи, а не формой. Круг размером с миску и
-   сидит под ней, как в референсе: фигура без предмета там не встречается. */
-.camp-call__disc {
-  top: 8%;
-  right: 6%;
-  width: min(26%, 22rem);
+/* Группа: точки, круг, миска. Размер задаёт ширина миски, высота идёт от
+   её пропорции, 1400 на 1078. */
+.camp-call__unit {
+  position: absolute;
+  top: -6%;
+  right: 9%;
+  width: clamp(225px, 24vw, 345px);
+  aspect-ratio: 1400 / 1078;
 }
 
-.camp-call__disc i {
-  background: rgba(244, 241, 235, 0.55);
+.camp-call__unit img {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: camp-bowl-in 1ms linear both;
+  animation-timeline: --call;
+  animation-range: entry 0% entry 70%;
+}
+
+/* Падение идёт от шкалы секции, а не от своей: сама миска низкая, и её
+   собственный отрезок кончался бы за полсотни пикселей прокрутки. Наклона
+   нет: миска снята в сильном ракурсе, и повёрнутая читается опрокинутой. */
+@keyframes camp-bowl-in {
+  from {
+    opacity: 0;
+    translate: 0 -150px;
+  }
+}
+
+/* Кремовый круг: на цветном поле фигура обязана быть светлее его, иначе она
+   читается пятном грязи, а не формой. Миска сидит на его верхней части и
+   ломает кромку, как вырезка на круге в референсе. */
+.camp-call__disc {
+  position: absolute;
+  z-index: 1;
+  top: 38%;
+  left: -6%;
+  display: block;
+  width: 66%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(250, 245, 236, 0.72);
   animation: camp-shape-in 1ms linear both;
   animation-timeline: --call;
   animation-range: entry 0% entry 75%;
@@ -1311,39 +1329,18 @@
   }
 }
 
-/* Точки за группой, у правого верхнего края круга. */
+/* Точки уходят вправо за группу и вниз: они держат пустой нижний угол поля,
+   который иначе остаётся голым янтарём. */
 .camp-call__dots {
-  top: 2%;
-  right: 0;
-  width: min(13%, 11rem);
-  --dot: rgba(28, 28, 28, 0.26);
-}
-
-/* Миска висит над верхней кромкой, ломает кромку круга и заходит на поле
-   предыдущей секции. Падение идёт от шкалы секции, а не от своей: сама
-   миска низкая, и её собственный отрезок кончался бы за полсотни пикселей. */
-.camp-call__bowl {
   position: absolute;
-  top: -8%;
-  right: 9%;
-  width: min(25%, 21.5rem);
-}
-
-.camp-call__bowl img {
+  z-index: 0;
+  top: 46%;
+  right: -26%;
   display: block;
-  width: 100%;
-  height: auto;
-  animation: camp-bowl-in 1ms linear both;
-  animation-timeline: --call;
-  animation-range: entry 0% entry 70%;
-}
-
-@keyframes camp-bowl-in {
-  from {
-    opacity: 0;
-    translate: 0 -180px;
-    rotate: -16deg;
-  }
+  width: 62%;
+  aspect-ratio: 3 / 4;
+  background-image: radial-gradient(circle, rgba(28, 28, 28, 0.26) 1.7px, transparent 1.8px);
+  background-size: 21px 21px;
 }
 
 /* Ширина явная: в сетке блок с auto-полями ужимается до содержимого и
@@ -1445,25 +1442,19 @@
   }
 
   .camp-call__copy {
-    padding-top: clamp(150px, 44vw, 230px);
+    padding-top: clamp(160px, 46vw, 250px);
   }
 
-  .camp-call__bowl {
-    top: -4%;
-    right: 8%;
-    width: 44%;
-  }
-
-  .camp-call__disc {
-    top: 4%;
-    right: 3%;
-    width: 46%;
+  .camp-call__unit {
+    top: -5%;
+    right: 2%;
+    width: clamp(215px, 58vw, 330px);
   }
 
   .camp-call__dots {
-    top: 0;
-    right: -4%;
-    width: 26%;
+    top: 52%;
+    right: -6%;
+    width: 46%;
   }
 }
 
@@ -1483,8 +1474,8 @@
   .camp-item,
   .camp-item__shot,
   .camp-item__bar i,
-  .camp-call__disc i,
-  .camp-call__bowl img,
+  .camp-call__disc,
+  .camp-call__unit img,
   .camp-call__copy > * {
     animation: none;
   }
@@ -1506,9 +1497,13 @@
 
 /* ---------------- панель помощи в диалоге --------------------------------
 
-   Та же панель, что секцией стоит на главной, здесь поверх страницы.
-   Переменные панели объявлены на её секции на главной, поэтому здесь они
-   объявлены заново на диалоге: без них панель теряет цвета.
+   Та же панель, что секцией стоит на главной, здесь поверх страницы. Своего
+   фона и рамки у обёртки нет: у самой панели они уже есть, и вместе
+   получалась коробка в коробке. Обёртка держит только ширину, крестик и
+   место сверху под подопечного, который стоит над верхней кромкой панели.
+
+   Заголовок диалога скрыт от глаз, но не от читалки: панель называет себя
+   сама вкладками «Помочь» и «Помощники», а диалогу нужно имя.
 ------------------------------------------------------------------------- */
 
 .camp-donate {
@@ -1517,7 +1512,7 @@
   z-index: 60;
   display: grid;
   place-items: start center;
-  padding: clamp(1rem, 3vh, 2.5rem) clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 2.5vh, 2rem) clamp(0.5rem, 2vw, 1.5rem) clamp(1.5rem, 4vh, 3rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: rgba(28, 28, 28, 0.55);
@@ -1544,11 +1539,7 @@
   --donation-amber: #f3a400;
 
   position: relative;
-  width: min(100%, 74rem);
-  padding: clamp(1rem, 2.5vw, 2rem);
-  border-radius: 32px;
-  background: var(--c-sheet);
-  box-shadow: 0 30px 80px rgba(28, 28, 28, 0.35);
+  width: min(100%, 72rem);
   animation: camp-donate-rise 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1559,50 +1550,40 @@
   }
 }
 
-.camp-donate__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
+/* Подопечный стоит над верхней кромкой панели, как на главной, и сверху ему
+   оставлено место. В диалоге он поднят меньше и уведён левее крестика: на
+   главной он вынесен на половину роста вверх и вправо за панель, а здесь
+   при таком выносе уходил за верхний край экрана. На узком экране места нет
+   и он снимается. */
+.camp-donate .donation-experience {
+  margin-top: clamp(4.5rem, 10vw, 8rem);
+}
+
+.camp-donate .donation-pet {
+  right: clamp(3.5rem, 7vw, 7rem);
+  width: clamp(13rem, 21vw, 19rem);
+  height: clamp(16rem, 25vw, 23rem);
+  transform: translateY(-36%);
 }
 
 .camp-donate__head h2 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-/* Подопечный панели стоит над её верхней кромкой, как на главной: панели
-   оставлен запас сверху, чтобы он не лез на заголовок диалога. На узком
-   экране запаса нет и подопечный снимается. Крестик поверх него. */
-.camp-donate .donation-experience {
-  margin-top: clamp(5rem, 11vw, 8.5rem);
-}
-
-@media (max-width: 860px) {
-  .camp-donate .donation-experience {
-    margin-top: 0.5rem;
-  }
-
-  .camp-donate .donation-pet {
-    display: none;
-  }
-}
-
-/* Панель грузится по первому клику; пока едет, стоит одна строка. */
-.camp-donate__loading {
-  margin: 2rem 0;
-  color: var(--c-muted);
-  font-size: 0.95rem;
-  text-align: center;
-}
-
+/* Крестик поверх панели, у её правого верхнего угла. */
 .camp-donate__close {
-  position: relative;
-  z-index: 3;
+  position: absolute;
+  top: clamp(4.5rem, 10.5vw, 8rem);
+  right: 0.75rem;
+  z-index: 6;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1612,6 +1593,7 @@
   border-radius: 50%;
   background: #fff;
   color: var(--c-ink);
+  box-shadow: 0 6px 18px rgba(28, 28, 28, 0.18);
   cursor: pointer;
   transition:
     background 0.25s,
@@ -1622,6 +1604,29 @@
   background: var(--c-ink);
   color: #fff;
   transform: rotate(90deg);
+}
+
+/* Панель грузится по первому клику; пока едет, стоит одна строка. */
+.camp-donate__loading {
+  margin: 6rem 0 2rem;
+  color: #fff;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .camp-donate .donation-experience {
+    margin-top: 3.25rem;
+  }
+
+  .camp-donate .donation-pet {
+    display: none;
+  }
+
+  .camp-donate__close {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

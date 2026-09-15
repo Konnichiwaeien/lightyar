@@ -15,11 +15,16 @@ import { preloadDonatePanel, requestDonateOpen } from "@/lib/donations/donation-
  * ваши деньги» на тёплом кремовом, финал на янтаре: цвет меняется от секции
  * к секции, и к концу страницы он доходит до полного акцента.
  *
- * Справа одна группа, как в референсе: пустая миска на кремовом круге
- * размером с неё, за ними сетка точек. Миска падает сверху с поворотом,
- * пока секция входит в экран, и верхом заходит на предыдущее поле. Строки
- * текста поднимаются очередью. Всё это шкала просмотра секции в CSS; по
- * прокрутке слои ещё и плывут с разной скоростью, это framer.
+ * Справа одна группа: пустая миска на кремовом круге, за ними сетка точек.
+ * Круг и точки лежат внутри группы, а не расставлены процентами по полю:
+ * порознь они ехали по прокрутке в разные стороны, миска вверх, а круг
+ * вниз, и к середине прохода расходились на полтораста пикселей. Миска
+ * висела в воздухе над собственным кругом и наезжала на натюрморт секции
+ * выше. Теперь группа едет целиком.
+ *
+ * Миска верхом заходит на предыдущее поле: это последний переход через шов.
+ * Наклона у неё нет: она снята в сильном ракурсе, и повёрнутая читается
+ * опрокинутой.
  *
  * Янтарное поле уходит под скруглённый верх подвала. Подвал общий для сайта и
  * скруглён поверх фона страницы; на других страницах под углами лежит тот же
@@ -39,11 +44,9 @@ export function CampaignCall() {
   return (
     <section aria-labelledby="camp-call-title" className="camp-call" ref={sectionRef}>
       <div aria-hidden="true" className="camp-call__field">
-        <Drift className="camp-call__dots" distance={36} progress={scrollYProgress} still={still} />
-        <Drift className="camp-call__disc" distance={80} progress={scrollYProgress} still={still}>
-          <i />
-        </Drift>
-        <Drift className="camp-call__bowl" distance={-90} rotate={-6} progress={scrollYProgress} still={still}>
+        <Drift className="camp-call__unit" distance={-46} progress={scrollYProgress} still={still}>
+          <i className="camp-call__dots" />
+          <i className="camp-call__disc" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" loading="lazy" src="/campaigns/need-bowl.webp" />
         </Drift>
@@ -56,11 +59,9 @@ export function CampaignCall() {
           <em>просто так</em>
         </h2>
         <p className="camp-call__lead">
-          Взнос без цели идёт на то, что <mark className="camp-mark camp-mark--sheet">нужнее прямо сейчас</mark>:
-          корм, лекарства, оплату клиники. Приют сам решит, какую миску наполнить первой.
+          Взнос без цели идёт туда, <mark className="camp-mark camp-mark--sheet">где нужнее</mark>: на корм,
+          лекарства или оплату клиники. Приют сам решит, какую миску наполнить первой.
         </p>
-        {/* Кнопка открывает панель помощи прямо здесь, в диалоге, а не уводит
-            на главную: до этого читатель терял страницу, с которой пришёл. */}
         <button
           className="camp-btn camp-call__cta"
           onClick={requestDonateOpen}

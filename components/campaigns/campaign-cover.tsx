@@ -15,19 +15,23 @@ import { useLenis } from "@/components/ui/smooth-scroll";
  * Обложка страницы сборов: коллаж.
  *
  * Устройство с обоих референсов. Типографика по центру поля, как у Vogue и
- * Wikimedia: «Все» гротеском и «сборы» на янтарной плашке в одну строку,
- * строка под ними с плашками на ключевых словах. По четырём углам поля
- * вырезки подопечных, каждая на своей фигуре, и уходят за кромки: Тесси на
- * точках слева вверху, Джек на светлом кружке справа вверху, Мира на
- * моховом круге слева внизу, Капрал на янтарном круге справа внизу, лапами
- * через шов. Четыре угла сопоставимого веса, как на обложке отчёта
- * Wikimedia; до этого Капрал в полный рост перевешивал всё поле.
+ * Wikimedia: «Все» гротеском и «сборы» на янтарной плашке в одну строку.
+ * По углам поля четыре группы сопоставимого веса, и каждая уходит за свою
+ * кромку.
  *
- * Механики оттуда же. Мышиный параллакс: вырезки едут за курсором, каждая
- * на свою глубину, как головы на обложке Vogue (там сдвиг доходит до ста
- * тридцати пикселей, замерено в браузере). Пружина при загрузке: фигуры и
- * вырезки вскакивают на поле по очереди. Дрейф по прокрутке с разной
- * скоростью и поворотом.
+ * Группа это связка «фигура и вырезка на ней», собранная разметкой, а не
+ * процентами по полю. Так было не всегда, и вот почему пришлось: холст у
+ * всех вырезок квадратный, 620 на 620, а собака внутри занимает от трети
+ * ширины (Капрал) до девяти десятых (Мира). Круг, поставленный процентами
+ * от поля, совпадал с боксом вырезки, но не с самой собакой, и группы
+ * разъезжались тем сильнее, чем уже была вырезка. Теперь круг лежит внутри
+ * группы и считается от её размера.
+ *
+ * Механики оттуда же. Мышиный параллакс: группы едут за курсором, каждая на
+ * свою глубину, как головы на обложке Vogue (там сдвиг доходит до ста
+ * тридцати пикселей, замерено в браузере). Внутри группы круг едет вдвое
+ * медленнее вырезки: глубина есть, а группа не рвётся. Пружина при
+ * загрузке, дрейф по прокрутке с разной скоростью.
  *
  * Строка под заголовком не перечисляет нужды: сборы бывают на что угодно,
  * от корма до машины, и список из трёх слов врал бы. Кнопка ведёт к
@@ -40,18 +44,62 @@ const RUB = new Intl.NumberFormat("ru-RU");
 const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 
 /**
- * Кто лежит на поле. Места заданы в стилях по модификатору, здесь движение:
- * путь по прокрутке, поворот, глубина под мышь и очередь появления.
+ * Группы по углам поля. Места и размеры заданы в стилях по модификатору,
+ * здесь только движение: путь по прокрутке, поворот, глубина под мышь и
+ * очередь появления.
  *
  * Глубина не привязана к размеру: на референсе мелкая голова в углу едет
  * меньше средней у заголовка. Здесь дальше всех едут мелкие по краям, а
- * главная вырезка, на которой держится композиция, едет меньше всех.
+ * главная группа, на которой держится композиция, едет меньше всех.
+ *
+ * Фигура у каждой своя и сдвинута в свою сторону: одинаковый круг под
+ * каждой вырезкой читается штампом, а не коллажем.
  */
-const PETS = [
-  { src: "/pets/cutout-kapral.webp", name: "Капрал", mod: "lead", small: false, drift: -70, rotate: 0, depth: 0.45, delay: 0.1 },
-  { src: "/pets/cutout-mira.webp", name: "Мира", mod: "mira", small: true, drift: -110, rotate: 3, depth: 0.7, delay: 0.28 },
-  { src: "/pets/cutout-tessi.webp", name: "Тесси", mod: "tessi", small: false, drift: -170, rotate: -8, depth: 1, delay: 0.42 },
-  { src: "/pets/cutout-dzhek.webp", name: "Джек", mod: "dzhek", small: true, drift: -150, rotate: 7, depth: 0.85, delay: 0.52 },
+const UNITS = [
+  {
+    src: "/pets/cutout-kapral.webp",
+    name: "Капрал",
+    mod: "lead",
+    small: false,
+    shape: "disc",
+    drift: -60,
+    rotate: 0,
+    depth: 0.4,
+    delay: 0.08,
+  },
+  {
+    src: "/pets/cutout-mira.webp",
+    name: "Мира",
+    mod: "mira",
+    small: false,
+    shape: "disc",
+    drift: -105,
+    rotate: 3,
+    depth: 0.72,
+    delay: 0.26,
+  },
+  {
+    src: "/pets/cutout-dzhessi.webp",
+    name: "Джесси",
+    mod: "dzhessi",
+    small: true,
+    shape: "dots",
+    drift: -165,
+    rotate: -7,
+    depth: 1,
+    delay: 0.4,
+  },
+  {
+    src: "/pets/cutout-dzhek.webp",
+    name: "Джек",
+    mod: "dzhek",
+    small: true,
+    shape: "disc",
+    drift: -140,
+    rotate: 6,
+    depth: 0.86,
+    delay: 0.5,
+  },
 ];
 
 const spring = { type: "spring", stiffness: 120, damping: 14, mass: 0.9 } as const;
@@ -62,17 +110,23 @@ function Mouse({
   y,
   depth,
   still,
+  className,
   children,
 }: {
   x: MotionValue<number>;
   y: MotionValue<number>;
   depth: number;
   still: boolean;
+  className?: string;
   children: React.ReactNode;
 }) {
   const dx = useTransform(x, (value) => value * depth * 110);
   const dy = useTransform(y, (value) => value * depth * 60);
-  return <motion.div className="camp-cover__mouse" style={still ? undefined : { x: dx, y: dy }}>{children}</motion.div>;
+  return (
+    <motion.div className={className ?? "camp-cover__mouse"} style={still ? undefined : { x: dx, y: dy }}>
+      {children}
+    </motion.div>
+  );
 }
 
 export function CampaignCover({ summary }: { summary: CampaignSummary }) {
@@ -123,51 +177,33 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
         }}
       >
         <div aria-hidden="true" className="camp-cover__field">
-          {/* Фигуры за вырезками. Каждая на свою глубину под мышь, как и вырезка над ней. */}
-          <Drift className="camp-cover__dots camp-cover__dots--lead" distance={90} origin="start" progress={scrollYProgress} still={still}>
-            <Mouse x={softX} y={softY} depth={0.3} still={still}>
-              <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.5 }} />
-            </Mouse>
-          </Drift>
-          <Drift className="camp-cover__dots camp-cover__dots--tessi" distance={60} origin="start" progress={scrollYProgress} still={still}>
-            <Mouse x={softX} y={softY} depth={0.6} still={still}>
-              <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.7 }} />
-            </Mouse>
-          </Drift>
-          <Drift className="camp-cover__disc camp-cover__disc--lead" distance={140} origin="start" progress={scrollYProgress} still={still}>
-            <Mouse x={softX} y={softY} depth={0.3} still={still}>
-              <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: 0.05 }} />
-            </Mouse>
-          </Drift>
-          <Drift className="camp-cover__disc camp-cover__disc--mira" distance={100} origin="start" progress={scrollYProgress} small still={still}>
-            <Mouse x={softX} y={softY} depth={0.45} still={still}>
-              <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: 0.2 }} />
-            </Mouse>
-          </Drift>
-          <Drift className="camp-cover__disc camp-cover__disc--dzhek" distance={120} origin="start" progress={scrollYProgress} small still={still}>
-            <Mouse x={softX} y={softY} depth={0.6} still={still}>
-              <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: 0.45 }} />
-            </Mouse>
-          </Drift>
-
-          {PETS.map((pet) => (
+          {UNITS.map((unit) => (
             <Drift
-              className={`camp-cover__pet camp-cover__pet--${pet.mod}`}
-              distance={pet.drift}
-              rotate={pet.rotate}
+              className={`camp-cover__unit camp-cover__unit--${unit.mod}`}
+              distance={unit.drift}
+              rotate={unit.rotate}
               origin="start"
-              key={pet.src}
+              key={unit.src}
               progress={scrollYProgress}
-              small={pet.small}
+              small={unit.small}
               still={still}
             >
-              <Mouse x={softX} y={softY} depth={pet.depth} still={still}>
+              {/* Фигура внутри группы: круг или сетка точек. Едет вдвое
+                  медленнее вырезки, поэтому глубина есть, а группа цела. */}
+              <Mouse className="camp-cover__shape" depth={unit.depth * 0.45} still={still} x={softX} y={softY}>
+                {unit.shape === "disc" ? (
+                  <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: unit.delay - 0.06 }} />
+                ) : (
+                  <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: unit.delay }} />
+                )}
+              </Mouse>
+              <Mouse className="camp-cover__mouse" depth={unit.depth} still={still} x={softX} y={softY}>
                 <motion.img
                   alt=""
-                  src={pet.src}
-                  initial={{ opacity: 0, scale: 0.5, rotate: -12 }}
+                  src={unit.src}
+                  initial={{ opacity: 0, scale: 0.55, rotate: -10 }}
                   animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  transition={{ ...spring, delay: pet.delay, opacity: { duration: 0.25, delay: pet.delay } }}
+                  transition={{ ...spring, delay: unit.delay, opacity: { duration: 0.25, delay: unit.delay } }}
                 />
               </Mouse>
             </Drift>
@@ -181,8 +217,8 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
           </h1>
           <p className="camp-cover__lead">
             Каждый сбор закрывает <mark className="camp-mark camp-mark--amber">одну конкретную нужду</mark> приюта,
-            и по каждому видно, <mark className="camp-mark camp-mark--moss">сколько уже собрано</mark> и сколько
-            осталось. Сейчас открыто{" "}
+            и по каждому видно, <mark className="camp-mark camp-mark--moss">сколько уже собрано</mark>. Сейчас
+            открыто{" "}
             <strong>
               {summary.funds} {plural(summary.funds, "сбор", "сбора", "сборов")}
             </strong>
