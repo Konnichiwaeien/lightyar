@@ -11,76 +11,94 @@ import { useMotionPreference } from "@/components/reports/use-motion-preference"
 import { useLenis } from "@/components/ui/smooth-scroll";
 
 /**
- * Обложка страницы сборов: коллаж из кадров приюта.
+ * Обложка страницы сборов: коллаж.
  *
- * Вокруг типографики лежат настоящие снимки: руки волонтёра на морде собаки,
- * котёнок на руках, пёс, встающий лапами к человеку, общий выход на выгул.
- * У каждого своя форма, свой наклон и свой путь по прокрутке; справа внизу
- * вырезка подопечного на янтарном круге уходит лапами через шов в каталог.
+ * Устройство с обоих референсов. Типографика по центру поля, как у Vogue и
+ * Wikimedia: «Все» гротеском и «сборы» на янтарной плашке в одну строку.
+ * По углам поля четыре группы сопоставимого веса, и каждая уходит за свою
+ * кромку.
  *
- * Формы задаёт CSS, а не запечённая маска: кадр остаётся прямоугольным, и
- * круг или арку из него делает скругление. Так кадр можно переснять, не
- * перерисовывая ассет.
+ * Группа это связка «фигура и вырезка на ней», собранная разметкой, а не
+ * процентами по полю. Так было не всегда, и вот почему пришлось: холст у
+ * всех вырезок квадратный, 620 на 620, а собака внутри занимает от трети
+ * ширины (Капрал) до девяти десятых (Мира). Круг, поставленный процентами
+ * от поля, совпадал с боксом вырезки, но не с самой собакой, и группы
+ * разъезжались тем сильнее, чем уже была вырезка. Теперь круг лежит внутри
+ * группы и считается от её размера.
  *
- * Мышиного параллакса здесь больше нет. Слои ехали за курсором через пружину,
+ * Движение. При загрузке фигуры и вырезки вскакивают пружиной по очереди,
+ * дальше слои плывут по прокрутке, каждый со своей скоростью и поворотом.
+ *
+ * Мышиный параллакс здесь был и снят. Слои ехали за курсором через пружину,
  * и на каждом кадре их смещение пересчитывалось в доли пикселя: коллаж мелко
- * дрожал, пока мышь была над полем. Дрейф по прокрутке остался, он идёт
- * редкими шагами и не дрожит.
+ * дрожал, пока мышь была над полем.
  *
- * Кадры выбраны из медиатеки CMS и обрезаны под формы; исходники и размеры
- * перечислены в docs/campaigns-scroll-plan.md.
+ * Строка под заголовком не перечисляет нужды: сборы бывают на что угодно,
+ * от корма до машины, и список из трёх слов врал бы. Кнопка ведёт к
+ * каталогу на этой же странице, а не на главную.
+ *
+ * Разбор секций в docs/campaigns-scroll-plan.md.
  */
 
 const RUB = new Intl.NumberFormat("ru-RU");
 const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 
 /**
- * Слои коллажа. Места и формы заданы в стилях по модификатору, здесь путь по
- * прокрутке, наклон и очередь появления.
+ * Группы по углам поля. Места и размеры заданы в стилях по модификатору,
+ * здесь только движение: путь по прокрутке, поворот, глубина под мышь и
+ * очередь появления.
  *
- * Дальше всех уезжают мелкие кадры по краям, меньше всех главная вырезка, на
- * которой держится композиция: то, что мельче, читается ближним.
+ * Глубина не привязана к размеру: на референсе мелкая голова в углу едет
+ * меньше средней у заголовка. Здесь дальше всех едут мелкие по краям, а
+ * главная группа, на которой держится композиция, едет меньше всех.
+ *
+ * Фигура у каждой своя и сдвинута в свою сторону: одинаковый круг под
+ * каждой вырезкой читается штампом, а не коллажем.
  */
-const SHOTS = [
+const UNITS = [
   {
-    mod: "care",
-    src: "/campaigns/hero/care.webp",
-    alt: "Волонтёр держит морду собаки в ладонях",
-    drift: -150,
-    rotate: -4,
-    delay: 0.18,
+    src: "/pets/cutout-kapral.webp",
+    name: "Капрал",
+    mod: "lead",
     small: false,
-  },
-  {
-    mod: "greet",
-    src: "/campaigns/hero/greet.webp",
-    alt: "Пёс встаёт лапами на волонтёра",
-    drift: -95,
-    rotate: 3,
-    delay: 0.3,
-    small: false,
-  },
-  {
-    mod: "kitten",
-    src: "/campaigns/hero/kitten.webp",
-    alt: "Рыжий котёнок на руках",
-    drift: -170,
-    rotate: 5,
-    delay: 0.42,
-    small: true,
-  },
-  {
-    mod: "team",
-    src: "/campaigns/hero/team.webp",
-    alt: "Волонтёры вывели собак на прогулку",
+    shape: "disc",
     drift: -60,
-    rotate: -2,
-    delay: 0.52,
+    rotate: 0,
+    delay: 0.08,
+  },
+  {
+    src: "/pets/cutout-mira.webp",
+    name: "Мира",
+    mod: "mira",
+    small: false,
+    shape: "disc",
+    drift: -105,
+    rotate: 3,
+    delay: 0.26,
+  },
+  {
+    src: "/pets/cutout-dzhessi.webp",
+    name: "Джесси",
+    mod: "dzhessi",
     small: true,
+    shape: "dots",
+    drift: -165,
+    rotate: -7,
+    delay: 0.4,
+  },
+  {
+    src: "/pets/cutout-dzhek.webp",
+    name: "Джек",
+    mod: "dzhek",
+    small: true,
+    shape: "disc",
+    drift: -140,
+    rotate: 6,
+    delay: 0.5,
   },
 ];
 
-const spring = { type: "spring", stiffness: 110, damping: 15, mass: 0.9 } as const;
+const spring = { type: "spring", stiffness: 120, damping: 14, mass: 0.9 } as const;
 
 export function CampaignCover({ summary }: { summary: CampaignSummary }) {
   const still = useMotionPreference();
@@ -110,63 +128,35 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
   return (
     <MotionConfig reducedMotion="user">
       <section className="camp-cover" ref={sectionRef}>
-        <div className="camp-cover__field">
-          <Drift
-            className="camp-cover__dots"
-            distance={70}
-            origin="start"
-            progress={scrollYProgress}
-            still={still}
-          >
-            <motion.i
-              aria-hidden="true"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.9, delay: 0.5 }}
-            />
-          </Drift>
-
-          {SHOTS.map((shot) => (
+        <div aria-hidden="true" className="camp-cover__field">
+          {UNITS.map((unit) => (
             <Drift
-              className={`camp-cover__shot camp-cover__shot--${shot.mod}`}
-              distance={shot.drift}
-              key={shot.mod}
+              className={`camp-cover__unit camp-cover__unit--${unit.mod}`}
+              distance={unit.drift}
+              rotate={unit.rotate}
               origin="start"
+              key={unit.src}
               progress={scrollYProgress}
-              rotate={shot.rotate}
-              small={shot.small}
+              small={unit.small}
               still={still}
             >
+              {/* Фигура внутри группы: круг или сетка точек. */}
+              <span className="camp-cover__shape">
+                {unit.shape === "disc" ? (
+                  <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: unit.delay - 0.06 }} />
+                ) : (
+                  <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: unit.delay }} />
+                )}
+              </span>
               <motion.img
-                alt={shot.alt}
-                decoding="async"
-                initial={{ opacity: 0, scale: 0.86, rotate: shot.rotate > 0 ? -5 : 5 }}
+                alt=""
+                src={unit.src}
+                initial={{ opacity: 0, scale: 0.55, rotate: -10 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                src={shot.src}
-                transition={{ ...spring, delay: shot.delay, opacity: { duration: 0.3, delay: shot.delay } }}
+                transition={{ ...spring, delay: unit.delay, opacity: { duration: 0.25, delay: unit.delay } }}
               />
             </Drift>
           ))}
-
-          {/* Подопечный на янтарном круге: единственная вырезка на поле, она
-              же переход через шов в каталог. */}
-          <Drift
-            aria-hidden="true"
-            className="camp-cover__pet"
-            distance={-70}
-            origin="start"
-            progress={scrollYProgress}
-            still={still}
-          >
-            <i />
-            <motion.img
-              alt=""
-              initial={{ opacity: 0, scale: 0.7, rotate: -8 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              src="/pets/cutout-kapral.webp"
-              transition={{ ...spring, delay: 0.08, opacity: { duration: 0.25, delay: 0.08 } }}
-            />
-          </Drift>
         </div>
 
         <div className="camp-inner camp-cover__copy">

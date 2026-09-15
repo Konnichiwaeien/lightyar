@@ -20,10 +20,14 @@ import { preloadDonatePanel, requestDonateOpen } from "@/lib/donations/donation-
  * полю: порознь они ехали по прокрутке в разные стороны и к середине
  * прохода расходились на полтораста пикселей.
  *
- * Здесь стояла вырезка пустой миски. Владелец отклонил её, и по делу: миска
- * повторяла ту, что уже стоит в натюрморте секцией выше, а пустая посуда на
- * призыве помочь читается упрёком. Кадр с волонтёром говорит то же самое
- * прямо: помощь это чьи-то руки.
+ * Здесь стояла вырезка пустой миски, и владелец отклонил её: миска повторяла
+ * ту, что уже стоит в натюрморте секцией выше, а пустая посуда на призыве
+ * помочь читается упрёком. На её месте теперь подопечный, бегущий с палкой:
+ * то же поле, та же фигура под вырезкой, но говорит он не о нехватке, а о
+ * том, ради чего собирают.
+ *
+ * Фотокарточкой этот кадр тоже побывал, один заход, и был отклонён: снимок в
+ * рамке с тенью это прямоугольный фотоблок, которого в грамматике нет.
  *
  * Кадр верхом заходит на предыдущее поле: это последний переход через шов.
  *
@@ -44,12 +48,12 @@ export function CampaignCall() {
 
   return (
     <section aria-labelledby="camp-call-title" className="camp-call" ref={sectionRef}>
-      <div className="camp-call__field">
+      <div aria-hidden="true" className="camp-call__field">
         <Drift className="camp-call__unit" distance={-46} progress={scrollYProgress} still={still}>
           <i className="camp-call__dots" />
           <i className="camp-call__disc" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="Волонтёр треплет собаку по животу" loading="lazy" src="/campaigns/hero/hands.webp" />
+          <img alt="" loading="lazy" src="/pets/cutout-bim.webp" />
         </Drift>
       </div>
 

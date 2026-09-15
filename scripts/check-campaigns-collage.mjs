@@ -134,13 +134,17 @@ try {
          слои коллажа сдвинуты трансформацией дрейфа. По offsetTop дрейфа
          не видно, а видно именно то, что задано в стилях. */
       const coverField = document.querySelector(".camp-cover__field");
-      const pet = document.querySelector(".camp-cover__pet");
-      const bleed = Math.round(pet.offsetTop + pet.offsetHeight - coverField.offsetHeight);
-      /* Кадры коллажа: видимые снимки приюта вокруг типографики. */
-      const shown = [...document.querySelectorAll(".camp-cover__shot")].filter(
+      const bleed = Math.max(
+        ...[...document.querySelectorAll(".camp-cover__unit")].map((node) =>
+          Math.round(node.offsetTop + node.offsetHeight - coverField.offsetHeight),
+        ),
+      );
+      const shown = [...document.querySelectorAll(".camp-cover__unit")].filter(
         (node) => getComputedStyle(node).display !== "none",
       );
-      const landed = [pet, ...shown].map((node) => {
+      /* Фигура есть у каждой видимой группы: круг или сетка точек. */
+      const shapeless = shown.filter((node) => !node.querySelector("i")).length;
+      const landed = shown.map((node) => {
         const img = node.querySelector("img");
         const style = getComputedStyle(img);
         return {
@@ -151,7 +155,7 @@ try {
       const marks = [...document.querySelectorAll(".camp-cover .camp-mark")].map(
         (mark) => getComputedStyle(mark).backgroundSize,
       );
-      const lead = document.querySelector(".camp-cover__pet img");
+      const lead = document.querySelector(".camp-cover__unit--lead img");
       const controls = document.querySelector(".camp-controls");
       const call = document.querySelector(".camp-call");
       const footer = document.querySelector("footer");
@@ -163,13 +167,14 @@ try {
         sheetPaint: paint(".camp"),
         callBleed: -Math.round(bowl.offsetTop),
         ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
-        pets: shown.length + 1,
+        pets: shown.length,
+        shapeless,
         landed,
         marks,
         // Фигура без предмета не встречается: круги и точки лежат внутри
         // групп, по одной фигуре на вырезку.
-        discs: document.querySelectorAll(".camp-cover__pet i, .camp-route__disc, .camp-call__disc").length,
-        dots: document.querySelectorAll(".camp-cover__dots, .camp-call__dots").length,
+        discs: document.querySelectorAll(".camp-cover__unit i, .camp-route__disc, .camp-call__disc").length,
+        dots: document.querySelectorAll(".camp-cover__unit--dzhessi i, .camp-call__dots").length,
         items: document.querySelectorAll(".camp-route__item img").length,
         labels: document.querySelectorAll(".camp-route__label").length,
         links: document.querySelectorAll(".camp-route a").length,
@@ -245,10 +250,11 @@ try {
        это же, и держать обе означало сказать одно дважды. */
     assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
-    /* Кадры приюта вокруг типографики: на телефоне их меньше, там в ряд они
-       превращаются в кашу. Вырезка подопечного считается отдельно. */
-    const leastShots = compact ? 3 : 4;
-    assert.ok(shape.pets >= leastShots, `${viewport.name}: слоёв коллажа ${shape.pets}, ожидалось ${leastShots}`);
+    /* Вырезки на фигурах: на телефоне их меньше, там в ряд они превращаются
+       в кашу. Фотокарточек в сценах нет вовсе, это главное правило. */
+    assert.equal(shape.shapeless, 0, `${viewport.name}: ${shape.shapeless} вырезок без своей фигуры`);
+    const leastPets = viewport.width <= 600 ? 1 : 2;
+    assert.ok(shape.pets >= leastPets, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось ${leastPets}`);
 
     // Круги каталога стоят вразнобой и не режутся боковой кромкой.
     if (shape.orbs.length >= 4) {
@@ -279,10 +285,18 @@ try {
 
     // Прямоугольных фотоблоков в сценах быть не должно: за них отклонены семь
     // предыдущих заходов.
+    /* Фотокарточек в сценах нет: снимок в рамке с тенью это прямоугольный
+       фотоблок, за который отклонены восемь заходов. Считаем по признаку, а
+       не по имени класса: рамка вокруг картинки в поле секции. */
     const slabs = await page.evaluate(
-      () => document.querySelectorAll(".camp-cover__yard, .camp-cover__veil, .camp-route__strip").length,
+      () =>
+        [
+          ...document.querySelectorAll(
+            ".camp-cover__field img, .camp-call__field img, .camp-route__scene img",
+          ),
+        ].filter((img) => parseFloat(getComputedStyle(img).borderTopWidth) > 0).length,
     );
-    assert.equal(slabs, 0, `${viewport.name}: в сцене осталась прямоугольная фотополоса`);
+    assert.equal(slabs, 0, `${viewport.name}: в сцене ${slabs} снимков в рамке`);
 
     // Главная вырезка уходит за нижнюю кромку обложки и ложится на следующее
     // поле. Это тот самый переход через шов.
@@ -329,10 +343,10 @@ try {
       });
       await page.mouse.move(cover.left + cover.width * 0.08, cover.top + cover.height * 0.5, { steps: 8 });
       await page.waitForTimeout(700);
-      const [leftX] = await shift(page, ".camp-cover__shot--care", "x");
+      const [leftX] = await shift(page, ".camp-cover__unit--lead", "x");
       await page.mouse.move(cover.left + cover.width * 0.92, cover.top + cover.height * 0.5, { steps: 8 });
       await page.waitForTimeout(700);
-      const [rightX] = await shift(page, ".camp-cover__shot--care", "x");
+      const [rightX] = await shift(page, ".camp-cover__unit--lead", "x");
       mouse = `${leftX} → ${rightX}`;
       assert.equal(leftX, rightX, `${viewport.name}: коллаж ходит за мышью (${mouse})`);
       await page.mouse.move(cover.left + cover.width * 0.5, cover.top + cover.height * 0.5);
@@ -343,10 +357,10 @@ try {
     // её ухода. Раньше отсчёт шёл от середины пути, и при загрузке всё было
     // уже сдвинуто.
     const cover = await passage(page, ".camp-cover");
-    const restingLead = (await shift(page, ".camp-cover__pet"))[0];
+    const restingLead = (await shift(page, ".camp-cover__unit--lead"))[0];
     assert.equal(restingLead, 0, `${viewport.name}: вырезка при загрузке уже сдвинута на ${restingLead}px`);
     await scrollTo(page, Math.min(cover.max, Math.round(cover.height * 0.5)), viewport.name);
-    const movedLead = (await shift(page, ".camp-cover__pet"))[0];
+    const movedLead = (await shift(page, ".camp-cover__unit--lead"))[0];
     if (reduced) {
       assert.equal(movedLead, 0, "reduced motion: обложка плывёт");
     } else {
