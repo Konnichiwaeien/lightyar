@@ -417,6 +417,147 @@
   }
 }
 
+/* ---------------- секция 5: финальный призыв ----------------------------
+
+   Третье поле страницы. Обложка стоит на кремовом, «Куда уходит взнос» на
+   тёплом кремовом, финал на янтаре: цвет меняется от секции к секции и к
+   концу доходит до полного акцента. Это часть грамматики, а не украшение.
+
+   Пустая миска выходит за верхнюю кромку и ложится на предыдущее поле. Это
+   последний переход через шов.
+
+   Секция заменила янтарную карточку «Просто помочь», которая стояла последней
+   в сетке сборов: карточка говорила ровно это же.
+------------------------------------------------------------------------ */
+
+.camp-call {
+  position: relative;
+  z-index: 1;
+  min-height: clamp(460px, 62svh, 720px);
+  padding: var(--c-gap) 0;
+  overflow-x: clip;
+  background: var(--c-amber);
+  color: var(--c-ink);
+}
+
+.camp-call__field {
+  position: absolute;
+  inset: 0;
+}
+
+/* Кремовый круг на янтаре: на цветном поле фигура обязана быть светлее его,
+   иначе она читается пятном грязи, а не формой. */
+.camp-call__disc {
+  position: absolute;
+  right: 6%;
+  bottom: -14%;
+  width: min(36%, 32rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(244, 241, 235, 0.55);
+}
+
+.camp-call__dots {
+  position: absolute;
+  top: 14%;
+  right: 34%;
+  width: min(20%, 17rem);
+  aspect-ratio: 1;
+  background-image: radial-gradient(circle, rgba(28, 28, 28, 0.26) 1.7px, transparent 1.8px);
+  background-size: 21px 21px;
+}
+
+/* Миска висит над верхней кромкой и заходит на поле предыдущей секции. */
+.camp-call__bowl {
+  position: absolute;
+  top: -9%;
+  right: 8%;
+  width: min(26%, 23rem);
+}
+
+.camp-call__bowl img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.camp-call__copy {
+  position: relative;
+  z-index: 1;
+}
+
+.camp-call .camp-kicker {
+  color: rgba(28, 28, 28, 0.62);
+}
+
+.camp-call__copy h2 {
+  max-width: 12ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  font-weight: 780;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+/* Слово вынуто светлым, а не на плашку: плашка уже занята на обложке, и вторая
+   на странице читалась бы приёмом, а не акцентом. */
+.camp-call__copy h2 em {
+  display: block;
+  color: var(--c-sheet);
+  font-family: var(--font-serif);
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.camp-call__lead {
+  max-width: 42ch;
+  margin: 1.2rem 0 1.8rem;
+  color: rgba(28, 28, 28, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* Селектор с родителем нарочно: у .camp-btn ширина в сто процентов, и по
+   одному классу она перебивала бы это правило по порядку в файле. */
+.camp-call .camp-call__cta {
+  width: auto;
+  border-color: var(--c-ink);
+  background: var(--c-ink);
+  color: var(--c-sheet);
+}
+
+.camp-call .camp-call__cta:hover {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+}
+
+@media (max-width: 860px) {
+  .camp-call__bowl {
+    top: -6%;
+    right: 4%;
+    width: 42%;
+  }
+
+  .camp-call__disc {
+    right: -14%;
+    bottom: -18%;
+    width: 62%;
+  }
+
+  .camp-call__dots {
+    top: auto;
+    right: auto;
+    bottom: 6%;
+    left: 4%;
+    width: 34%;
+  }
+}
+
 /* ---------------- фильтр и сортировка ---------------- */
 
 .camp-controls {
@@ -749,61 +890,6 @@
   color: #4c5038;
   font-size: 0.9rem;
   font-weight: 600;
-}
-
-/* Последняя карточка янтарная: она единственная без фотографии, и без
-   крупного знака читалась бы как карточка с незагрузившейся картинкой.
-   Тянется на всю строку: в колонку шириной с соседей она вставала одна
-   в новом ряду и выглядела забытой. */
-.camp-grid__own {
-  grid-column: 1 / -1;
-}
-
-.camp-card--own {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem clamp(1.5rem, 4vw, 3rem);
-  padding: clamp(1.75rem, 4vw, 2.5rem);
-  background: var(--c-amber);
-  color: var(--c-ink);
-}
-
-.camp-own-icon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: rgba(28, 28, 28, 0.09);
-}
-
-.camp-card--own b {
-  font-family: var(--font-serif);
-  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
-  font-weight: 600;
-}
-
-.camp-own-text {
-  display: grid;
-  flex: 1 1 24rem;
-  gap: 0.3rem;
-}
-
-.camp-card--own p {
-  margin: 0;
-  color: rgba(28, 28, 28, 0.78);
-  font-size: 0.97rem;
-  line-height: 1.55;
-}
-
-/* Кнопка на общей строке: растянутая во всю ширину она уезжала под текст
-   и ломала полосу на два этажа. */
-.camp-card--own .camp-btn {
-  flex: none;
-  width: auto;
-  margin-left: auto;
 }
 
 .camp-empty {

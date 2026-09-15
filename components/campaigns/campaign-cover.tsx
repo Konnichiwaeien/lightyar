@@ -2,11 +2,12 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useScroll } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns/summary";
 import { plural } from "@/lib/reports/shelter-scales";
+import { Drift } from "@/components/campaigns/collage-drift";
 import { useMotionPreference } from "@/components/reports/use-motion-preference";
 
 /**
@@ -110,39 +111,5 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
         </Link>
       </div>
     </section>
-  );
-}
-
-/**
- * Слой коллажа, который плывёт по прокрутке.
- *
- * Чем ближе предмет к читателю, тем дальше он уезжает: это единственное, что
- * отличает коллаж от наклейки. Смещение приходит в пикселях и своё у каждого
- * слоя, поэтому поле не едет целиком.
- *
- * Преобразование функцией, а не парой отрезков: от пары отрезков framer
- * отдаёт значение браузеру нативной шкалой прокрутки и для узких окон внутри
- * пути считает его неверно. Разобрано в campaign-route.tsx.
- */
-function Drift({
-  className,
-  distance,
-  progress,
-  still,
-  style,
-  children,
-}: {
-  className: string;
-  distance: number;
-  progress: ReturnType<typeof useScroll>["scrollYProgress"];
-  still: boolean;
-  style?: React.CSSProperties;
-  children?: React.ReactNode;
-}) {
-  const y = useTransform(progress, (value) => value * distance);
-  return (
-    <motion.div className={className} style={still ? style : { ...style, y }}>
-      {children}
-    </motion.div>
   );
 }

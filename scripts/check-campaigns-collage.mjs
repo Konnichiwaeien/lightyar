@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright-core";
 
 /**
- * Контракт на две коллажные секции страницы сборов: обложку и «Куда уходит
- * взнос».
+ * Контракт на три коллажные секции страницы сборов: обложку, «Куда уходит
+ * взнос» и финальный призыв.
  *
  * Проверяется не красота, а грамматика, которую подтвердил владелец: плоское
  * поле своего цвета у каждой секции, вырезки лежат поверх него, геометрические
@@ -76,15 +76,22 @@ try {
 
     const shape = await page.evaluate(() => {
       const paint = (selector) => getComputedStyle(document.querySelector(selector)).backgroundColor;
-      const cover = document.querySelector(".camp-cover").getBoundingClientRect();
-      const pets = [...document.querySelectorAll(".camp-cover__pet")].map((node) => {
-        const box = node.getBoundingClientRect();
-        return Math.round(box.bottom - cover.bottom);
-      });
+      /* Выход за кромку меряется по раскладке, а не по экранным коробкам:
+         слои коллажа сдвинуты трансформацией дрейфа, и в момент замера она
+         прибавляет к позиции до трёх десятков пикселей. По offsetTop дрейфа
+         не видно, а видно именно то, что задано в стилях. */
+      const coverField = document.querySelector(".camp-cover__field");
+      const pets = [...document.querySelectorAll(".camp-cover__pet")].map((node) =>
+        Math.round(node.offsetTop + node.offsetHeight - coverField.offsetHeight),
+      );
+      const bowl = document.querySelector(".camp-call__bowl");
       return {
         coverPaint: paint(".camp-cover"),
         routePaint: paint(".camp-route"),
+        callPaint: paint(".camp-call"),
         sheetPaint: paint(".camp"),
+        callBleed: -Math.round(bowl.offsetTop),
+        ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
         pets: document.querySelectorAll(".camp-cover__pet").length,
         discs: document.querySelectorAll(".camp-cover__disc, .camp-route__disc").length,
         dots: document.querySelectorAll(".camp-cover__dots, .camp-route__dots").length,
@@ -99,6 +106,14 @@ try {
        референсах цвет меняется от секции к секции. */
     assert.notEqual(shape.coverPaint, shape.routePaint, `${viewport.name}: поля секций одного цвета`);
     assert.notEqual(shape.coverPaint, shape.sheetPaint, `${viewport.name}: обложка не отличается от листа`);
+    assert.notEqual(shape.routePaint, shape.callPaint, `${viewport.name}: финал не отличается от предыдущего поля`);
+
+    // Миска висит над верхней кромкой финала и заходит на предыдущее поле.
+    assert.ok(shape.callBleed > 4, `${viewport.name}: миска не переходит через шов (${shape.callBleed}px)`);
+
+    /* Янтарная карточка «Просто помочь» снята: финальная секция говорит ровно
+       это же, и держать обе означало сказать одно дважды. */
+    assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
     assert.ok(shape.pets >= 2, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы две`);
     assert.ok(shape.discs >= 2, `${viewport.name}: кругов ${shape.discs}, по одному на секцию`);
@@ -109,7 +124,7 @@ try {
       `${viewport.name}: у нужды пропала сумма`,
     );
 
-    // Прямоугольных фотоблоков в сценах быть не должно: за них отклонены шесть
+    // Прямоугольных фотоблоков в сценах быть не должно: за них отклонены семь
     // предыдущих заходов.
     const slabs = await page.evaluate(
       () => document.querySelectorAll(".camp-cover__yard, .camp-cover__veil, .camp-route__strip").length,

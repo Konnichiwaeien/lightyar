@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useScroll } from "framer-motion";
 
 import type { RouteStation } from "@/lib/campaigns/summary";
+import { Drift } from "@/components/campaigns/collage-drift";
 import { useMotionPreference } from "@/components/reports/use-motion-preference";
 
 /**
@@ -96,38 +97,5 @@ export function CampaignRoute({
         })}
       </div>
     </section>
-  );
-}
-
-/**
- * Слой коллажа, который плывёт по прокрутке.
- *
- * Чем ближе предмет к читателю, тем дальше он уезжает. Смещение своё у каждого
- * слоя, поэтому поле не едет целиком и коллаж не превращается в картинку.
- *
- * Преобразование функцией, а не парой отрезков: от пары отрезков framer
- * отдаёт значение браузеру нативной шкалой прокрутки и для узких окон внутри
- * пути считает его неверно. Это стоило одного полного переписывания секции.
- */
-function Drift({
-  className,
-  distance,
-  progress,
-  still,
-  style,
-  children,
-}: {
-  className: string;
-  distance: number;
-  progress: ReturnType<typeof useScroll>["scrollYProgress"];
-  still: boolean;
-  style?: React.CSSProperties;
-  children?: React.ReactNode;
-}) {
-  const y = useTransform(progress, (value) => (value - 0.5) * distance);
-  return (
-    <motion.div className={className} style={still ? style : { ...style, y }}>
-      {children}
-    </motion.div>
   );
 }

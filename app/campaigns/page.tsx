@@ -2,13 +2,14 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, HandCoins } from "lucide-react";
+import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
 import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
 import { CampaignCover } from "@/components/campaigns/campaign-cover";
 import { CampaignRoute } from "@/components/campaigns/campaign-route";
+import { CampaignCall } from "@/components/campaigns/campaign-call";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
@@ -173,26 +174,6 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                 );
               })}
 
-              {status === "active" ? (
-                <li className="camp-grid__own">
-                  <article className="camp-card camp-card--own" style={{ "--i": list.length } as React.CSSProperties}>
-                    <span className="camp-own-icon" aria-hidden="true">
-                      <HandCoins size={38} />
-                    </span>
-                    <span className="camp-own-text">
-                      <b>Просто помочь</b>
-                      <p>
-                        Не выбрали сбор? Взнос без цели идёт на то, что нужнее прямо сейчас: корм, лекарства, оплату
-                        клиники.
-                      </p>
-                    </span>
-                    <Link className="camp-btn camp-btn--quiet" href="/#donate">
-                      Сделать взнос
-                      <ArrowUpRight size={16} aria-hidden="true" />
-                    </Link>
-                  </article>
-                </li>
-              ) : null}
             </ul>
           ) : (
             <p className="camp-empty">
@@ -216,6 +197,11 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             unit={PLEDGE}
           />
         ) : null}
+
+        {/* Финальный призыв: секция 5 плана. Заменила янтарную карточку
+            «Просто помочь», которая стояла последней в сетке и говорила
+            ровно это же. */}
+        <CampaignCall />
       </main>
     </div>
   );
