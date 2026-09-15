@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/seo/site";
 import { Golos_Text, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -22,7 +23,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lightyar.shdk.tech"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Светлый — Луч надежды для животных",
     template: "%s | Светлый",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Светлый — Луч надежды для животных",
     description: "АНБО «Светлый» — благотворительная организация помощи бездомным животным в Ярославле. Возьмите питомца из приюта или помогите кормом.",
-    url: "https://lightyar.shdk.tech",
+    url: SITE_URL,
     siteName: "Светлый",
     locale: "ru_RU",
     type: "website",

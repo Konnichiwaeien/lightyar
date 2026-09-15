@@ -122,7 +122,6 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
 
   return (
     <div className="camp">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd) }} />
       <InnerHeader />
       <main id="main-content">
         {/* Обложка-коллаж: секция 1 плана. Разбор в самом компоненте.
@@ -296,6 +295,14 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             «Просто помочь», которая стояла последней в сетке и говорила
             ровно это же. */}
         <CampaignCall />
+
+        {/* Разметка для поисковика стоит в конце содержимого: React 19
+            переносит теги головы сам, а этот скрипт должен остаться в теле. */}
+        <script
+          id="camp-list-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd) }}
+        />
       </main>
 
       {/* Панель помощи в диалоге: кнопки «Помочь» на карточках и «Сделать
