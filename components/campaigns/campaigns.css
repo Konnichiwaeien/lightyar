@@ -203,6 +203,7 @@
    она читалась заплаткой: квадрат точек посреди поля не держит ничего. По
    краям гуще, к середине сходит на нет, иначе спорит с типографикой. */
 .camp-cover::before,
+.fund-cover::before,
 .camp-call::before {
   position: absolute;
   z-index: 0;
@@ -490,6 +491,11 @@
 ------------------------------------------------------------------------- */
 
 .camp-controls {
+  /* Обе пилюли ряда одной высоты. Вкладки набирали 52 пикселя из своей
+     подкладки, а список сортировки приходил из каталога питомцев со своей,
+     38 с половиной, и ряд читался сбитым. Высота задана здесь одна на двоих. */
+  --camp-control-h: 52px;
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -500,6 +506,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  min-height: var(--camp-control-h);
   padding: 4px;
   border: 1px solid rgba(28, 28, 28, 0.06);
   border-radius: 999px;
@@ -566,6 +573,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Кнопка списка сортировки приходит общей из каталога питомцев: её высота
+   задана отступами. Здесь она подтягивается до высоты вкладок, а внутренности
+   остаются на месте — правило ловит только сам переключатель, не пункты
+   раскрытого списка. */
+.camp-sort > div > button {
+  min-height: var(--camp-control-h);
 }
 
 /* На телефоне две вкладки не встают в ряд внутри пилюли и вторая падала на
@@ -838,9 +853,13 @@
   white-space: nowrap;
 }
 
+/* Тег набран капителью в десять пикселей, и это мелкий текст: ему нужно
+   4.5 к одному. Общий янтарный --c-amber-text на подложке бейджа давал 4.15
+   на листе и 3.7 на кремовом поле сбора, поэтому здесь своя краска потемнее:
+   4.97 на самом тёмном из полей. */
 .camp-badge--tag {
   background: rgba(168, 84, 6, 0.1);
-  color: var(--c-amber-text);
+  color: #8a4503;
 }
 
 .camp-badge--pet {
@@ -932,7 +951,8 @@
    рывок с остановкой. Теперь едет фон, градиент периодический (два блика
    на период), а сдвиг равен ровно периоду, поэтому конец цикла совпадает с
    началом и шва не видно. */
-.camp-item[data-status="active"] .camp-item__bar i::after {
+.camp-item[data-status="active"] .camp-item__bar i::after,
+.camp-item__bar[data-status="active"] i::after {
   position: absolute;
   inset: 0;
   background-image: linear-gradient(
@@ -962,7 +982,8 @@
   }
 }
 
-.camp-item[data-status="closed"] .camp-item__bar i {
+.camp-item[data-status="closed"] .camp-item__bar i,
+.camp-item__bar[data-status="closed"] i {
   background: var(--c-moss);
 }
 
@@ -1627,6 +1648,7 @@
   .camp-item,
   .camp-item__shot,
   .camp-item__bar i,
+  .fund-shots__stack,
   .camp-call__disc,
   .camp-call__unit img,
   .camp-call__copy > * {
@@ -1639,6 +1661,14 @@
 
   .camp-item__bar i {
     transform: none;
+  }
+
+  /* Блик по набранной части это непрерывное движение, и при «меньше
+     движения» он останавливается совсем. Гасился только рост шкалы, а блик
+     продолжал бегать на обеих страницах. */
+  .camp-item[data-status="active"] .camp-item__bar i::after,
+  .camp-item__bar[data-status="active"] i::after {
+    animation: none;
   }
 
   .camp-item:hover .camp-item__shot,
@@ -1878,20 +1908,29 @@
   grid-row: auto;
 }
 
-/* На узком экране панель главной раскладывает ступени каруселью с боковой
-   прокруткой. В листе она не нужна и вредна: лист и так прокручивается
-   вертикально, а карусель отнимает у ступеней ширину и режет подписи.
-   Ступени идут столбиком на любой ширине. */
+/* Ступени идут карточками в две колонки, как в форме на главной.
+
+   Панель главной на узком экране раскладывает их каруселью с боковой
+   прокруткой. В окне она не нужна и вредна: окно и так прокручивается
+   вертикально, а карусель отнимает у карточек ширину и режет подписи. */
 .camp-donate__body .donation-tier-picker__list {
   grid-auto-flow: row;
   grid-auto-columns: auto;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
   margin-inline: 0;
   padding: 0;
   overflow-x: visible;
   scroll-snap-type: none;
   touch-action: auto;
+}
+
+/* На телефоне двух колонок не выходит: на 390 пикселях карточка получается по
+   160, и сумма ломается пополам. Там они идут друг под другом. */
+@media (max-width: 560px) {
+  .camp-donate__body .donation-tier-picker__list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .camp-donate__body .donation-tier {
@@ -1977,8 +2016,569 @@
   line-height: 1.55;
 }
 
-.camp-blank .camp-blank__cta {
+.camp-blank .camp-btn {
   width: auto;
   margin-top: 0.8rem;
 }
 
+
+/* ======================= страница одного сбора ===========================
+
+   Тот же язык, что и в каталоге: плоские цветные поля одно под другим, кадр
+   это круг с плоской фигурой за ним, прямоугольных фотоблоков нет.
+   Префикс .fund- отделяет правила страницы сбора от каталога .camp-item,
+   общие детали (бейджи, кнопки, шкала, пустая карточка) берутся как есть.
+
+   Поля идут по тому же ряду цветов, что и каталог: кремовое, лист, тёплое
+   кремовое, лист, янтарь. Цвет меняется от секции к секции, и к концу
+   страницы доходит до полного акцента.
+======================================================================== */
+
+.fund-cover {
+  position: relative;
+  padding: clamp(5.5rem, 12vh, 7rem) 0 var(--c-gap);
+  overflow-x: clip;
+  background: #ece3d2;
+}
+
+.fund-cover__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-areas:
+    "copy shots"
+    "deal shots";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 2.5rem) clamp(2rem, 5vw, 4.5rem);
+}
+
+.fund-cover__copy {
+  grid-area: copy;
+  align-self: end;
+}
+
+.fund-cover__deal {
+  grid-area: deal;
+  display: grid;
+  align-self: start;
+  gap: 1.15rem;
+  max-width: 34rem;
+}
+
+/* Хлебные крошки тихие: это служебная строка, а не начало чтения. */
+.fund-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.4rem;
+  color: var(--c-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fund-crumbs a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+.fund-crumbs a:hover,
+.fund-crumbs a:focus-visible {
+  color: var(--c-amber-text);
+}
+
+.fund-cover__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 1.1rem;
+}
+
+.camp-badge--term {
+  background: rgba(28, 28, 28, 0.07);
+  color: #4a443b;
+}
+
+/* Срок на исходе: бейдж переходит на полный янтарь. Красного в наборе нет, и
+   заводить его ради одного бейджа значит завести вторую акцентную краску. */
+.camp-badge--urgent {
+  background: var(--c-amber);
+  color: var(--c-ink);
+}
+
+.camp-badge--done {
+  background: rgba(111, 115, 85, 0.18);
+  color: #4c5038;
+}
+
+.fund-cover__title {
+  margin: 0 0 1rem;
+  font-family: var(--font-sans);
+  font-size: clamp(2.1rem, 4.4vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.fund-cover__lead {
+  max-width: 34rem;
+  margin: 0;
+  color: #574f45;
+  font-size: clamp(1rem, 1.5vw, 1.12rem);
+  line-height: 1.62;
+}
+
+/* Шкала и суммы: то же, что на карточке каталога, но крупнее — здесь это
+   главное число страницы, а не строка в списке. */
+.fund-money {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.fund-money__bar {
+  height: 14px;
+}
+
+.fund-money__sums {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fund-money__sums b {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.fund-money__sums span {
+  color: var(--c-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.fund-cover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.2rem;
+}
+
+.fund-cover__actions .camp-btn {
+  width: auto;
+  min-width: 11rem;
+}
+
+.fund-closed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 46px;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(111, 115, 85, 0.16);
+  color: #454832;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.fund-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fund-dates span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.fund-dates svg {
+  color: var(--c-amber-text);
+}
+
+/* ---------------- поделиться --------------------------------------------- */
+
+.fund-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.fund-share__label {
+  margin-right: 0.2rem;
+  color: var(--c-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fund-share__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgba(28, 28, 28, 0.14);
+  border-radius: 999px;
+  background: var(--c-card);
+  color: #4a443b;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    color 0.25s,
+    transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.fund-share__btn:hover {
+  border-color: var(--c-amber-deep);
+  color: var(--c-amber-text);
+  transform: translateY(-2px);
+}
+
+.fund-share__btn svg {
+  color: var(--c-amber-text);
+}
+
+/* ---------------- кадры сбора --------------------------------------------
+
+   Кадр это круг, за ним плоский круг — та же пара, что в каталоге и в финале.
+   Остальные кадры лежат в том же круге стопкой и проявляются по нажатию на
+   малый круг ленты.
+------------------------------------------------------------------------- */
+
+.fund-shots {
+  grid-area: shots;
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.9rem, 2vw, 1.3rem);
+}
+
+.fund-shots__frame {
+  position: relative;
+  width: min(100%, 31rem);
+  aspect-ratio: 1;
+}
+
+/* Круг выглядывает из-за кадра, а не лежит серпом сбоку: его середина
+   заходит под кромку кадра, наружу выходит меньше трети. */
+.fund-shots__disc {
+  position: absolute;
+  right: 1%;
+  bottom: 1%;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c-amber);
+}
+
+.fund-shots__stack {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--c-paper);
+  /* Круг растёт, пока входит в экран, как кадры каталога. */
+  animation: camp-shot-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 80%;
+}
+
+.fund-shots__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Морда обычно в верхней трети кадра, и круг режет по краям сильнее
+     прямоугольника: центр тяжести кадра сдвинут вверх. */
+  object-position: 50% 35%;
+  opacity: 0;
+  transition: opacity 0.36s ease;
+}
+
+.fund-shots__img[data-shown="true"] {
+  opacity: 1;
+}
+
+/* У закрытого сбора кадр приглушён, как в каталоге: дело сделано, и цвет на
+   нём уже не зовёт. */
+.fund-cover[data-status="closed"] .fund-shots__img,
+.fund-cover[data-status="closed"] .fund-shots__pick img {
+  filter: grayscale(0.55);
+}
+
+.fund-shots__rail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.fund-shots__pick {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--c-paper);
+  cursor: pointer;
+  transition:
+    border-color 0.25s,
+    transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.fund-shots__pick img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+.fund-shots__pick:hover {
+  transform: translateY(-3px);
+}
+
+.fund-shots__pick[aria-current="true"] {
+  border-color: var(--c-amber);
+}
+
+/* ---------------- о сборе ------------------------------------------------ */
+
+.fund-title {
+  margin: 0 0 var(--c-gap-sm);
+  font-family: var(--font-sans);
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.fund-title em {
+  color: var(--c-amber-text);
+  font-family: var(--font-serif);
+  font-size: 0.94em;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.fund-story {
+  padding: var(--c-gap) 0;
+  background: var(--c-sheet);
+}
+
+.fund-story__text {
+  display: grid;
+  gap: 1.15rem;
+  /* Строка держится в пределах семидесяти знаков: длиннее глаз теряет начало
+     следующей. */
+  max-width: 38rem;
+  color: #39342c;
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.fund-story__text p {
+  margin: 0;
+}
+
+/* Первый абзац крупнее: он и есть вступление, отдельного лида у текста из CMS
+   нет. */
+.fund-story__text p:first-child {
+  color: var(--c-ink);
+  font-size: 1.16rem;
+  line-height: 1.6;
+}
+
+/* ---------------- кто помог ---------------------------------------------- */
+
+.fund-backers {
+  padding: var(--c-gap) 0;
+  background: #f3e6cd;
+}
+
+.fund-backers__list {
+  display: grid;
+  max-width: 46rem;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fund-backers__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.2rem 1rem;
+  padding: 0.95rem 0;
+  border-top: 1px solid rgba(28, 28, 28, 0.1);
+}
+
+.fund-backers__list li:last-child {
+  border-bottom: 1px solid rgba(28, 28, 28, 0.1);
+}
+
+.fund-backer__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.fund-backer__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--c-amber-text);
+}
+
+.fund-backer__when {
+  grid-column: 1;
+  padding-left: calc(34px + 0.6rem);
+  color: var(--c-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.fund-backers__list b {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.fund-backers__more {
+  margin: 1.1rem 0 0;
+  color: var(--c-muted);
+  font-size: 0.86rem;
+}
+
+.fund-backers .camp-blank {
+  background: var(--c-card);
+}
+
+/* ---------------- другие сборы ------------------------------------------- */
+
+.fund-more {
+  padding: var(--c-gap) 0;
+  background: var(--c-sheet);
+}
+
+.fund-more .camp-list__head {
+  align-items: center;
+}
+
+.fund-more__all {
+  width: auto;
+}
+
+/* ---------------- кнопка, догоняющая на телефоне ------------------------- */
+
+.fund-dock {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 40;
+  display: none;
+}
+
+.fund-dock .camp-btn {
+  box-shadow: 0 10px 28px rgba(73, 47, 19, 0.28);
+}
+
+@media (max-width: 980px) {
+  .fund-cover__inner {
+    grid-template-areas:
+      "copy"
+      "shots"
+      "deal";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fund-cover__copy,
+  .fund-cover__deal {
+    align-self: auto;
+    max-width: 38rem;
+  }
+
+  .fund-shots__frame {
+    width: min(100%, 24rem);
+  }
+}
+
+@media (max-width: 860px) {
+  .fund-dock {
+    display: block;
+  }
+
+  .fund-cover__actions .camp-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .fund-backers__list li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fund-backers__list b {
+    grid-column: 1;
+    grid-row: auto;
+    padding-left: calc(34px + 0.6rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fund-shots__img,
+  .fund-shots__pick,
+  .fund-share__btn {
+    transition: none;
+  }
+}
+
+/* Живых кадров у сбора может не оказаться: записи в CMS переживают свои
+   файлы. Тогда колонка под круг не нужна, и поле идёт одной. */
+.fund-cover__inner:not(:has(.fund-shots)) {
+  grid-template-areas:
+    "copy"
+    "deal";
+  grid-template-columns: minmax(0, 1fr);
+}

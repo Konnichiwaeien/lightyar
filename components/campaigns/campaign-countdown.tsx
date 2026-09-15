@@ -1,74 +1,45 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
+import { CalendarClock, Flame } from "lucide-react";
+
+import { plural } from "@/lib/reports/shelter-scales";
 
 /**
- * Russian pluralization for "день" (day).
- * Rules: 1 → день, 2-4 → дня, 5-20 → дней, 21 → день, 22-24 → дня, etc.
+ * Сколько осталось до срока сбора — бейдж в ряду с тегом и подопечным.
+ *
+ * Считается в браузере, а не на сервере: страница отдаётся из кэша на минуту
+ * и живёт в нём до следующей сборки, а «осталось 4 дня» в такой разметке
+ * протухает молча. До счёта бейджа нет вовсе, поэтому разметка сервера и
+ * первый кадр браузера совпадают.
+ *
+ * Пересчёта по часам нет: число дней меняется раз в сутки, а таймер на минуту
+ * будил бы вкладку впустую.
+ *
+ * Значок здесь рисованный. На его месте стояли песочные часы эмодзи: эмодзи
+ * приходит из системного шрифта, у каждой платформы он свой, и рядом с
+ * набором значков страницы читался чужим.
  */
-function pluralizeDays(n: number): string {
-  const abs = Math.abs(n)
-  const mod10 = abs % 10
-  const mod100 = abs % 100
 
-  if (mod100 >= 11 && mod100 <= 19) return 'ДНЕЙ'
-  if (mod10 === 1) return 'ДЕНЬ'
-  if (mod10 >= 2 && mod10 <= 4) return 'ДНЯ'
-  return 'ДНЕЙ'
-}
-
-interface CampaignCountdownProps {
-  deadline: string | null
-}
-
-export function CampaignCountdown({ deadline }: CampaignCountdownProps) {
-  const [daysRemaining, setDaysRemaining] = useState<number | null>(null)
+export function CampaignCountdown({ deadline }: { deadline: string | null }) {
+  const [days, setDays] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!deadline) return
+    if (!deadline) return;
+    const left = new Date(deadline).getTime() - Date.now();
+    if (left <= 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDays(Math.ceil(left / 86_400_000));
+  }, [deadline]);
 
-    function calculate() {
-      const now = new Date()
-      const end = new Date(deadline!)
-      const diffMs = end.getTime() - now.getTime()
+  if (days === null) return null;
 
-      if (diffMs <= 0) {
-        setDaysRemaining(null)
-        return
-      }
-
-      setDaysRemaining(Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    }
-
-    calculate()
-
-    const interval = setInterval(calculate, 60_000)
-    return () => clearInterval(interval)
-  }, [deadline])
-
-  if (daysRemaining === null) return null
-
-  const isUrgent = daysRemaining <= 3
-  const label =
-    daysRemaining <= 1
-      ? 'ПОСЛЕДНИЙ ДЕНЬ!'
-      : `ОСТАЛОСЬ ${daysRemaining} ${pluralizeDays(daysRemaining)}`
+  const urgent = days <= 3;
 
   return (
-    <span
-      className={`
-        inline-flex items-center gap-1.5
-        rounded-full px-3.5 py-2
-        text-[10px] md:text-xs font-extrabold tracking-widest uppercase
-        border
-        ${
-          isUrgent
-            ? 'bg-red-50 text-red-600 border-red-100/20'
-            : 'bg-[#fdf0e9] text-[#d97706] border-[#d97706]/10'
-        }
-      `}
-    >
-      ⏳ {label}
+    <span className={`camp-badge ${urgent ? "camp-badge--urgent" : "camp-badge--term"}`}>
+      {urgent ? <Flame aria-hidden="true" size={12} /> : <CalendarClock aria-hidden="true" size={12} />}
+      {days <= 1 ? "Последний день" : `Осталось ${days} ${plural(days, "день", "дня", "дней")}`}
     </span>
-  )
+  );
 }

@@ -60,11 +60,23 @@ test("campaign donate dialog keeps its scroll, its motion and the shared donatio
   assert.ok(tierList, "в окне нет переопределения списка ступеней");
   for (const rule of [
     /grid-auto-flow:\s*row/,
-    /grid-template-columns:\s*1fr/,
+    // Карточками в две колонки, как в форме на главной.
+    /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
     /overflow-x:\s*visible/,
     /scroll-snap-type:\s*none/,
   ]) {
     assert.match(tierList[1], rule);
   }
+  // На телефоне колонка остаётся одна: в половину ширины сумма не влезает.
+  assert.match(
+    css,
+    /@media \(max-width: 560px\)\s*\{\s*\.camp-donate__body \.donation-tier-picker__list\s*\{[\s\S]*?grid-template-columns:\s*1fr/,
+  );
   assert.match(css, /\.camp-donate__body \.donation-fields__person\s*\{[\s\S]*?grid-template-columns:\s*1fr/);
+
+  /* Ряд управления каталога: вкладки и список сортировки одной высоты. Список
+     общий с каталогом питомцев и приносит свою, на 13 пикселей меньше. */
+  assert.match(css, /--camp-control-h:\s*52px/);
+  assert.match(css, /\.camp-tabs\s*\{[\s\S]*?min-height:\s*var\(--camp-control-h\)/);
+  assert.match(css, /\.camp-sort > div > button\s*\{\s*min-height:\s*var\(--camp-control-h\)/);
 });

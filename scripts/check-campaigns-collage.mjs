@@ -335,6 +335,23 @@ try {
     assert.ok(shape.cards > 0, `${viewport.name}: каталог пуст`);
     assert.equal(shape.shots, shape.cards, `${viewport.name}: у сбора нет кадра`);
 
+    /* Вкладки и список сортировки стоят в одну линию, и высота у них общая:
+       список приходит из каталога питомцев со своей подкладкой, и ряд читался
+       сбитым. На самом узком экране пилюля вкладок переносит вторую вкладку на
+       новую строку, и равнять там нечего. */
+    const controls = await page.evaluate(() => {
+      const height = (sel) => Math.round(document.querySelector(sel).getBoundingClientRect().height);
+      return { tabs: height(".camp-tabs"), sort: height(".camp-sort > div > button") };
+    });
+    if (controls.tabs <= 60) {
+      assert.equal(
+        controls.sort,
+        controls.tabs,
+        `${viewport.name}: вкладки ${controls.tabs}px, сортировка ${controls.sort}px`,
+      );
+    }
+
+
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
@@ -396,7 +413,7 @@ try {
 
     const line = row.map((point) => `${Math.round(point.stop * 100)}%:${point.xs.join("/")} (на месте ${point.home})`).join("  ");
     console.log(
-      `${viewport.name.padEnd(15)} вырезок ${shape.pets}, вещей ${shape.items}, мышь ${mouse}, зазор до фильтра ${shape.pawsToControls}px, подвал на поле ${shape.footerOverlap}px`,
+      `${viewport.name.padEnd(15)} вырезок ${shape.pets}, вещей ${shape.items}, мышь ${mouse}, зазор до фильтра ${shape.pawsToControls}px, ряд ${controls.tabs}/${controls.sort}px, подвал на поле ${shape.footerOverlap}px`,
     );
     console.log(`${" ".repeat(16)}${line}`);
 
@@ -460,24 +477,32 @@ try {
     const free = await page.$eval(".camp-form__intent", (node) => node.className.includes("--free"));
     assert.ok(free, `${viewport.name}: из финала окно открылось с назначением`);
 
-    /* Ступени и поля в окне те же, что на главной, и стоят столбцом: в широкой
-       секции список ступеней это лента со снапом, и в окне она оставалась
-       лентой, которую надо тащить вбок. */
+    /* Ступени и поля в окне те же, что на главной, и разложены так же:
+       карточками в две колонки. В широкой секции на узком экране это лента со
+       снапом, и в окне она оставалась лентой, которую надо тащить вбок. */
     const form = await page.evaluate(() => {
       const panel = document.querySelector(".camp-donate__body");
       const list = panel.querySelector(".donation-tier-picker__list");
       const tiers = [...panel.querySelectorAll(".donation-tier")];
+      const rows = new Map();
+      for (const tier of tiers) rows.set(tier.offsetTop, (rows.get(tier.offsetTop) || 0) + 1);
       return {
         tiers: tiers.length,
         fields: Boolean(panel.querySelector(".donation-fields")),
         sideways: Math.round(list.scrollWidth - list.clientWidth),
-        narrow: tiers.filter((tier) => tier.offsetWidth < list.clientWidth - 8).length,
+        columns: getComputedStyle(list).gridTemplateColumns.split(" ").length,
+        perRow: [...rows.values()],
       };
     });
+    const columns = viewport.width <= 560 ? 1 : 2;
     assert.ok(form.tiers >= 5, `${viewport.name}: ступени с главной не приехали (${form.tiers})`);
     assert.ok(form.fields, `${viewport.name}: полей с главной в окне нет`);
     assert.equal(form.sideways, 0, `${viewport.name}: ступени остались лентой (${form.sideways}px вбок)`);
-    assert.equal(form.narrow, 0, `${viewport.name}: ${form.narrow} ступеней уже колонки`);
+    assert.equal(form.columns, columns, `${viewport.name}: ступени в ${form.columns} колонки вместо ${columns}`);
+    assert.ok(
+      form.perRow.slice(0, -1).every((row) => row === columns),
+      `${viewport.name}: ступени легли рядами ${form.perRow.join("/")} вместо по ${columns}`,
+    );
 
     /* Прокрутка внутри окна проверяется колесом, а не присвоением scrollTop:
        присвоение прошло бы и с поломкой, из-за которой окно не прокручивалось
@@ -494,7 +519,7 @@ try {
     await page.locator(".camp-donate").waitFor({ state: "detached", timeout: 5_000 }).catch(() => {});
     assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 0, `${viewport.name}: окно не закрылось крестиком`);
     console.log(
-      `${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает ${sheet ? "лист" : "окно"} со сбором «${intentTitle.slice(0, 24)}…», финал открывает его без назначения, ступеней ${form.tiers} в столбец, колесо прокручивает на ${wheeled}px`,
+      `${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает ${sheet ? "лист" : "окно"} со сбором «${intentTitle.slice(0, 24)}…», финал открывает его без назначения, ступеней ${form.tiers} по ${columns} в ряд, колесо прокручивает на ${wheeled}px`,
     );
 
     // Финал: миска падает, пока секция входит в экран. Внизу экрана её ещё

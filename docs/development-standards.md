@@ -120,8 +120,7 @@ lightyar/
 
 `components/layout/menu-overlay.tsx`, `components/wishlist/gift-order-modal.tsx`,
 `components/donations/donation-feed.tsx`,
-`components/campaigns/campaign-donate-dialog.tsx`,
-`components/campaigns/campaign-progress-card.tsx`.
+`components/campaigns/campaign-donate-dialog.tsx`.
 
 ### Как проверить
 

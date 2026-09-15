@@ -5,16 +5,16 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("donation experience uses semantic controls and has no fake payment", async () => {
-  const [payment, experience, picker, fields, feed, campaignWidget, css] = await Promise.all([
+  const [payment, experience, picker, fields, feed, campaignForm, css] = await Promise.all([
     read("../sections/payment-section.tsx"),
     read("./donation-experience.tsx"),
     read("./donation-tier-picker.tsx"),
     read("./donation-fields.tsx"),
     read("./donation-feed.tsx"),
-    read("../campaigns/campaign-interactive-widget.tsx"),
+    read("../campaigns/campaign-donate-form.tsx"),
     read("./donation-experience.css"),
   ]);
-  const allDonationSource = [payment, experience, picker, fields, feed, campaignWidget].join("\n");
+  const allDonationSource = [payment, experience, picker, fields, feed, campaignForm].join("\n");
 
   assert.doesNotMatch(allDonationSource, /alert\s*\(/);
   assert.doesNotMatch(allDonationSource, /setTimeout\s*\(/);

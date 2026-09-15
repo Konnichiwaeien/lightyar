@@ -1,52 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart } from "lucide-react";
 
-export function CampaignMobileCta() {
-  const [visible, setVisible] = useState(false);
+import { preloadDonatePanel, requestDonationIntent } from "@/lib/donations/donation-intent";
+
+/**
+ * Кнопка помощи, которая догоняет читателя на телефоне.
+ *
+ * Показывается, когда кнопка из обложки ушла с экрана, и прячется, когда та
+ * вернулась: раньше здесь висел обработчик прокрутки с порогом в шестьсот
+ * пикселей, и на длинной странице кнопка успевала появиться поверх такой же
+ * кнопки обложки. Наблюдатель пересечения считает то же самое без работы на
+ * каждый кадр прокрутки.
+ *
+ * Нажатие открывает то же окно помощи, что и кнопки на карточках, с
+ * подставленным сбором. Прежняя версия просто прокручивала к форме на
+ * странице; формы на странице больше нет, и это к лучшему: она была второй
+ * копией той, что в окне.
+ */
+
+export function CampaignMobileCta({ anchor, id, title }: { anchor: string; id: string; title: string }) {
+  const [shown, setShown] = useState(false);
+  const still = useReducedMotion();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setVisible(window.scrollY > 600);
+    const target = document.getElementById(anchor);
+    if (!target) return;
+
+    /* Условие одно: кнопка обложки ушла вверх за край экрана. Не «не видна»:
+       в начале страницы она ещё ниже экрана, и подсказка всплывала бы над
+       такой же кнопкой, до которой читатель не успел долистать.
+
+       Считается по прокрутке, а не наблюдателем пересечения: наблюдатель
+       сообщает о смене состояния, и прыжок через всю обложку (конец страницы
+       по клавише, переход по якорю) он проходит молча — вход и выход
+       случаются в одном кадре, состояние «не пересекается» не меняется, и
+       кнопка не появляется вовсе. Замер снимается раз в кадр, пока идёт
+       прокрутка. */
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setShown(target.getBoundingClientRect().bottom < 0);
+    };
+    const queue = () => {
+      if (!frame) frame = window.requestAnimationFrame(measure);
     };
 
-    // Check initial position
-    handleScroll();
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleClick = () => {
-    document
-      .getElementById("donation-form")
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
+    measure();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [anchor]);
 
   return (
-    <div className="lg:hidden">
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-6 left-4 right-4 z-40"
+    <AnimatePresence>
+      {shown ? (
+        <motion.div
+          animate={{ y: 0, opacity: 1 }}
+          className="fund-dock"
+          exit={{ y: 90, opacity: 0 }}
+          initial={{ y: 90, opacity: 0 }}
+          transition={still ? { duration: 0.2 } : { type: "spring", stiffness: 320, damping: 32 }}
+        >
+          <button
+            className="camp-btn"
+            onClick={() => requestDonationIntent({ kind: "campaign", id, title, amount: 500 })}
+            onFocus={preloadDonatePanel}
+            onMouseEnter={preloadDonatePanel}
+            type="button"
           >
-            <button
-              type="button"
-              onClick={handleClick}
-              className="w-full flex items-center justify-center gap-2.5 bg-[#f59e0b] text-white rounded-2xl py-4 font-serif font-black uppercase tracking-widest text-sm shadow-[0_10px_40px_rgba(245,158,11,0.4)] cursor-pointer transition-all duration-200 hover:bg-[#d97706] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-hidden"
-            >
-              <Heart size={18} strokeWidth={2.5} fill="currentColor" />
-              <span>Поддержать сбор</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <Heart aria-hidden="true" size={18} />
+            Помочь сбору
+          </button>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
