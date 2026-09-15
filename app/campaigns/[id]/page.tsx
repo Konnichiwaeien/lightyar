@@ -1,5 +1,6 @@
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
+import { siteUrl } from "@/lib/seo/site";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Resolve OG image
-  let ogImage = "https://svetly.org/og-default.jpg";
+  let ogImage = siteUrl("/og-image.jpg");
   if (campaign.images && campaign.images.length > 0) {
     ogImage = campaignsService.resolveMediaUrl(campaign.images[0].url);
   }
@@ -183,8 +184,8 @@ export default async function CampaignDetailsPage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Главная", "item": "https://svetly.org/" },
-      { "@type": "ListItem", "position": 2, "name": "Сборы", "item": "https://svetly.org/campaigns" },
+      { "@type": "ListItem", "position": 1, "name": "Главная", "item": siteUrl("/") },
+      { "@type": "ListItem", "position": 2, "name": "Сборы", "item": siteUrl("/campaigns") },
       { "@type": "ListItem", "position": 3, "name": campaign.title },
     ]
   };

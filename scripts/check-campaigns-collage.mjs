@@ -164,12 +164,17 @@ try {
       const call = document.querySelector(".camp-call");
       const footer = document.querySelector("footer");
       const bowl = document.querySelector(".camp-call__unit");
+      /* Вылет группы финала за верхнюю кромку: меряем по экранным коробкам, а
+         не по offsetTop. Группа центрируется по высоте поля через translate, и
+         в раскладке её верх стоит ниже кромки, хотя на экране она выше неё. */
+      const callTop = call.getBoundingClientRect().top;
+      const unitTop = bowl.getBoundingClientRect().top;
       return {
         coverPaint: paint(".camp-cover"),
         routePaint: paint(".camp-route"),
         callPaint: paint(".camp-call"),
         sheetPaint: paint(".camp"),
-        callBleed: -Math.round(bowl.offsetTop),
+        callBleed: Math.round(callTop - unitTop),
         ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
         pets: shown.length,
         shapeless,

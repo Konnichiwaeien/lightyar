@@ -16,19 +16,22 @@ export interface CampaignShot {
   borrowed: boolean;
 }
 
-/** Запас кадров приюта: берём один раз на отрисовку страницы, а не на карточку. */
+/**
+ * Запас кадров приюта: берём один раз на отрисовку страницы, а не на карточку.
+ *
+ * Кандидаты проверяются пачкой, а не по одному. Раньше здесь стоял цикл с
+ * ожиданием внутри: каждый следующий запрос к хранилищу ждал предыдущего, и на
+ * четыре недостающих кадра уходило четыре round trip подряд. Берём с запасом
+ * втрое, проверяем разом и оставляем первые живые в исходном порядке.
+ */
 async function shelterShots(limit: number): Promise<string[]> {
   if (limit <= 0) return [];
   try {
     const pets = await petStatsService.getCensusPets();
-    const covers = pets.flatMap((pet) => (pet.cover ? [pet.cover] : []));
-    const alive: string[] = [];
-    for (const cover of covers) {
-      if (alive.length >= limit) break;
-      const found = await firstAlive([cover], { strict: true });
-      if (found) alive.push(found);
-    }
-    return alive;
+    const covers = pets.flatMap((pet) => (pet.cover ? [pet.cover] : [])).slice(0, limit * 3);
+    if (covers.length === 0) return [];
+    const checks = await Promise.all(covers.map((cover) => firstAlive([cover], { strict: true })));
+    return checks.filter((src): src is string => Boolean(src)).slice(0, limit);
   } catch {
     return [];
   }

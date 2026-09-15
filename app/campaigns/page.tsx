@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import ReactDOM from "react-dom";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,6 +21,7 @@ import { needArt } from "@/lib/campaigns/collage";
 import { getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 import { plural } from "@/lib/reports/shelter-scales";
+import { siteUrl } from "@/lib/seo/site";
 import "@/components/campaigns/campaigns.css";
 
 export const metadata: Metadata = {
@@ -49,7 +51,18 @@ const SORTS: Record<string, string> = {
   collected_asc: "current:asc",
 };
 
+/* Вырезки обложки: самая крупная из них и есть LCP страницы. Обложка
+   клиентская, её картинки уходят в загрузку после гидратации, и замер давал
+   2,3 секунды. Предзагрузка ставит их в очередь сразу с разметкой. */
+const COVER_ART = [
+  "/campaigns/people/care.webp",
+  "/pets/cutout-kapral.webp",
+  "/campaigns/people/walk.webp",
+];
+
 export default async function CampaignsPage({ searchParams }: PageProps) {
+  for (const src of COVER_ART) ReactDOM.preload(src, { as: "image", fetchPriority: "high" });
+
   const resolved = await searchParams;
   const status = resolved.status === "closed" ? "closed" : "active";
   const sort = typeof resolved.sort === "string" ? resolved.sort : "date_desc";
@@ -91,8 +104,25 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
   const counts = { active: summary?.funds ?? 0, closed: closedData.meta?.pagination?.total || 0 };
 
+  /* Разметка списка для поисковика: сборы страницы с их адресами и суммами.
+     Страница сбора отдаёт свои хлебные крошки, здесь список того, что на ней
+     видно. Суммы берутся те же, что показаны читателю. */
+  const listJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Сборы АНБО «Светлый»",
+    numberOfItems: list.length,
+    itemListElement: list.map((fund, index) => ({
+      "@type": "ListItem",
+      position: (safePage - 1) * ITEMS_PER_PAGE + index + 1,
+      url: siteUrl(`/campaigns/${fund.id}`),
+      name: fund.title,
+    })),
+  };
+
   return (
     <div className="camp">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(listJsonLd) }} />
       <InnerHeader />
       <main id="main-content">
         {/* Обложка-коллаж: секция 1 плана. Разбор в самом компоненте.
@@ -225,7 +255,13 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                             <CheckCircle2 size={17} aria-hidden="true" /> Сбор закрыт
                           </span>
                         )}
-                        <Link className="camp-btn camp-btn--quiet" href={`/campaigns/${fund.id}`}>
+                        {/* Подпись для читалки называет сбор: «Подробнее» в
+                            списке ссылок само по себе не говорит ни о чём. */}
+                        <Link
+                          aria-label={`Подробнее о сборе: ${fund.title}`}
+                          className="camp-btn camp-btn--quiet"
+                          href={`/campaigns/${fund.id}`}
+                        >
                           Подробнее
                           <ArrowUpRight size={16} aria-hidden="true" />
                         </Link>

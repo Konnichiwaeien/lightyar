@@ -865,13 +865,31 @@
   letter-spacing: -0.01em;
 }
 
+/* Заголовок сбора: цвет и подчёркивание меняются плавно, и клавиатура видит
+   ровно то же, что мышь. Подчёркивание рисуется цветом акцента и прочёркивается
+   от нуля, а не появляется рывком. */
 .camp-item__title a {
+  background-image: linear-gradient(var(--c-amber-text), var(--c-amber-text));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
   color: inherit;
   text-decoration: none;
+  transition:
+    color 0.32s cubic-bezier(0.33, 1, 0.68, 1),
+    background-size 0.36s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
-.camp-item__title a:hover {
+.camp-item__title a:hover,
+.camp-item__title a:focus-visible {
+  background-size: 100% 2px;
   color: var(--c-amber-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camp-item__title a {
+    transition: none;
+  }
 }
 
 /* Описание забирает лишнюю высоту, поэтому шкалы и суммы у соседей по ряду
@@ -1246,8 +1264,10 @@
   top: 24%;
 }
 
+/* Свой оттенок, темнее общего акцента: на тёплом поле секции общий давал
+   4,32 при норме 4,5 для мелкого текста. Замер в scripts/contrast-audit.mjs. */
 .camp-route__tag {
-  color: var(--c-amber-text);
+  color: #8f4704;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -1406,11 +1426,21 @@
 
 /* Группа: точки, круг, миска. Размер задаёт ширина миски, высота идёт от
    её пропорции, 1400 на 1078. */
+/* Группа крупная и стоит по середине высоты поля, но не ниже её верхней
+   кромки.
+
+   Два условия спорят: владелец просил центровку, а грамматика требует выхода
+   за кромку, это последний переход через шов. На низком окне центр сам даёт
+   вылет, на высоком (окно 1440 на 1200) секция выше группы, и центрированная
+   группа целиком внутри поля. Поэтому берётся меньшее из двух: центр или
+   потолок в шесть процентов над кромкой. */
 .camp-call__unit {
+  --size: clamp(320px, 46vw, 680px);
+
   position: absolute;
-  top: -12%;
-  right: 4%;
-  width: clamp(280px, 36vw, 540px);
+  top: min(-6%, calc(50% - var(--size) * 0.54));
+  right: 3%;
+  width: var(--size);
   aspect-ratio: 1;
 }
 
@@ -1517,11 +1547,15 @@
   letter-spacing: -0.04em;
 }
 
-/* Слово вынуто светлым, а не на плашку: плашка уже занята на обложке, и вторая
-   на странице читалась бы приёмом, а не акцентом. */
+/* Слово вынуто цветом, а не на плашку: плашка уже занята на обложке, и вторая
+   на странице читалась бы приёмом, а не акцентом.
+
+   Цвет тёмный, хотя светлый смотрелся мягче: светлая антиква на янтаре давала
+   контраст 1,91 при норме 3 для крупного текста, то есть читалась не всеми.
+   Тёмно-янтарный держит 4,58 и остаётся отдельным от чёрного заголовка. */
 .camp-call__copy h2 em {
   display: block;
-  color: var(--c-sheet);
+  color: #6b3503;
   font-family: var(--font-serif);
   font-size: 1.1em;
   font-style: italic;
