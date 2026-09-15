@@ -104,72 +104,72 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                 const rest = Math.max(0, fund.total - fund.current);
 
                 return (
-                  <li key={fund.id}>
-                    <article
-                      className="camp-card"
-                      data-status={fund.status}
-                      style={{ "--i": index } as React.CSSProperties}
+                  <li
+                    className="camp-item"
+                    data-status={fund.status}
+                    key={fund.id}
+                    style={{ "--i": index } as React.CSSProperties}
+                  >
+                    <Link className="camp-item__shot" href={`/campaigns/${fund.id}`}>
+                      {fund.shot.src ? (
+                        <Image
+                          src={fund.shot.src}
+                          alt=""
+                          width={640}
+                          height={640}
+                          sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                        />
+                      ) : null}
+                    </Link>
+
+                    {/* Тег и пометка о чужом кадре стоят на листе, а не на
+                        снимке: у круга нет углов, и на кромке их срезало. */}
+                    <p className="camp-item__meta">
+                      <span className="camp-item__tag">{fund.tag}</span>
+                      {fund.shot.borrowed ? <span className="camp-item__borrowed">кадр из жизни приюта</span> : null}
+                    </p>
+
+                    <h3 className="camp-item__title">
+                      <Link href={`/campaigns/${fund.id}`}>{fund.title}</Link>
+                      {fund.petName ? <span className="camp-item__pet">{fund.petName}</span> : null}
+                    </h3>
+                    <p className="camp-item__desc">{fund.desc}</p>
+
+                    <div
+                      className="camp-item__bar"
+                      role="progressbar"
+                      aria-valuenow={fund.current}
+                      aria-valuemin={0}
+                      aria-valuemax={fund.total}
+                      aria-label={`Собрано ${fund.current} рублей из ${fund.total}`}
                     >
-                      <div className="camp-card__media">
-                        {fund.shot.src ? (
-                          <Image
-                            src={fund.shot.src}
-                            alt=""
-                            width={640}
-                            height={480}
-                            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 25vw"
-                          />
-                        ) : null}
-                        <span className="camp-tag">{fund.tag}</span>
-                        {fund.shot.borrowed ? <span className="camp-borrowed">кадр из жизни приюта</span> : null}
-                      </div>
+                      <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                    </div>
 
-                      <div className="camp-card__content">
-                        <div className="camp-card__title">
-                          <b>
-                            <Link href={`/campaigns/${fund.id}`}>{fund.title}</Link>
-                          </b>
-                          {fund.petName ? <span className="camp-pet-name">{fund.petName}</span> : null}
-                        </div>
-                        <p className="camp-specs">{fund.desc}</p>
+                    <p className="camp-item__money">
+                      <b>{money(fund.current)}</b>
+                      <span>
+                        {fund.status === "closed"
+                          ? `цель ${money(fund.total)}`
+                          : rest > 0
+                            ? `осталось ${money(rest)}`
+                            : "цель собрана"}
+                      </span>
+                    </p>
 
-                        <div
-                          className="camp-bar"
-                          role="progressbar"
-                          aria-valuenow={fund.current}
-                          aria-valuemin={0}
-                          aria-valuemax={fund.total}
-                          aria-label={`Собрано ${fund.current} рублей из ${fund.total}`}
-                        >
-                          <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
-                        </div>
-
-                        <p className="camp-money">
-                          <b>{money(fund.current)}</b>
-                          <span>
-                            {fund.status === "closed"
-                              ? `цель ${money(fund.total)}`
-                              : rest > 0
-                                ? `осталось ${money(rest)}`
-                                : "цель собрана"}
-                          </span>
-                        </p>
-                      </div>
-
-                      <div className="camp-card__actions">
-                        {fund.status === "active" ? (
-                          <CampaignHelpButton id={fund.id} title={fund.title} />
-                        ) : (
-                          <span className="camp-closed">
-                            <CheckCircle2 size={17} aria-hidden="true" /> Сбор закрыт
-                          </span>
-                        )}
-                        <Link className="camp-btn camp-btn--quiet" href={`/campaigns/${fund.id}`}>
-                          Подробнее о сборе
-                          <ArrowUpRight size={16} aria-hidden="true" />
-                        </Link>
-                      </div>
-                    </article>
+                    <div className="camp-item__actions">
+                      {fund.status === "active" ? (
+                        <CampaignHelpButton id={fund.id} title={fund.title} />
+                      ) : (
+                        <span className="camp-item__closed">
+                          <CheckCircle2 size={17} aria-hidden="true" /> Сбор закрыт
+                        </span>
+                      )}
+                      <Link className="camp-btn camp-btn--quiet" href={`/campaigns/${fund.id}`}>
+                        Подробнее о сборе
+                        <ArrowUpRight size={16} aria-hidden="true" />
+                      </Link>
+                    </div>
                   </li>
                 );
               })}

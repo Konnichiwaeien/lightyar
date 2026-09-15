@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { useScroll } from "framer-motion";
 
 import type { RouteStation } from "@/lib/campaigns/summary";
@@ -83,15 +84,17 @@ export function CampaignRoute({
               still={still}
               style={{ left: slot.left, top: slot.top, "--art": slot.art } as React.CSSProperties}
             >
-              {station.art ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img alt="" aria-hidden="true" loading="lazy" src={station.art} />
-              ) : null}
-              <figure>
-                <figcaption>{station.tag}</figcaption>
-                <b>{money(station.collected)}</b>
-                <span>уже собрано</span>
-              </figure>
+              <Link aria-label={station.title} className="camp-route__link" href={`/campaigns/${station.id}`}>
+                {station.art ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt="" aria-hidden="true" loading="lazy" src={station.art} />
+                ) : null}
+                <figure>
+                  <figcaption>{station.tag}</figcaption>
+                  <b>{money(station.collected)}</b>
+                  <span>уже собрано</span>
+                </figure>
+              </Link>
             </Drift>
           );
         })}

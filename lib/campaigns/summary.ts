@@ -47,6 +47,10 @@ export interface RouteStation {
   collected: number;
   /** Доля пути, к которой подпись станции проявлена целиком. */
   say: number;
+  /** Сбор, на который ведёт нужда. Первый открытый с этим тегом. */
+  id: string;
+  /** Его название: оно уходит в подпись ссылки для читалки. */
+  title: string;
 }
 
 export interface CampaignSummary {
@@ -73,13 +77,16 @@ export async function getCampaignSummary(): Promise<CampaignSummary | null> {
   /* Станция без своих сборов подписи не получает: ноль рублей под предметом
      читался бы поломкой, а не правдой. Предметы на картине при этом остаются,
      она одна на все состояния данных. */
-  const stations = STATIONS.map((station) => ({
-    ...station,
-    say: say(station.at),
-    collected: open
-      .filter((fund) => (fund.tag || "").trim().toLowerCase() === station.tag.toLowerCase())
-      .reduce((sum, fund) => sum + (Number(fund.current) || 0), 0),
-  })).filter((station) => station.collected > 0);
+  const stations = STATIONS.map((station) => {
+    const own = open.filter((fund) => (fund.tag || "").trim().toLowerCase() === station.tag.toLowerCase());
+    return {
+      ...station,
+      say: say(station.at),
+      collected: own.reduce((sum, fund) => sum + (Number(fund.current) || 0), 0),
+      id: own[0]?.documentId ?? "",
+      title: own[0]?.title ?? "",
+    };
+  }).filter((station) => station.collected > 0 && station.id);
 
   return { funds: open.length, goal, got, rest: Math.max(0, goal - got), stations };
 }

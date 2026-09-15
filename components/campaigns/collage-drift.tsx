@@ -23,6 +23,7 @@ export function Drift({
   still,
   style,
   children,
+  small,
 }: {
   className: string;
   distance: number;
@@ -30,10 +31,12 @@ export function Drift({
   still: boolean;
   style?: React.CSSProperties;
   children?: React.ReactNode;
+  /** Мелкий слой: на узком экране такие снимаются, чтобы поле не стало кашей. */
+  small?: boolean;
 }) {
   const y = useTransform(progress, (value) => (value - 0.5) * distance);
   return (
-    <motion.div className={className} style={still ? style : { ...style, y }}>
+    <motion.div className={className} data-small={small ? "true" : undefined} style={still ? style : { ...style, y }}>
       {children}
     </motion.div>
   );

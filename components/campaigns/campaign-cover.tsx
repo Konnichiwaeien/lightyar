@@ -43,18 +43,21 @@ const PETS = [
   {
     src: "/pets/cutout-kapral.webp",
     name: "Капрал",
+    small: false,
     style: { right: "2%", bottom: "-8%", height: "94%" },
     drift: -54,
   },
   {
     src: "/pets/cutout-dzhek.webp",
     name: "Джек",
+    small: true,
     style: { left: "37%", top: "2%", height: "32%" },
     drift: -38,
   },
   {
     src: "/pets/cutout-lakki.webp",
     name: "Лакки",
+    small: true,
     style: { left: "33%", bottom: "0%", height: "42%" },
     drift: -26,
   },
@@ -83,6 +86,7 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
             distance={pet.drift}
             key={pet.src}
             progress={scrollYProgress}
+            small={pet.small}
             still={still}
             style={pet.style}
           >
