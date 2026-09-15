@@ -45,6 +45,8 @@ export interface RouteStation {
   tag: string;
   /** Сколько собрано по этому тегу. */
   collected: number;
+  /** Сумма целей открытых сборов этого тега: «собрано из». */
+  goal: number;
   /** Доля пути, к которой подпись станции проявлена целиком. */
   say: number;
   /** Сбор, на который ведёт нужда. Первый открытый с этим тегом. */
@@ -83,6 +85,7 @@ export async function getCampaignSummary(): Promise<CampaignSummary | null> {
       ...station,
       say: say(station.at),
       collected: own.reduce((sum, fund) => sum + (Number(fund.current) || 0), 0),
+      goal: own.reduce((sum, fund) => sum + (Number(fund.total) || 0), 0),
       id: own[0]?.documentId ?? "",
       title: own[0]?.title ?? "",
     };

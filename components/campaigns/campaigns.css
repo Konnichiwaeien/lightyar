@@ -92,7 +92,6 @@
 ------------------------------------------------------------------------- */
 
 .camp-cover__field,
-.camp-route__field,
 .camp-call__field {
   position: absolute;
   inset: 0;
@@ -104,14 +103,14 @@
    трансформацией, а въезд фигуры идёт своим свойством на ребёнке, и они не
    спорят за одно поле стиля. */
 .camp-cover__disc,
-.camp-route__disc,
+.camp-cover__ring,
 .camp-call__disc {
   position: absolute;
   aspect-ratio: 1;
 }
 
 .camp-cover__disc i,
-.camp-route__disc i,
+.camp-cover__ring i,
 .camp-call__disc i {
   display: block;
   width: 100%;
@@ -122,7 +121,6 @@
 /* Сетка из точек. Второй тип геометрии: держит пустой угол и не даёт полю
    выглядеть незаполненным. */
 .camp-cover__dots,
-.camp-route__dots,
 .camp-call__dots {
   position: absolute;
   background-image: radial-gradient(circle, var(--dot, rgba(168, 84, 6, 0.32)) 1.7px, transparent 1.8px);
@@ -151,9 +149,20 @@
 }
 
 .camp-cover__disc {
-  top: 8%;
-  right: 5%;
-  width: min(36%, 31rem);
+  top: 10%;
+  right: 6%;
+  width: min(34%, 30rem);
+}
+
+/* Моховой кружок под Джека: вторая группа, мельче главной. */
+.camp-cover__ring {
+  top: 5%;
+  left: 45%;
+  width: min(11.5%, 10rem);
+}
+
+.camp-cover__ring i {
+  background: rgba(111, 115, 85, 0.42);
 }
 
 .camp-cover__disc i {
@@ -161,10 +170,10 @@
 }
 
 .camp-cover__dots {
-  top: 5%;
-  left: 62%;
-  width: min(15%, 13rem);
-  aspect-ratio: 4 / 3;
+  top: 3%;
+  left: 58%;
+  width: min(14%, 12rem);
+  aspect-ratio: 1;
   background-image: none;
 }
 
@@ -191,24 +200,24 @@
 
 /* Капрал главный: крупно справа, на круге, лапами через шов. */
 .camp-cover__pet--lead {
-  right: 7%;
+  right: 9%;
   bottom: calc(-1 * var(--c-bleed));
-  height: calc(90% + var(--c-bleed));
+  height: calc(88% + var(--c-bleed));
 }
 
 /* Лакки у середины, стоит на шве и чуть выходит за него. */
 .camp-cover__pet--lakki {
-  left: 40%;
-  bottom: -5%;
-  height: 46%;
+  left: 48%;
+  bottom: -6%;
+  height: 42%;
 }
 
 /* Джек мельче всех и выше всех: то, что мельче, читается ближним и уезжает
    дальше. */
 .camp-cover__pet--dzhek {
-  left: 45%;
-  top: 11%;
-  height: 29%;
+  left: 43%;
+  top: 9%;
+  height: 26%;
 }
 
 .camp-cover__copy {
@@ -306,29 +315,35 @@
    мельче, текст короче по строке. */
 @media (min-width: 861px) and (max-width: 1200px) {
   .camp-cover__pet--lead {
-    right: 3%;
-    height: calc(80% + var(--c-bleed));
+    right: 5%;
+    height: calc(78% + var(--c-bleed));
   }
 
   .camp-cover__pet--lakki {
-    left: 38%;
-    height: 38%;
+    left: 46%;
+    height: 36%;
   }
 
   .camp-cover__pet--dzhek {
-    left: 46%;
+    left: 40%;
     top: 8%;
     height: 22%;
   }
 
+  .camp-cover__ring {
+    top: 4%;
+    left: 42%;
+    width: 11%;
+  }
+
   .camp-cover__disc {
     right: 3%;
-    width: 38%;
+    width: 36%;
   }
 
   .camp-cover__dots {
-    left: 58%;
-    width: 13%;
+    left: 56%;
+    width: 12%;
   }
 
   .camp-cover__lead {
@@ -371,7 +386,8 @@
 
   /* Убирают по признаку в разметке, а не по порядковому номеру: все слои
      поля это div, и nth-of-type считал среди них же. */
-  .camp-cover__pet[data-small="true"] {
+  .camp-cover__pet[data-small="true"],
+  .camp-cover__ring {
     display: none;
   }
 
@@ -850,11 +866,16 @@
   font-size: 1.05rem;
 }
 
-/* ---------------- секция «Куда уходит взнос»: коллаж --------------------
+/* ---------------- секция «Куда уходит взнос» ----------------------------
 
-   Своё поле, теплее обложки: цвет меняется от секции к секции, и это часть
-   языка референсов, а не украшение. Нужды стоят по местам, а не в потоке:
-   в потоке они выстроились бы в ряд, а ряд это таблица.
+   Сюжет с «цифр года» референса: заголовок по центру поля, под ним четыре
+   нужды, у каждой своя мини-композиция. Слева группа из трёх слоёв: сетка
+   точек сзади, круг размером с предмет посередине, вырезка спереди, и она
+   ломает кромку круга. Справа тег, сумма, «собрано из» и тонкая шкала.
+
+   Круг никогда не живёт сам по себе: в референсе он всегда сиденье под
+   конкретной вырезкой. До этого здесь был один огромный круг в углу и блок
+   точек в другом, и роли у них не было.
 ------------------------------------------------------------------------ */
 
 .camp-route {
@@ -865,51 +886,22 @@
   background: #f3e6cd;
 }
 
-/* Приглушённый зелёный круг. Второй цвет поля: на одном янтаре страница
-   начинает звенеть, а в референсах на поле всегда больше одной фигуры. */
-.camp-route__disc {
-  top: 3%;
-  right: -4%;
-  width: min(42%, 36rem);
+.camp-route__head {
+  max-width: 44rem;
+  margin: 0 auto var(--c-gap-sm);
+  text-align: center;
 }
 
-.camp-route__disc i {
-  background: rgba(111, 115, 85, 0.22);
-  animation: camp-shape-in 1ms linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 40%;
-}
-
-@keyframes camp-shape-in {
-  from {
-    opacity: 0;
-    scale: 0.4;
-  }
-}
-
-.camp-route__dots {
-  bottom: 5%;
-  left: 3%;
-  width: min(22%, 19rem);
-  aspect-ratio: 5 / 3;
-}
-
-.camp-route__copy {
-  position: relative;
-  z-index: 1;
-}
-
-.camp-route__copy h2 {
-  max-width: 13ch;
+.camp-route__head h2 {
   margin: 0;
   font-family: var(--font-sans);
   font-size: clamp(2.4rem, 5vw, 4.2rem);
   font-weight: 800;
-  line-height: 0.96;
+  line-height: 0.98;
   letter-spacing: -0.04em;
 }
 
-.camp-route__copy h2 em {
+.camp-route__head h2 em {
   display: block;
   color: var(--c-amber-text);
   font-family: var(--font-serif);
@@ -920,52 +912,35 @@
   letter-spacing: -0.03em;
 }
 
-/* Поле нужд. Высота своя, потому что нужды стоят по местам. */
+.camp-route__lead {
+  max-width: 36rem;
+  margin: 1.2rem auto 0;
+  color: var(--c-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
 .camp-route__needs {
-  position: relative;
-  z-index: 1;
-  height: clamp(560px, 66svh, 800px);
-  margin-top: var(--c-gap-sm);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2.5rem, 6vh, 4.5rem) clamp(2rem, 5vw, 5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.camp-route__need {
-  position: absolute;
-}
-
-/* Места нарочно неровные: ровный ряд из четырёх нужд превращает коллаж
-   обратно в таблицу. */
-.camp-route__need--1 {
-  top: 4%;
-  left: 0;
-}
-
-.camp-route__need--2 {
-  top: 42%;
-  left: 27%;
-}
-
-.camp-route__need--3 {
-  top: 0;
-  left: 52%;
-}
-
-.camp-route__need--4 {
-  top: 36%;
-  left: 75%;
-}
-
-/* Нужда это ссылка на свой сбор. Она въезжает снизу с наклоном и встаёт
-   ровно, пока входит в экран: шкала её собственного прохода. */
+/* Нужда это ссылка на свой сбор: группа слева, подписи справа. Въезжает
+   снизу с наклоном и встаёт ровно, пока входит в экран, очередь по номеру. */
 .camp-route__link {
   display: grid;
-  justify-items: start;
-  gap: 0.6rem;
+  grid-template-columns: clamp(11rem, 16vw, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
   color: inherit;
   text-decoration: none;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   animation: camp-need-in 1ms linear both;
   animation-timeline: view();
-  animation-range: entry 0% cover 38%;
+  animation-range: entry 0% cover 36%;
 }
 
 @keyframes camp-need-in {
@@ -976,9 +951,59 @@
   }
 }
 
-.camp-route__link:hover,
-.camp-route__link:focus-visible {
-  transform: translateY(-6px);
+/* Группа: точки сзади, круг посередине, предмет спереди. Размер задаёт
+   ширина колонки, всё внутри считается от неё. */
+.camp-route__figure {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.camp-route__dots {
+  position: absolute;
+  top: -8%;
+  right: -10%;
+  width: 62%;
+  aspect-ratio: 1;
+  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
+  background-size: 19px 19px;
+}
+
+.camp-route__disc {
+  position: absolute;
+  top: 8%;
+  left: 12%;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--tone, var(--c-amber));
+  transform-origin: 50% 50%;
+  animation: camp-shape-in 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+@keyframes camp-shape-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+/* Предмет ломает кромку круга: сидит ниже и левее его центра. */
+.camp-route__figure img {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 92%;
+  height: 84%;
+  object-fit: contain;
+  object-position: bottom left;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.camp-route__link:hover .camp-route__figure img,
+.camp-route__link:focus-visible .camp-route__figure img {
+  transform: translateY(-6px) rotate(-2deg);
 }
 
 .camp-route__link:hover b,
@@ -986,23 +1011,13 @@
   color: var(--c-amber-text);
 }
 
-/* Размер задаёт высота, а не ширина: предметы сняты и вертикально, и
-   горизонтально, и по ширине мешок вышел бы вдвое выше миски. Множитель
-   у каждого места свой, потому что одинаковый размер это ряд, а не коллаж. */
-.camp-route__link img {
-  display: block;
-  width: auto;
-  max-width: min(22rem, 24vw);
-  height: calc(clamp(130px, 16vw, 230px) * var(--art, 1));
-  object-fit: contain;
-  object-position: bottom left;
+.camp-route__text {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
 }
 
-.camp-route__link figure {
-  margin: 0;
-}
-
-.camp-route__link figcaption {
+.camp-route__tag {
   color: var(--c-amber-text);
   font-size: 0.68rem;
   font-weight: 700;
@@ -1010,58 +1025,69 @@
   text-transform: uppercase;
 }
 
-.camp-route__link b {
+.camp-route__text b {
   display: block;
-  margin-top: 0.35rem;
   font-family: var(--font-serif);
-  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  line-height: 0.92;
+  line-height: 0.95;
   letter-spacing: -0.02em;
   transition: color 0.3s;
 }
 
-.camp-route__link > figure > span {
-  display: block;
-  margin-top: 0.3rem;
+.camp-route__of {
   color: var(--c-muted);
-  font-size: 0.84rem;
+  font-size: 0.9rem;
 }
 
-/* На узком экране разбросанный коллаж не читается: нужды становятся сеткой
-   в две колонки, чётные опущены на ступень, чтобы это осталось коллажем, а
-   не таблицей. */
-@media (max-width: 860px) {
+/* Шкала: короткая, как янтарная черта под числом в референсе, но с долей. */
+.camp-route__bar {
+  position: relative;
+  width: min(100%, 14rem);
+  height: 4px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(28, 28, 28, 0.12);
+}
+
+.camp-route__bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill);
+  min-width: 6px;
+  border-radius: 2px;
+  background: var(--c-amber);
+  transform-origin: 0 50%;
+  animation: camp-item-fill 1ms linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+/* На планшете две колонки потеснее: в одной справа оставалась пустая
+   половина экрана. */
+@media (min-width: 700px) and (max-width: 860px) {
   .camp-route__needs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2.5rem 1.25rem;
-    height: auto;
+    gap: 2.5rem 2rem;
   }
 
-  .camp-route__need {
-    position: static;
+  .camp-route__link {
+    grid-template-columns: clamp(7rem, 19vw, 10rem) minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* На телефоне одна колонка, группа мельче, подписи рядом. */
+@media (max-width: 699px) {
+  .camp-route__needs {
+    grid-template-columns: 1fr;
+    gap: 2.25rem;
   }
 
-  .camp-route__need:nth-child(even) {
-    margin-top: 3rem;
-  }
-
-  .camp-route__link img {
-    max-width: 100%;
-    height: calc(clamp(110px, 30vw, 150px) * var(--art, 1));
-  }
-
-  .camp-route__disc {
-    top: 6%;
-    right: -24%;
-    width: 66%;
-  }
-
-  .camp-route__dots {
-    bottom: 3%;
-    width: 40%;
+  .camp-route__link {
+    grid-template-columns: clamp(8rem, 34vw, 11rem) minmax(0, 1fr);
+    gap: 1.25rem;
   }
 }
 
@@ -1087,11 +1113,12 @@
 }
 
 /* Кремовый круг на янтаре: на цветном поле фигура обязана быть светлее его,
-   иначе она читается пятном грязи, а не формой. */
+   иначе она читается пятном грязи, а не формой. Круг размером с миску и
+   сидит под ней, как в референсе: фигура без предмета там не встречается. */
 .camp-call__disc {
-  top: 12%;
-  right: 6%;
-  width: min(36%, 31rem);
+  top: 4%;
+  right: 7%;
+  width: min(27%, 23rem);
 }
 
 .camp-call__disc i {
@@ -1101,10 +1128,11 @@
   animation-range: entry 0% entry 75%;
 }
 
+/* Точки за группой, у правого верхнего края круга. */
 .camp-call__dots {
-  right: 3%;
-  bottom: 14%;
-  width: min(15%, 13rem);
+  top: 0;
+  right: 2%;
+  width: min(14%, 12rem);
   aspect-ratio: 1;
   --dot: rgba(28, 28, 28, 0.26);
 }
@@ -1115,7 +1143,7 @@
 .camp-call__bowl {
   position: absolute;
   top: -9%;
-  right: 14%;
+  right: 15%;
   width: min(24%, 21rem);
 }
 
@@ -1233,19 +1261,19 @@
 
   .camp-call__bowl {
     top: -4%;
-    right: 6%;
+    right: 8%;
     width: 46%;
   }
 
   .camp-call__disc {
-    top: 1%;
-    right: -12%;
-    width: 62%;
+    top: 2%;
+    right: 2%;
+    width: 50%;
   }
 
   .camp-call__dots {
-    right: 5%;
-    bottom: 5%;
+    top: 0;
+    right: -4%;
     width: 30%;
   }
 }
@@ -1265,7 +1293,8 @@
   .camp-item,
   .camp-item__shot,
   .camp-item__bar i,
-  .camp-route__disc i,
+  .camp-route__disc,
+  .camp-route__bar i,
   .camp-route__link,
   .camp-call__disc i,
   .camp-call__bowl img,
@@ -1273,13 +1302,14 @@
     animation: none;
   }
 
-  .camp-item__bar i {
+  .camp-item__bar i,
+  .camp-route__bar i {
     transform: none;
   }
 
   .camp-item:hover .camp-item__shot,
   .camp-item:hover .camp-item__shot img,
-  .camp-route__link:hover,
+  .camp-route__link:hover .camp-route__figure img,
   .camp-btn:hover {
     transform: none;
   }

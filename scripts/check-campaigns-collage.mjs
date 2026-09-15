@@ -148,10 +148,11 @@ try {
         ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
         pets: document.querySelectorAll(".camp-cover__pet").length,
         landed,
-        discs: document.querySelectorAll(".camp-cover__disc, .camp-route__disc, .camp-call__disc").length,
+        discs: document.querySelectorAll(".camp-cover__disc, .camp-cover__ring, .camp-route__disc, .camp-call__disc").length,
         dots: document.querySelectorAll(".camp-cover__dots, .camp-route__dots, .camp-call__dots").length,
         needs: document.querySelectorAll(".camp-route__need").length,
         sums: [...document.querySelectorAll(".camp-route__need b")].map((n) => n.textContent.trim()),
+        goals: [...document.querySelectorAll(".camp-route__of")].map((n) => n.textContent.trim()),
         bleed: Math.max(...pets),
         plate: getComputedStyle(document.querySelector(".camp-cover h1 em")).backgroundColor,
         pawsToControls: Math.round(rect(controls).top - rect(lead).bottom),
@@ -179,8 +180,11 @@ try {
     assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
     assert.ok(shape.pets >= 2, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы две`);
-    assert.ok(shape.discs >= 3, `${viewport.name}: кругов ${shape.discs}, по одному на секцию`);
-    assert.ok(shape.dots >= 3, `${viewport.name}: сеток точек ${shape.dots}, по одной на секцию`);
+    // Фигура без предмета не встречается: у каждой нужды свой круг и своя
+    // сетка точек, плюс по группе на обложке и в финале.
+    assert.ok(shape.discs >= shape.needs + 2, `${viewport.name}: кругов ${shape.discs} при ${shape.needs} нуждах`);
+    assert.ok(shape.dots >= shape.needs + 2, `${viewport.name}: сеток точек ${shape.dots} при ${shape.needs} нуждах`);
+    assert.ok(shape.goals.every((goal) => /\d/.test(goal)), `${viewport.name}: у нужды нет «собрано из»`);
     assert.ok(shape.needs >= 1, `${viewport.name}: нужд на поле нет вовсе`);
     assert.ok(
       shape.sums.every((sum) => /\d/.test(sum)),
@@ -254,7 +258,7 @@ try {
       await scrollTo(page, at(route, stop), viewport.name);
       row.push({
         stop,
-        needs: await shift(page, ".camp-route__need"),
+        needs: await shift(page, ".camp-route__figure"),
         shown: await page.$$eval(
           ".camp-route__link",
           (links) => links.filter((link) => Number(getComputedStyle(link).opacity) > 0.85).length,

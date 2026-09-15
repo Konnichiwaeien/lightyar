@@ -10,37 +10,47 @@ import { CountUp } from "@/components/reports/count-up";
 import { useMotionPreference } from "@/components/reports/use-motion-preference";
 
 /**
- * Секция «Куда уходит взнос»: коллаж.
+ * Секция «Куда уходит взнос».
  *
- * Та же грамматика, что у обложки: плоское поле своего цвета, поверх него
- * свободно лежащие вырезки и крупные числа, за ними геометрические фигуры.
+ * Сюжет взят с «цифр года» из референса Wikimedia: заголовок по центру поля,
+ * под ним четыре нужды, и у каждой своя мини-композиция. Слева группа из
+ * трёх слоёв: сетка точек сзади, круг размером с предмет посередине,
+ * вырезка предмета спереди, и она ломает кромку круга. Справа тег, сумма и
+ * «собрано из», под ними тонкая шкала.
  *
- * Движение в три слоя. Каждая нужда въезжает снизу с наклоном и встаёт ровно,
- * пока входит в экран: это шкала просмотра CSS, и она у каждой нужды своя,
- * поэтому очередь получается сама, по местам на поле. Сумма набегает от нуля,
- * когда попадает в кадр. И всё поле плывёт по прокрутке с разной скоростью:
- * это framer, потому что здесь один прогресс кормит все слои сразу.
+ * В референсе круг никогда не живёт сам по себе: он всегда сиденье под
+ * конкретной вырезкой. До этого здесь был один огромный круг в углу и блок
+ * точек в другом, и владелец спросил, какую роль они играют. Никакой. Теперь
+ * у каждой фигуры есть предмет, а у каждого предмета фигура.
  *
- * Числа настоящие: сколько собрано по каждой нужде, считается из Strapi.
- * Станция без своих сборов на поле не появляется вовсе. Каждая нужда это
+ * Движение. Группа въезжает снизу с наклоном и встаёт ровно, пока входит в
+ * экран, шкала просмотра у каждой своя, очередь по номеру. Сумма набегает от
+ * нуля. Предметы плывут по прокрутке с разной скоростью, подписи стоят: так
+ * группа читается объёмной. Это framer, один прогресс на все предметы.
+ *
+ * Числа настоящие: сколько собрано и сколько нужно по каждому тегу, из
+ * Strapi. Нужда без своих сборов на поле не появляется. Каждая нужда это
  * ссылка на свой сбор.
  *
  * Вырезки предметов сняты по брифу docs/asset-brief-campaigns-collage.md.
- * Пока файла нет, поле собирается из чисел и геометрии и выглядит законченным.
+ * Пока файла нет, группа собирается из круга и точек и выглядит законченной.
  */
 
+const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
+
 /**
- * Движение каждого места на поле. Сами места заданы в стилях по номеру.
+ * Движение и цвет каждого места.
  *
- * Путь у мест разный нарочно: одинаковая скорость это одна картинка, которую
- * подвинули целиком. Наклон при въезде тоже свой, и он же уходит в CSS
- * переменной, чтобы вырезки не вставали одинаковым строем.
+ * Круги разных цветов, как в референсе, где каждая вырезка сидит на своём:
+ * янтарь под мешком, светлый лист под коробкой лекарств, мох под миской,
+ * тёмный янтарь под брезентом. Путь и наклон у всех свои: одинаковые
+ * превращают четыре группы в одну картинку, которую подвинули.
  */
 const SLOTS = [
-  { art: 1, drift: -70, rotate: -2, tilt: "-7deg" },
-  { art: 0.8, drift: -140, rotate: 3, tilt: "6deg" },
-  { art: 0.95, drift: -100, rotate: -2, tilt: "-5deg" },
-  { art: 1.1, drift: -170, rotate: 2, tilt: "8deg" },
+  { tone: "var(--c-amber)", drift: -50, rotate: -3, tilt: "-7deg" },
+  { tone: "var(--c-sheet)", drift: -80, rotate: 4, tilt: "6deg" },
+  { tone: "rgba(111, 115, 85, 0.42)", drift: -60, rotate: -2, tilt: "-5deg" },
+  { tone: "var(--c-amber-deep)", drift: -95, rotate: 3, tilt: "8deg" },
 ];
 
 export function CampaignRoute({
@@ -60,52 +70,66 @@ export function CampaignRoute({
 
   return (
     <section aria-labelledby="camp-route-title" className="camp-route" ref={sectionRef}>
-      <div aria-hidden="true" className="camp-route__field">
-        <Drift className="camp-route__disc" distance={110} progress={scrollYProgress} still={still}>
-          <i />
-        </Drift>
-        <Drift className="camp-route__dots" distance={50} progress={scrollYProgress} still={still} />
-      </div>
-
       <div className="camp-inner">
-        <div className="camp-route__copy">
+        <header className="camp-route__head">
           <p className="camp-kicker">Куда уходит взнос</p>
           <h2 id="camp-route-title">
-            На что идут
-            <em>ваши {new Intl.NumberFormat("ru-RU").format(unit)} ₽</em>
+            На что идут <em>ваши {money(unit)}</em>
           </h2>
-        </div>
+          <p className="camp-route__lead">
+            Каждый взнос закрывает одну из {stations.length === 4 ? "четырёх" : "открытых"} нужд приюта. Столько по
+            каждой уже собрано и столько нужно, чтобы закрыть её целиком.
+          </p>
+        </header>
 
-        <div className="camp-route__needs">
+        <ul className="camp-route__needs">
           {stations.map((station, index) => {
             const slot = SLOTS[index % SLOTS.length];
+            const share = station.goal > 0 ? Math.min(1, station.collected / station.goal) : 0;
             return (
-              <Drift
-                className={`camp-route__need camp-route__need--${(index % SLOTS.length) + 1}`}
-                distance={slot.drift}
-                rotate={slot.rotate}
+              <li
+                className="camp-route__need"
                 key={station.tag}
-                progress={scrollYProgress}
-                still={still}
-                style={{ "--art": slot.art, "--tilt": slot.tilt } as React.CSSProperties}
+                style={{ "--i": index, "--tilt": slot.tilt, "--tone": slot.tone } as React.CSSProperties}
               >
                 <Link aria-label={station.title} className="camp-route__link" href={`/campaigns/${station.id}`}>
-                  {station.art ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img alt="" aria-hidden="true" loading="lazy" src={station.art} />
-                  ) : null}
-                  <figure>
-                    <figcaption>{station.tag}</figcaption>
+                  <Drift
+                    className="camp-route__figure"
+                    distance={slot.drift}
+                    rotate={slot.rotate}
+                    progress={scrollYProgress}
+                    still={still}
+                  >
+                    <i aria-hidden="true" className="camp-route__dots" />
+                    <i aria-hidden="true" className="camp-route__disc" />
+                    {station.art ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img alt="" aria-hidden="true" loading="lazy" src={station.art} />
+                    ) : null}
+                  </Drift>
+
+                  <span className="camp-route__text">
+                    <span className="camp-route__tag">{station.tag}</span>
                     <b>
                       <CountUp value={station.collected} kind="rub" />
                     </b>
-                    <span>уже собрано</span>
-                  </figure>
+                    <span className="camp-route__of">собрано из {money(station.goal)}</span>
+                    <span
+                      className="camp-route__bar"
+                      role="progressbar"
+                      aria-valuenow={station.collected}
+                      aria-valuemin={0}
+                      aria-valuemax={station.goal}
+                      aria-label={`Собрано ${station.collected} рублей из ${station.goal}`}
+                    >
+                      <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                    </span>
+                  </span>
                 </Link>
-              </Drift>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     </section>
   );

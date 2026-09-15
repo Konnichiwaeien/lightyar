@@ -18,15 +18,20 @@ import { useMotionPreference } from "@/components/reports/use-motion-preference"
  * фигуры, крупная смешанная типографика, вырезки переходят через шов между
  * секциями.
  *
- * Движение двух родов. При загрузке вырезки и круг вскакивают на поле
- * пружиной, по очереди: это первое, что видит читатель, и поле не должно
- * лежать мёртвым. Дальше по прокрутке слои разъезжаются с разной скоростью,
- * а мелкие вырезки ещё и поворачиваются: так коллаж отличается от наклейки.
+ * Композиция в две группы, как в референсе, где каждая вырезка сидит на своей
+ * фигуре и ломает её кромку. Главная группа справа: Капрал на янтарном круге,
+ * за кругом сетка точек, Лакки перед нижней кромкой круга, лапами через шов.
+ * Вторая группа мельче, между текстом и главной: Джек на моховом кружке.
+ * До этого три собаки трёх размеров плавали по полю порознь, и композиция
+ * не складывалась.
+ *
+ * Движение двух родов. При загрузке фигуры и вырезки вскакивают на поле
+ * пружиной, по очереди. Дальше по прокрутке слои разъезжаются с разной
+ * скоростью, а мелкие вырезки ещё и поворачиваются.
  *
  * Вырезки настоящие: подопечные приюта из `public/pets`, прошедшие числовой
- * отсев по docs/pet-cutout-standard.md. Капрал и Лакки выходят за нижнюю
- * кромку и ложатся на поле каталога; под них у каталога оставлен отступ,
- * чтобы лапы не наступали на фильтр.
+ * отсев по docs/pet-cutout-standard.md. Под лапы, выходящие через шов, у
+ * каталога оставлен отступ, чтобы они не наступали на фильтр.
  *
  * Разбор секций в docs/campaigns-scroll-plan.md.
  */
@@ -43,8 +48,8 @@ const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.r
  */
 const PETS = [
   { src: "/pets/cutout-kapral.webp", name: "Капрал", mod: "lead", small: false, drift: -70, rotate: 0, delay: 0.1 },
-  { src: "/pets/cutout-lakki.webp", name: "Лакки", mod: "lakki", small: true, drift: -130, rotate: 5, delay: 0.32 },
-  { src: "/pets/cutout-dzhek.webp", name: "Джек", mod: "dzhek", small: true, drift: -190, rotate: -9, delay: 0.46 },
+  { src: "/pets/cutout-lakki.webp", name: "Лакки", mod: "lakki", small: true, drift: -130, rotate: 4, delay: 0.32 },
+  { src: "/pets/cutout-dzhek.webp", name: "Джек", mod: "dzhek", small: true, drift: -190, rotate: -8, delay: 0.5 },
 ];
 
 const spring = { type: "spring", stiffness: 120, damping: 14, mass: 0.9 } as const;
@@ -70,6 +75,17 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
           </Drift>
           <Drift className="camp-cover__disc" distance={140} origin="start" progress={scrollYProgress} still={still}>
             <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: 0.05 }} />
+          </Drift>
+          {/* Кружок под Джека: вторая группа, мельче главной. */}
+          <Drift
+            className="camp-cover__ring"
+            distance={110}
+            origin="start"
+            progress={scrollYProgress}
+            small
+            still={still}
+          >
+            <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: 0.4 }} />
           </Drift>
 
           {PETS.map((pet) => (
