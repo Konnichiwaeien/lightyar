@@ -337,16 +337,16 @@
    Секция высокая, внутри неё липкая сцена во весь экран, и прокрутка внутри
    липкой части и есть путь ленты.
 
-   Отрезок contain. У секции выше экрана он совпадает с тем временем, пока она
-   держит экран целиком, то есть ровно с липкостью: лента начинает ехать, когда
-   сцена прилипла, и доезжает, когда отлипает. Ни cover, ни entry так не умеют.
+   Движением правит framer: один прогресс прокрутки кормит сдвиг ленты,
+   проявление подписей и тёплый свет. Разбор в самом компоненте, там же
+   объяснено, почему сдвиг идёт отрезками, а подписи функцией.
 
-   Путь ленты считается в единицах контейнера: ширина картины это её высота,
-   умноженная на десять, а окно это 100cqw полосы. Поэтому никакого замера в
-   JavaScript не нужно, и сцена остаётся серверной.
+   Пропорция картины десять к одному задана брифом, поэтому ширина полосы
+   считается от её высоты, а не подбирается. Координаты станций тоже из брифа:
+   по ним художник ставит предметы, а код ставит подписи.
 
-   Конечное состояние объявлено статикой, исходное лежит в keyframes: при
-   гашении движения читатель видит проявленные подписи и зажжённый свет.
+   Здесь нет конечного состояния в статике: его ставит framer, а при гашении
+   движения секция просто остаётся стоять в начале пути и листается рукой.
 
    Замысел в docs/campaigns-scroll-plan.md, бриф на картину в
    docs/asset-brief-campaigns-ribbon.md.
@@ -361,7 +361,6 @@
   height: 260vh;
   margin-bottom: var(--c-gap);
   background: var(--c-paper);
-  view-timeline: --route block;
 }
 
 .camp-route__sticky {
@@ -404,12 +403,18 @@
   letter-spacing: -0.03em;
 }
 
-/* Контейнер нужен, чтобы лента знала ширину окна: от неё считается путь. */
+.camp-route__lead {
+  max-width: 52ch;
+  margin: 0.9rem 0 0;
+  color: var(--c-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
 .camp-route__track {
   position: relative;
   height: var(--route-h);
   overflow: hidden;
-  container-type: inline-size;
 }
 
 /* Ширина считается от высоты: картина 9000 на 900, то есть десять к одному.
@@ -422,33 +427,21 @@
   position: relative;
   width: calc(var(--route-h) * 10);
   height: 100%;
-  translate: calc(100cqw - var(--route-h) * 10) 0;
-  animation: camp-route-ride 1ms linear both;
-  animation-timeline: --route;
-  animation-range: contain 4% contain 96%;
+  will-change: transform;
 }
 
-@keyframes camp-route-ride {
-  from {
-    translate: 0 0;
-  }
-}
-
-/* Временная замена картины: предметы вишлиста на кремовой полосе. Когда
-   придёт ribbon.webp, здесь останется один img на всю полосу, а эти правила
-   уйдут вместе с разметкой. */
-.camp-route__thing {
+.camp-route__art {
   position: absolute;
-  bottom: 14%;
-  width: calc(var(--route-h) * 0.44);
-  height: calc(var(--route-h) * 0.5);
-  object-fit: contain;
-  object-position: bottom;
-  translate: -50% 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Полоса и картина одной пропорции, поэтому cover ничего не режет. Он здесь
+     страховкой на случай, если файл заменят с другим отношением сторон. */
+  object-fit: cover;
 }
 
 /* Подпись станции стоит над предметом и едет вместе с лентой: она привязана
-   к станции, а не к экрану. Момент проявления приходит числом из данных. */
+   к станции, а не к экрану. */
 .camp-route__station {
   position: absolute;
   top: 6%;
@@ -457,16 +450,6 @@
   margin: 0;
   text-align: center;
   translate: -50% 0;
-  animation: camp-route-say 1ms linear both;
-  animation-timeline: --route;
-  animation-range: contain calc((var(--say) - 0.12) * 100%) contain calc(var(--say) * 100%);
-}
-
-@keyframes camp-route-say {
-  from {
-    opacity: 0;
-    translate: -50% 18px;
-  }
 }
 
 .camp-route__station figcaption {
@@ -506,21 +489,11 @@
     rgba(245, 158, 11, 0.06) 42%,
     rgba(245, 158, 11, 0.22) 100%
   );
-  animation: camp-route-warm 1ms linear both;
-  animation-timeline: --route;
-  animation-range: contain 6% contain 96%;
-}
-
-@keyframes camp-route-warm {
-  from {
-    opacity: 0;
-  }
 }
 
 /* Узкий экран: держать липкую сцену на телефоне негде. Секция становится
-   обычной полосой, и лента проезжает свой путь, пока полоса идёт через экран.
-   Отрезок меняется на cover: contain у секции ниже экрана длится считаные
-   пиксели. */
+   обычной полосой, и лента проезжает свой путь, пока полоса идёт через
+   экран. */
 @media (max-width: 860px) {
   .camp-route {
     height: auto;
@@ -532,50 +505,32 @@
     padding: var(--c-gap) 0;
   }
 
-  /* Путь кончается на 70 процентах прохода, а не на 92: секция стоит
-     последней на странице, и прокрутки за её низом попросту нет. С 92
-     процентами лента на планшете не доезжала полторы сотни пикселей. */
-  .camp-route__strip {
-    animation-range: cover 14% cover 70%;
-  }
-
+  /* Подпись едет вместе с лентой и на подходе к станции стоит у кромки
+     окна. На телефоне окно узкое, и подпись в восемнадцать строчных высот
+     обрезалась на подходе целиком. */
   .camp-route__station {
-    animation-range: cover calc(14% + (var(--say) - 0.12) * 56%) cover calc(14% + var(--say) * 56%);
+    max-width: 13rem;
   }
 
-  .camp-route__glow {
-    animation-range: cover 16% cover 70%;
+  .camp-route__station b {
+    font-size: 1.5rem;
   }
 }
 
 /* Меньше движения: лента никуда не едет и ничего не липнет. Полосу можно
    пролистать рукой, подписи стоят все сразу, свет зажжён. */
-@media (prefers-reduced-motion: reduce) {
-  .camp-route {
-    height: auto;
-  }
+.camp-route[data-still="true"] {
+  height: auto;
+}
 
-  .camp-route__sticky {
-    position: static;
-    height: auto;
-    padding: var(--c-gap) 0;
-  }
+.camp-route[data-still="true"] .camp-route__sticky {
+  position: static;
+  height: auto;
+  padding: var(--c-gap) 0;
+}
 
-  .camp-route__track {
-    overflow-x: auto;
-  }
-
-  .camp-route__strip,
-  .camp-route__station,
-  .camp-route__glow {
-    animation: none;
-  }
-
-  /* Гасить мало: без этой строки лента осталась бы в конечном положении,
-     то есть отъехавшей, и читатель увидел бы её хвост. */
-  .camp-route__strip {
-    translate: 0 0;
-  }
+.camp-route[data-still="true"] .camp-route__track {
+  overflow-x: auto;
 }
 
 /* ---------------- фильтр и сортировка ---------------- */
