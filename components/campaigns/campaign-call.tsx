@@ -28,7 +28,10 @@ import { preloadDonatePanel, requestDonateOpen } from "@/lib/donations/donation-
  * Вырезка выбрана по лапам. У Бима, стоявшего тут первым, передняя и задняя
  * лапы обрываются обрубком: это видно только на янтаре и только в крупном
  * размере, числовой отсев такое не ловит, он смотрит на нижнюю кромку
- * силуэта. Джек целый, и на янтаре его серая шерсть не сливается с полем.
+ * силуэта. Тиша снята и вырезана под этот бриф
+ * (docs/asset-brief-campaigns-hero-dog.md): все четыре лапы с подушечками,
+ * уши и хвост целиком, одна связная область без прилипшего фона, и чёрная
+ * шерсть на янтаре читается силуэтом, а не пятном.
  *
  * Фотокарточкой этот кадр тоже побывал, один заход, и был отклонён: снимок в
  * рамке с тенью это прямоугольный фотоблок, которого в грамматике нет.
@@ -57,7 +60,7 @@ export function CampaignCall() {
           <i className="camp-call__dots" />
           <i className="camp-call__disc" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" loading="lazy" src="/pets/cutout-dzhek.webp" />
+          <img alt="" loading="lazy" src="/pets/cutout-tisha.webp" />
         </Drift>
       </div>
 
