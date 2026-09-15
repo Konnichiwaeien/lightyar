@@ -12,6 +12,7 @@ import { CampaignRoute } from "@/components/campaigns/campaign-route";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
+import { needArt } from "@/lib/campaigns/collage";
 import { PLEDGE, getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 import "@/components/campaigns/campaigns.css";
@@ -210,7 +211,10 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             намеренно, это блок доверия: он работает, когда читатель уже
             посмотрел сборы. Станции без своих сборов подписи не получают. */}
         {summary && summary.stations.length > 0 ? (
-          <CampaignRoute stations={summary.stations} unit={PLEDGE} />
+          <CampaignRoute
+            stations={summary.stations.map((station) => ({ ...station, art: needArt(station.tag) }))}
+            unit={PLEDGE}
+          />
         ) : null}
       </main>
     </div>

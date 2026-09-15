@@ -53,136 +53,75 @@
   text-transform: uppercase;
 }
 
-/* ---------------- обложка «Сквозь вещи» ---------------------------------
+/* ---------------- обложка: коллаж ---------------------------------------
 
-   Кадр снят из-за предметов. Вплотную к объективу слева и справа стоят вещи,
-   которые приют собирает, в просвете между ними подопечный, глубже двор. По
-   прокрутке вещи разъезжаются к своим краям и уходят вниз, двор почти стоит,
-   собака слегка растёт. К концу полосы между читателем и собакой чисто.
+   Грамматика с референсов, подтверждена владельцем 15 сентября: плоское
+   цветное поле, поверх него свободно лежащие вырезки, за ними геометрические
+   фигуры, крупная смешанная типографика в пустой середине, вырезки переходят
+   через шов между секциями.
 
-   Отрезок exit, а не cover и не entry. Обложка стоит первой на странице, и
-   к первому кадру она уже целиком в экране: cover там пройден наполовину, а
-   entry пройден целиком. exit начинается ровно тогда, когда читатель тронул
-   колесо, и кончается, когда полоса уходит за верхнюю кромку. Слои при этом
-   расходятся на глазах у читателя, а не за кадром.
+   Прямоугольников здесь нет ни одного, и это главное отличие от шести
+   предыдущих заходов. Фотополоса, сетка карточек и лента-полоса отклонены
+   владельцем именно за это: в референсах прямоугольных фотоблоков нет, там
+   всё вырезано и лежит на цвете.
 
-   Конечное состояние объявлено статикой, исходное лежит в keyframes. Поэтому
-   при гашении движения читатель видит итог, а не сведённые вещи, и второй
-   копии правил для этого не нужно.
+   Поле режется только по горизонтали. По вертикали оно нарочно открыто:
+   главная вырезка выходит за нижнюю кромку и ложится на следующее поле.
 
-   Замысел в docs/campaigns-scroll-plan.md, бриф на съёмку в
-   docs/asset-brief-campaigns-cover.md.
+   Замысел в docs/campaigns-scroll-plan.md.
 ------------------------------------------------------------------------- */
 
 .camp-cover {
   position: relative;
+  z-index: 1;
   display: grid;
   align-items: center;
-  isolation: isolate;
-  min-height: clamp(430px, 60svh, 760px);
-  margin-bottom: var(--c-gap);
-  overflow: hidden;
-  background: var(--c-paper);
-  view-timeline: --cover block;
+  min-height: clamp(480px, 62svh, 800px);
+  /* clip, а не hidden: hidden по одной оси заставляет вторую стать auto, и
+     вырезка, выходящая за нижнюю кромку, была бы срезана вместе с ней. */
+  overflow-x: clip;
+  background: #ece3d2;
 }
 
-.camp-cover__scene {
+.camp-cover__field {
   position: absolute;
   inset: 0;
-  z-index: -1;
 }
 
-/* Четыре слоя одного холста 2400 на 1350. Вписываются одинаково, поэтому
-   совмещаются при любой ширине полосы: любое расхождение поехало бы на
-   первом же кадре анимации. */
-.camp-cover__yard,
-.camp-cover__pet,
-.camp-cover__near {
+/* Плоский янтарный круг за главной вырезкой. Фигура, а не подложка: у неё нет
+   ни тени, ни градиента, ни рамки. */
+.camp-cover__disc {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  top: 6%;
+  right: 4%;
+  width: min(34%, 30rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--c-amber);
 }
 
-/* Двор дальше всех и почти стоит: по законам параллакса он едет медленнее
-   остальных слоёв. */
-.camp-cover__yard {
-  scale: 1;
-  animation: camp-cover-yard 1ms linear both;
-  animation-timeline: --cover;
-  animation-range: exit 0% exit 88%;
-}
-
-@keyframes camp-cover-yard {
-  from {
-    scale: 1.07;
-  }
+/* Сетка из точек. Второй тип геометрии: она держит пустой угол и не даёт полю
+   выглядеть незаполненным. */
+.camp-cover__dots {
+  position: absolute;
+  top: 10%;
+  left: 53%;
+  width: min(21%, 18rem);
+  aspect-ratio: 5 / 4;
+  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.32) 1.7px, transparent 1.8px);
+  background-size: 21px 21px;
 }
 
 .camp-cover__pet {
-  scale: 1.06;
-  translate: 0 -1%;
-  animation: camp-cover-pet 1ms linear both;
-  animation-timeline: --cover;
-  animation-range: exit 0% exit 88%;
-}
-
-@keyframes camp-cover-pet {
-  from {
-    scale: 1;
-    translate: 0 0;
-  }
-}
-
-/* Передние грозди ближе всех к объективу, поэтому едут дальше и быстрее
-   остальных слоёв. Левая уходит влево, правая вправо, обе вниз. Смещение
-   считается от ширины полосы, а не от предмета: слой размером с холст, и
-   девяти процентов хватает, чтобы вынести гроздь за кромку. */
-.camp-cover__near--left {
-  translate: -10% 7%;
-  scale: 1.14;
-  animation: camp-cover-left 1ms linear both;
-  animation-timeline: --cover;
-  animation-range: exit 0% exit 88%;
-}
-
-@keyframes camp-cover-left {
-  from {
-    translate: 0 0;
-    scale: 1;
-  }
-}
-
-.camp-cover__near--right {
-  translate: 10% 7%;
-  scale: 1.14;
-  animation: camp-cover-right 1ms linear both;
-  animation-timeline: --cover;
-  animation-range: exit 0% exit 88%;
-}
-
-@keyframes camp-cover-right {
-  from {
-    translate: 0 0;
-    scale: 1;
-  }
-}
-
-/* Кремовая вуаль слева: заголовок стоит на фотографии, и без неё тёмные буквы
-   тонут в траве. Полоса при этом остаётся бумагой, а не превращается в тёмный
-   баннер с белым текстом, каких на сайте нет. */
-.camp-cover__veil {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    rgba(244, 241, 235, 0.96) 0%,
-    rgba(244, 241, 235, 0.86) 28%,
-    rgba(244, 241, 235, 0.3) 54%,
-    rgba(244, 241, 235, 0) 72%
-  );
+}
+
+.camp-cover__pet img {
+  display: block;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
 }
 
 .camp-cover__copy {
@@ -193,51 +132,35 @@
   padding-bottom: var(--c-gap);
 }
 
-/* Своя подложка под текстом.
-
-   Общая вуаль лежит под ближними гроздями, иначе левая гроздь пропадала бы
-   за ней целиком. Но тогда бумажный мешок наезжает на подводку, и первые
-   слова тонут. Поэтому под самим текстом стоит вторая, узкая подложка: она
-   выше всей сцены и держит ровно ту колонку, в которой стоят буквы. */
-.camp-cover__copy::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: -1;
-  width: min(46rem, 78%);
-  background: linear-gradient(
-    92deg,
-    rgba(242, 238, 231, 0.92) 0%,
-    rgba(242, 238, 231, 0.86) 46%,
-    rgba(242, 238, 231, 0) 100%
-  );
-  content: "";
-}
-
 .camp-cover h1 {
-  max-width: 12ch;
-  margin: 0 0 1.1rem;
+  max-width: 11ch;
+  /* Плашка красит всю строчную коробку, и при плотном интерлиньяже соседние
+     строки налезают друг на друга. Ниже 1.06 не опускать. */
+  margin: 0 0 1.2rem;
   font-family: var(--font-sans);
-  font-size: clamp(3.2rem, 8vw, 6.4rem);
+  font-size: clamp(3rem, 7.6vw, 6.2rem);
   font-weight: 780;
-  line-height: 0.82;
+  line-height: 1.06;
   letter-spacing: -0.04em;
 }
 
+/* Слово на цветной плашке: приём из референса, где заголовок набран в двух
+   регистрах и одно слово вынуто на плашку. */
 .camp-cover h1 em {
-  display: block;
-  color: var(--c-amber);
+  display: inline-block;
+  margin-top: 0.12em;
+  padding: 0.02em 0.2em 0.1em;
+  background: var(--c-amber);
+  color: var(--c-ink);
   font-family: var(--font-serif);
-  font-size: 1.08em;
+  font-size: 1.04em;
   font-style: italic;
   font-weight: 500;
-  line-height: 0.9;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 }
 
 .camp-cover__lead {
-  max-width: 40ch;
+  max-width: 34ch;
   margin: 0 0 1.6rem;
   color: var(--c-muted);
   font-size: 1.05rem;
@@ -253,8 +176,9 @@
    одному классу она перебивала бы это правило по порядку в файле. */
 .camp-cover .camp-cover__cta {
   width: auto;
-  border-color: var(--c-amber);
-  background: var(--c-amber);
+  border-color: var(--c-ink);
+  background: var(--c-ink);
+  color: var(--c-sheet);
 }
 
 .camp-cover .camp-cover__cta:hover {
@@ -264,8 +188,7 @@
 }
 
 /* Вход обложки: строки поднимаются очередью, кнопка последней. Это часы, а не
-   прокрутка, и так и должно быть: полоса стоит первой на странице, и её вход
-   происходит на загрузке, а не по колесу. */
+   прокрутка, и так и должно быть: полоса стоит первой на странице. */
 .camp-cover__copy > * {
   animation: camp-cover-in 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -293,106 +216,110 @@
   }
 }
 
-/* На узком экране грозди занимают половину ширины и уходят вниз: собака между
-   ними иначе не помещается. Вуаль разворачивается снизу вверх, потому что
-   текст встаёт над сценой, а не слева от неё. */
-@media (max-width: 780px) {
+/* На узком экране коллаж не помещается рядом с текстом: вырезки уходят под
+   него, а мелкие снимаются вовсе. Две вырезки на телефоне это каша. */
+@media (max-width: 860px) {
   .camp-cover {
-    align-items: end;
-    min-height: clamp(460px, 66svh, 700px);
+    align-items: start;
+    min-height: clamp(520px, 74svh, 760px);
   }
 
-  /* На телефоне полоса почти квадратная, и холст 16 на 9 вписывается в неё
-     по высоте: около трети кадра срезается по горизонтали. Показать сразу
-     обе грозди и собаку между ними на такой ширине нельзя.
-
-     Поэтому кадр сдвигается вправо: в окно попадают собака и правая гроздь,
-     левая уходит за кромку. Смысл сцены сохраняется, читатель по-прежнему
-     смотрит из-за вещей, просто вещь одна. Все слои сдвигаются одинаково,
-     иначе они разъедутся между собой. */
-  .camp-cover__yard,
-  .camp-cover__pet,
-  .camp-cover__near {
-    object-position: 72% bottom;
+  .camp-cover__disc {
+    top: auto;
+    right: -8%;
+    bottom: 4%;
+    width: 56%;
   }
 
-  .camp-cover__veil {
-    background: linear-gradient(
-      180deg,
-      rgba(244, 241, 235, 0.97) 0%,
-      rgba(244, 241, 235, 0.9) 34%,
-      rgba(244, 241, 235, 0.35) 62%,
-      rgba(244, 241, 235, 0) 84%
-    );
+  .camp-cover__dots {
+    top: 4%;
+    left: auto;
+    right: 4%;
+    width: 38%;
   }
 
-  .camp-cover__copy {
-    align-self: start;
+  .camp-cover__pet:nth-of-type(3),
+  .camp-cover__pet:nth-of-type(4) {
+    display: none;
+  }
+
+  .camp-cover__lead {
+    max-width: 30ch;
   }
 }
 
-/* ---------------- секция 3: лента «Куда уходит взнос» -------------------
+@media (prefers-reduced-motion: reduce) {
+  .camp-cover__copy > * {
+    animation: none;
+  }
+}
 
-   Одна длинная картина едет влево, пока читатель прокручивает страницу вниз.
-   Секция высокая, внутри неё липкая сцена во весь экран, и прокрутка внутри
-   липкой части и есть путь ленты.
+/* ---------------- секция «Куда уходит взнос»: коллаж --------------------
 
-   Движением правит framer: один прогресс прокрутки кормит сдвиг ленты,
-   проявление подписей и тёплый свет. Разбор в самом компоненте, там же
-   объяснено, почему сдвиг идёт отрезками, а подписи функцией.
+   Та же грамматика, что у обложки, но своё поле: цвет меняется от секции к
+   секции, и это часть языка референсов, а не украшение.
 
-   Пропорция картины десять к одному задана брифом, поэтому ширина полосы
-   считается от её высоты, а не подбирается. Координаты станций тоже из брифа:
-   по ним художник ставит предметы, а код ставит подписи.
+   Раньше здесь была лента: длинная картина ехала влево по прокрутке. Она
+   отклонена вместе с обложкой за то же самое, за что и всё остальное: лента
+   это прямоугольник.
 
-   Здесь нет конечного состояния в статике: его ставит framer, а при гашении
-   движения секция просто остаётся стоять в начале пути и листается рукой.
-
-   Замысел в docs/campaigns-scroll-plan.md, бриф на картину в
-   docs/asset-brief-campaigns-ribbon.md.
+   Числа настоящие, предметы придут вырезками по брифу
+   docs/asset-brief-campaigns-collage.md. Пока их нет, поле держат числа и
+   геометрия, и выглядит оно законченным.
 ------------------------------------------------------------------------ */
 
 .camp-route {
-  --route-h: clamp(240px, 38svh, 460px);
-
   position: relative;
-  /* Путь ленты. Меньше двух экранов лента проезжает рывком, больше трёх
-     читатель успевает заскучать на середине. */
-  height: 260vh;
-  margin-bottom: var(--c-gap);
-  background: var(--c-paper);
+  z-index: 1;
+  min-height: clamp(560px, 82svh, 900px);
+  padding: var(--c-gap) 0;
+  overflow-x: clip;
+  background: #f3e6cd;
 }
 
-.camp-route__sticky {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--c-gap-sm);
-  height: 100svh;
-  overflow: hidden;
+.camp-route__field {
+  position: absolute;
+  inset: 0;
 }
 
-/* Шапка секции тянется во всю ширину сама.
-   Внутри колоночного флекса блок с margin: 0 auto ужимается по содержимому и
-   встаёт по центру, и заголовок уезжал в середину экрана, хотя вся страница
-   набрана от левого поля. */
-.camp-route__head {
-  width: 100%;
+/* Приглушённый зелёный круг. Второй цвет поля: на одном янтаре страница
+   начинает звенеть, а в референсах на поле всегда больше одной фигуры. */
+.camp-route__disc {
+  position: absolute;
+  top: 12%;
+  right: -6%;
+  width: min(38%, 34rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(111, 115, 85, 0.22);
 }
 
-.camp-route__head h2 {
-  max-width: 16ch;
+.camp-route__dots {
+  position: absolute;
+  bottom: 8%;
+  left: 3%;
+  width: min(24%, 20rem);
+  aspect-ratio: 4 / 3;
+  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.3) 1.7px, transparent 1.8px);
+  background-size: 21px 21px;
+}
+
+.camp-route__copy {
+  position: relative;
+  z-index: 1;
+}
+
+.camp-route__copy h2 {
+  max-width: 13ch;
   margin: 0;
   font-family: var(--font-sans);
-  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  font-size: clamp(2.2rem, 5vw, 4rem);
   font-weight: 760;
-  line-height: 0.94;
-  letter-spacing: -0.035em;
+  line-height: 0.96;
+  letter-spacing: -0.04em;
 }
 
-.camp-route__head h2 em {
+.camp-route__copy h2 em {
   display: block;
   color: var(--c-amber-text);
   font-family: var(--font-serif);
@@ -403,56 +330,33 @@
   letter-spacing: -0.03em;
 }
 
-.camp-route__lead {
-  max-width: 52ch;
-  margin: 0.9rem 0 0;
-  color: var(--c-muted);
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.camp-route__track {
+/* Поле нужд. Высота своя, потому что блоки стоят по местам, а не в потоке:
+   в потоке они выстроятся в ряд, а ряд это таблица. */
+.camp-route__needs {
   position: relative;
-  height: var(--route-h);
-  overflow: hidden;
+  z-index: 1;
+  height: clamp(420px, 52svh, 620px);
+  margin-top: var(--c-gap-sm);
 }
 
-/* Ширина считается от высоты: картина 9000 на 900, то есть десять к одному.
-   Так пропорция держится на любой высоте экрана и лента не растягивается.
-
-   Десять, а не шесть. При шести лента на экране 1440 выходила длиной в 1,27
-   окна, и весь её путь укладывался в четыреста пикселей прокрутки: сцена
-   читалась как подрагивание, а не как поездка. */
-.camp-route__strip {
-  position: relative;
-  width: calc(var(--route-h) * 10);
-  height: 100%;
-  will-change: transform;
-}
-
-.camp-route__art {
+.camp-route__need {
   position: absolute;
-  inset: 0;
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+}
+
+.camp-route__need img {
+  display: block;
   width: 100%;
-  height: 100%;
-  /* Полоса и картина одной пропорции, поэтому cover ничего не режет. Он здесь
-     страховкой на случай, если файл заменят с другим отношением сторон. */
-  object-fit: cover;
+  height: auto;
 }
 
-/* Подпись станции стоит над предметом и едет вместе с лентой: она привязана
-   к станции, а не к экрану. */
-.camp-route__station {
-  position: absolute;
-  top: 6%;
-  width: max-content;
-  max-width: 18rem;
+.camp-route__need figure {
   margin: 0;
-  text-align: center;
-  translate: -50% 0;
 }
 
-.camp-route__station figcaption {
+.camp-route__need figcaption {
   color: var(--c-amber-text);
   font-size: 0.68rem;
   font-weight: 700;
@@ -460,77 +364,51 @@
   text-transform: uppercase;
 }
 
-.camp-route__station b {
+.camp-route__need b {
   display: block;
-  margin-top: 0.4rem;
+  margin-top: 0.35rem;
   font-family: var(--font-serif);
-  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  line-height: 0.95;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
 }
 
-.camp-route__station span {
+.camp-route__need span {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   color: var(--c-muted);
   font-size: 0.82rem;
 }
 
-/* Тёплый свет поверх ленты: к концу пути бумага теплеет. Меняется только
-   прозрачность, поэтому кадр остаётся дешёвым. */
-.camp-route__glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(245, 158, 11, 0) 0%,
-    rgba(245, 158, 11, 0.06) 42%,
-    rgba(245, 158, 11, 0.22) 100%
-  );
-}
-
-/* Узкий экран: держать липкую сцену на телефоне негде. Секция становится
-   обычной полосой, и лента проезжает свой путь, пока полоса идёт через
-   экран. */
+/* На узком экране разбросанный коллаж не читается: блоки налезают друг на
+   друга, а места сдвинуть их некуда. Поле становится обычным столбиком, и это
+   честнее, чем каша. */
 @media (max-width: 860px) {
-  .camp-route {
+  .camp-route__needs {
+    display: grid;
+    gap: var(--c-gap-sm);
     height: auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
   }
 
-  .camp-route__sticky {
+  .camp-route__need {
     position: static;
-    height: auto;
-    padding: var(--c-gap) 0;
+    width: auto !important;
+    max-width: 22rem;
   }
 
-  /* Подпись едет вместе с лентой и на подходе к станции стоит у кромки
-     окна. На телефоне окно узкое, и подпись в восемнадцать строчных высот
-     обрезалась на подходе целиком. */
-  .camp-route__station {
-    max-width: 13rem;
+  .camp-route__need:nth-child(even) {
+    justify-self: end;
+    text-align: right;
+    justify-items: end;
   }
 
-  .camp-route__station b {
-    font-size: 1.5rem;
+  .camp-route__disc {
+    right: -22%;
+    width: 64%;
   }
-}
-
-/* Меньше движения: лента никуда не едет и ничего не липнет. Полосу можно
-   пролистать рукой, подписи стоят все сразу, свет зажжён. */
-.camp-route[data-still="true"] {
-  height: auto;
-}
-
-.camp-route[data-still="true"] .camp-route__sticky {
-  position: static;
-  height: auto;
-  padding: var(--c-gap) 0;
-}
-
-.camp-route[data-still="true"] .camp-route__track {
-  overflow-x: auto;
 }
 
 /* ---------------- фильтр и сортировка ---------------- */

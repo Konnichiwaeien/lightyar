@@ -1,68 +1,94 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 
 import type { CampaignSummary } from "@/lib/campaigns/summary";
 import { plural } from "@/lib/reports/shelter-scales";
+import { useMotionPreference } from "@/components/reports/use-motion-preference";
 
 /**
- * Обложка страницы сборов: «Сквозь вещи».
+ * Обложка страницы сборов: коллаж.
  *
- * Кадр снят из-за предметов. Вплотную к объективу, слева и справа, крупно и
- * мягко не в фокусе стоят вещи, которые приют собирает. В просвете между ними,
- * в фокусе, подопечный смотрит на читателя. Глубже двор.
+ * Грамматика взята с референсов и подтверждена владельцем 15 сентября: плоское
+ * цветное поле, поверх него свободно лежащие вырезки, за ними геометрические
+ * фигуры, крупная смешанная типографика в пустой середине, вырезки переходят
+ * через шов между секциями.
  *
- * По прокрутке передние грозди разъезжаются к своим краям и уходят вниз, двор
- * почти стоит, собака слегка растёт. К концу полосы между читателем и собакой
- * чисто. Смысл без подписи: между нуждой и животным стоят эти вещи, и их можно
- * купить.
+ * Прямоугольников в сцене нет. До этого обложка была фотополосой, и владелец
+ * отклонил её вместе с шестью другими заходами: в референсах фотополос нет ни
+ * одной, там всё вырезано и лежит на цвете.
  *
- * Замысел и разбор в docs/campaigns-scroll-plan.md, секция 1.
- * Бриф на съёмку в docs/asset-brief-campaigns-cover.md.
+ * Вырезки настоящие: подопечные приюта из `public/pets`, прошедшие числовой
+ * отсев по docs/pet-cutout-standard.md. Главная выходит за нижнюю кромку
+ * секции и ложится на следующее поле.
+ *
+ * Разбор секций в docs/campaigns-scroll-plan.md.
  */
 
 const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.round(value))} ₽`;
 
 /**
- * Четыре слоя одного кадра.
+ * Кто лежит на поле и где.
  *
- * Все нарисованы на одном холсте 2400 на 1350 и вписываются одинаково, поэтому
- * совмещаются при любой ширине полосы. Порядок в разметке снизу вверх: двор,
- * подопечный, ближние грозди.
+ * Имена настоящие, это подопечные приюта. Капрал стоит главным: по нему снята
+ * планка вырезки, остальные меряются по нему. Размеры и места подобраны так,
+ * чтобы коллаж читался несобранным: одинаковые размеры и ровный ряд сразу
+ * превращают его обратно в полосу.
  */
-const LAYERS = {
-  yard: "/campaigns/cover-yard.webp",
-  pet: "/campaigns/cover-pet.webp",
-  left: "/campaigns/cover-near-left.png",
-  right: "/campaigns/cover-near-right.png",
-};
+const PETS = [
+  {
+    src: "/pets/cutout-kapral.webp",
+    name: "Капрал",
+    style: { right: "2%", bottom: "-8%", height: "94%" },
+    drift: -54,
+  },
+  {
+    src: "/pets/cutout-dzhek.webp",
+    name: "Джек",
+    style: { left: "37%", top: "2%", height: "32%" },
+    drift: -38,
+  },
+  {
+    src: "/pets/cutout-lakki.webp",
+    name: "Лакки",
+    style: { left: "33%", bottom: "0%", height: "42%" },
+    drift: -26,
+  },
+];
 
 export function CampaignCover({ summary }: { summary: CampaignSummary }) {
+  const still = useMotionPreference();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  /* Прогресс идёт по уходу обложки вверх: она стоит первой на странице, и
+     ничего другого у неё нет. К первому кадру обложка уже целиком в экране. */
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
   return (
-    <section className="camp-cover">
-      {/* Сцена целиком декоративна: всё, что она говорит, сказано текстом
-          рядом, поэтому читалке она не нужна. */}
-      <div aria-hidden="true" className="camp-cover__scene">
-        {/* Слои идут обычными img, а не next/image: они уже нарезаны под холст
-            сцены, и подстановка размеров под брейкпоинты сдвинула бы их друг
-            относительно друга. */}
-        {/* eslint-disable @next/next/no-img-element */}
-        <img alt="" className="camp-cover__yard" fetchPriority="high" src={LAYERS.yard} />
-        <img alt="" className="camp-cover__pet" fetchPriority="high" src={LAYERS.pet} />
-        {/* eslint-enable @next/next/no-img-element */}
+    <section className="camp-cover" ref={sectionRef}>
+      <div aria-hidden="true" className="camp-cover__field">
+        <Drift className="camp-cover__dots" distance={-14} progress={scrollYProgress} still={still} />
+        <Drift className="camp-cover__disc" distance={-22} progress={scrollYProgress} still={still} />
 
-        {/* Кремовая вуаль слева: заголовок стоит на фотографии, и без неё
-            тёмные буквы тонут в земле. Полоса остаётся бумагой, а не
-            превращается в тёмный баннер.
-
-            Стоит под ближними гроздями, а не поверх всего. Перед ними ей
-            стоять нечем: они ближе всех к объективу, и вуаль поверх съедала
-            левую гроздь целиком. */}
-        <span className="camp-cover__veil" />
-
-        {/* eslint-disable @next/next/no-img-element */}
-        <img alt="" className="camp-cover__near camp-cover__near--left" src={LAYERS.left} />
-        <img alt="" className="camp-cover__near camp-cover__near--right" src={LAYERS.right} />
-        {/* eslint-enable @next/next/no-img-element */}
+        {PETS.map((pet) => (
+          <Drift
+            className="camp-cover__pet"
+            distance={pet.drift}
+            key={pet.src}
+            progress={scrollYProgress}
+            still={still}
+            style={pet.style}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img alt="" src={pet.src} />
+          </Drift>
+        ))}
       </div>
 
       <div className="camp-inner camp-cover__copy">
@@ -84,5 +110,39 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
         </Link>
       </div>
     </section>
+  );
+}
+
+/**
+ * Слой коллажа, который плывёт по прокрутке.
+ *
+ * Чем ближе предмет к читателю, тем дальше он уезжает: это единственное, что
+ * отличает коллаж от наклейки. Смещение приходит в пикселях и своё у каждого
+ * слоя, поэтому поле не едет целиком.
+ *
+ * Преобразование функцией, а не парой отрезков: от пары отрезков framer
+ * отдаёт значение браузеру нативной шкалой прокрутки и для узких окон внутри
+ * пути считает его неверно. Разобрано в campaign-route.tsx.
+ */
+function Drift({
+  className,
+  distance,
+  progress,
+  still,
+  style,
+  children,
+}: {
+  className: string;
+  distance: number;
+  progress: ReturnType<typeof useScroll>["scrollYProgress"];
+  still: boolean;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}) {
+  const y = useTransform(progress, (value) => value * distance);
+  return (
+    <motion.div className={className} style={still ? style : { ...style, y }}>
+      {children}
+    </motion.div>
   );
 }
