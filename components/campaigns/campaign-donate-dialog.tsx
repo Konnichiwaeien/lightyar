@@ -25,6 +25,10 @@ import { useLenis } from "@/components/ui/smooth-scroll";
  * вкладки, лента помощников, подопечный над верхней кромкой. В окне это
  * лишнее, а подопечный ещё и налезал на заголовок.
  *
+ * Прокрутка внутри окна помечена `data-lenis-prevent`: без этого Lenis
+ * съедает колесо и касание, и содержимое не прокручивается. Разбор в
+ * docs/development-standards.md.
+ *
  * Открытие и закрытие ведёт framer: окно всплывает и растёт от 96 процентов,
  * лист выезжает снизу, оба уходят обратно тем же путём. AnimatePresence нужен
  * ради выхода: без него узел исчезал бы мгновенно, и закрытие читалось бы
@@ -210,7 +214,12 @@ export function CampaignDonateDialog() {
               </button>
             </header>
 
-            <div className="camp-donate__body">
+            {/* data-lenis-prevent обязателен: плавная прокрутка перехватывает
+                колесо и касание на всей странице, и без этой пометки список
+                внутри окна не прокручивается вовсе. Одного lenis.stop() мало:
+                он останавливает страницу, но события всё равно съедаются.
+                Тот же приём в меню, в окне подарка и в ленте помощников. */}
+            <div className="camp-donate__body" data-lenis-prevent>
               <CampaignDonateForm onClose={() => setOpen(false)} onReady={onReady} />
             </div>
           </motion.div>

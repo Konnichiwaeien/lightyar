@@ -1672,7 +1672,17 @@
   backdrop-filter: blur(4px);
 }
 
+/* Переменные панели помощи объявлены на секции главной страницы, а ступени и
+   поля взяты оттуда же. В окне секции нет, поэтому переменные объявлены здесь
+   заново: без них поля теряют цвета. */
 .camp-donate__panel {
+  --donation-ink: #27221d;
+  --donation-muted: #746c62;
+  --donation-paper: #fffdf8;
+  --donation-wash: #fff8e8;
+  --donation-line: rgba(54, 46, 38, 0.16);
+  --donation-amber: #f3a400;
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1854,291 +1864,54 @@
   text-transform: uppercase;
 }
 
-/* Ступени взноса: те же суммы, что на главной. */
-.camp-form__tiers {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+/* Ступени и поля приходят из donation-experience.css: подписи, суммы и
+   правила ввода общие с главной, здесь меняется только раскладка.
+
+   Главное переопределение это столбцы. На широком экране панель главной
+   раскладывает ступени в первую колонку, а поля во вторую
+   (`grid-column: 2; grid-row: 1 / span 3`). В окне колонка одна, и чужое
+   указание на вторую создавало её из воздуха: форма разъезжалась надвое, а
+   строка с выходом улетала в середину левой половины. */
+.camp-donate__body .donation-tier-picker,
+.camp-donate__body .donation-fields {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+/* На узком экране панель главной раскладывает ступени каруселью с боковой
+   прокруткой. В листе она не нужна и вредна: лист и так прокручивается
+   вертикально, а карусель отнимает у ступеней ширину и режет подписи.
+   Ступени идут столбиком на любой ширине. */
+.camp-donate__body .donation-tier-picker__list {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: 1fr;
   gap: 0.5rem;
+  margin-inline: 0;
+  padding: 0;
+  overflow-x: visible;
+  scroll-snap-type: none;
+  touch-action: auto;
 }
 
-.camp-form__tier {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.7rem 0.4rem;
-  border: 1px solid rgba(28, 28, 28, 0.12);
-  border-radius: 16px;
-  background: #fff;
-  color: var(--c-ink);
-  font: inherit;
-  cursor: pointer;
-  transition:
-    border-color 0.25s,
-    background 0.25s,
-    transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+.camp-donate__body .donation-tier {
+  scroll-snap-align: none;
+  width: auto;
+  min-width: 0;
 }
 
-.camp-form__tier b {
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+/* Карусель ступеней на узком экране не нужна: в окне список идёт столбиком,
+   и подсказка «листайте варианты» никуда не ведёт. */
+.camp-donate__body .donation-tier-picker__hint {
+  display: none;
 }
 
-.camp-form__tier small {
-  color: var(--c-muted);
-  font-size: 0.68rem;
+.camp-donate__body .donation-fields {
+  gap: 0.9rem;
 }
 
-.camp-form__tier:hover {
-  border-color: rgba(28, 28, 28, 0.3);
-  transform: translateY(-2px);
-}
-
-.camp-form__tier[aria-pressed="true"] {
-  border-color: var(--c-amber-deep);
-  background: rgba(245, 158, 11, 0.18);
-}
-
-.camp-form__field {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.camp-form__field > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--c-muted);
-  font-size: 0.78rem;
-}
-
-.camp-form__field input {
-  min-height: 46px;
-  padding: 0 0.9rem;
-  border: 1px solid rgba(28, 28, 28, 0.14);
-  border-radius: 14px;
-  background: #fff;
-  color: var(--c-ink);
-  font: inherit;
-  font-size: 0.95rem;
-}
-
-.camp-form__field input:focus-visible {
-  border-color: var(--c-amber-deep);
-}
-
-.camp-form__field--amount {
-  margin-top: 0.7rem;
-}
-
-/* Как часто: два взаимоисключающих варианта, поэтому радио. */
-.camp-form__cadence {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.camp-form__cadence label {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(28, 28, 28, 0.12);
-  border-radius: 16px;
-  background: #fff;
-  cursor: pointer;
-  transition:
-    border-color 0.25s,
-    background 0.25s;
-}
-
-.camp-form__cadence label[data-selected="true"] {
-  border-color: var(--c-amber-deep);
-  background: rgba(245, 158, 11, 0.18);
-}
-
-.camp-form__cadence input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.camp-form__cadence input:focus-visible ~ span {
-  text-decoration: underline;
-}
-
-.camp-form__cadence svg {
-  flex: none;
-  color: var(--c-amber-text);
-}
-
-.camp-form__cadence label > span {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.camp-form__cadence b {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.camp-form__cadence small {
-  color: var(--c-muted);
-  font-size: 0.72rem;
-}
-
-/* Переключатель анонимности. */
-.camp-form__toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-}
-
-.camp-form__toggle input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.camp-form__toggle i {
-  position: relative;
-  flex: none;
-  width: 44px;
-  height: 26px;
-  border-radius: 999px;
-  background: rgba(28, 28, 28, 0.16);
-  transition: background 0.25s;
-}
-
-.camp-form__toggle i::after {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  content: "";
-  transition: translate 0.25s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.camp-form__toggle input:checked + i {
-  background: var(--c-amber-deep);
-}
-
-.camp-form__toggle input:checked + i::after {
-  translate: 18px 0;
-}
-
-.camp-form__toggle input:focus-visible + i {
-  outline: 3px solid var(--c-amber-text);
-  outline-offset: 3px;
-}
-
-.camp-form__toggle > span {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.camp-form__toggle b {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.camp-form__toggle small {
-  color: var(--c-muted);
-  font-size: 0.75rem;
-}
-
-.camp-form__person {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.camp-form__consent {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  cursor: pointer;
-}
-
-.camp-form__consent input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.camp-form__consent > span {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
-  border: 1px solid rgba(28, 28, 28, 0.24);
-  border-radius: 6px;
-  background: #fff;
-  transition:
-    background 0.2s,
-    border-color 0.2s;
-}
-
-.camp-form__consent input:checked + span {
-  border-color: var(--c-amber-deep);
-  background:
-    linear-gradient(45deg, transparent 45%, #fff 45%, #fff 55%, transparent 55%) no-repeat center / 60% 2px,
-    var(--c-amber-deep);
-}
-
-.camp-form__consent input:focus-visible + span {
-  outline: 3px solid var(--c-amber-text);
-  outline-offset: 3px;
-}
-
-.camp-form__consent small {
-  color: var(--c-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.camp-form__consent a {
-  color: var(--c-amber-text);
-}
-
-/* Кнопка платежа выключена, пока оплата не подключена, и говорит об этом. */
-.camp-form__pay {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 56px;
-  padding: 0.8rem 1.1rem;
-  border: 0;
-  border-radius: 18px;
-  background: var(--c-amber);
-  color: var(--c-ink);
-  font: inherit;
-  text-align: left;
-  cursor: not-allowed;
-  opacity: 0.85;
-}
-
-.camp-form__pay > span {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.camp-form__pay b {
-  font-size: 1rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.camp-form__pay small {
-  color: rgba(28, 28, 28, 0.7);
-  font-size: 0.74rem;
+.camp-donate__body .donation-fields__person {
+  grid-template-columns: 1fr;
 }
 
 .camp-form__note {
@@ -2156,16 +1929,6 @@
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
-}
-
-@media (max-width: 480px) {
-  .camp-form__tiers {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .camp-form__cadence {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------------- пустое состояние каталога ------------------------------

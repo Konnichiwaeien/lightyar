@@ -85,3 +85,63 @@ lightyar/
 4.  **`components/pets/pets-grid.tsx`** — компонент сетки, управляющий Bento-стилем первого и шестого элемента, а также показывающий пустое состояние «Питомцев не найдено».
 5.  **`components/pets/pets-hero.tsx`** — изолированная премиальная обложка с фоновым видео и счетчиками.
 6.  **`components/pets/catalog-unavailable.tsx`** — изолированный экран системной ошибки API.
+
+---
+
+## 5. Плавная прокрутка: `data-lenis-prevent` на всём, что прокручивается внутри
+
+Страница прокручивается не браузером, а Lenis (`components/ui/smooth-scroll.tsx`).
+Он перехватывает колесо и касание **на всём документе** и сам двигает страницу.
+
+Отсюда правило, о которое спотыкались уже не раз:
+
+> **Любой блок с собственной прокруткой — окно, выдвижной лист, длинный
+> список, таблица — обязан нести атрибут `data-lenis-prevent`.**
+
+```tsx
+<div className="camp-donate__body" data-lenis-prevent>
+  {/* содержимое, которое прокручивается само */}
+</div>
+```
+
+Без атрибута блок **не прокручивается вообще**: события уходят Lenis, а он
+двигает страницу, которая в этот момент нередко заблокирована.
+
+### Чего недостаточно
+
+*   **`lenis.stop()` не спасает.** Он останавливает движение страницы, но
+    обработчики остаются висеть и по-прежнему съедают колесо и касание.
+    Останавливать страницу под модальным окном всё равно нужно — это другое:
+    так фон не уезжает, пока читатель работает с окном.
+*   **`overflow: auto` сам по себе не работает** по той же причине: браузер до
+    этих событий просто не доходит.
+
+### Где это уже сделано
+
+`components/layout/menu-overlay.tsx`, `components/wishlist/gift-order-modal.tsx`,
+`components/donations/donation-feed.tsx`,
+`components/campaigns/campaign-donate-dialog.tsx`,
+`components/campaigns/campaign-progress-card.tsx`.
+
+### Как проверить
+
+Замером, а не на глаз: прокрутить блок колесом и сравнить `scrollTop` до и
+после.
+
+```js
+const before = await page.$eval(SELECTOR, (n) => n.scrollTop);
+await page.hover(SELECTOR);
+await page.mouse.wheel(0, 400);
+await page.waitForTimeout(400);
+const after = await page.$eval(SELECTOR, (n) => n.scrollTop);
+// after должен быть заметно больше before
+```
+
+### Сопутствующее
+
+*   Якорные переходы внутри страницы делаются через `getLenis()?.scrollTo(...)`
+    с запасным `scrollIntoView` — без Lenis (телефон, «меньше движения») якорь
+    должен работать нативно.
+*   Lenis выключает сам себя при `prefers-reduced-motion: reduce` и на
+    сенсорных экранах, поэтому `getLenis()` может вернуть `null`. Код обязан
+    это переживать.

@@ -1,41 +1,48 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { ArrowUpRight, CalendarHeart, HandCoins, Mail, Target, UserRound, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Target, X } from "lucide-react";
 
 import { DONATION_TIERS } from "@/lib/donations/donation-tiers";
+import { getDonationTier } from "@/lib/donations/get-donation-tier";
 import { DONATION_INTENT_EVENT, type DonationIntent } from "@/lib/donations/donation-intent";
+import { DonationFields } from "@/components/donations/donation-fields";
+import { DonationTierPicker } from "@/components/donations/donation-tier-picker";
+/* Стили ступеней и полей лежат рядом с панелью главной и подключались её
+   файлом. Панель здесь не рендерится, поэтому лист стилей подключается
+   напрямую: без него поля приходят голой разметкой. */
+import "@/components/donations/donation-experience.css";
 
 /**
  * Форма взноса для окна помощи на странице сборов.
  *
- * Своя, а не та, что стоит секцией на главной. Туда форма вписана в широкую
- * панель: вкладки, лента помощников, подопечный, который висит над верхней
- * кромкой. В окне всё это лишнее, а подопечный ещё и налезал на заголовок.
- * Здесь остались только поля: назначение, сумма, как часто, кто платит.
+ * Ступени и поля здесь те же самые, что на главной: `DonationTierPicker` и
+ * `DonationFields` берутся как есть. Своя копия была бы вторым местом, где
+ * живут суммы, подписи и правила ввода, и они разошлись бы на первой же
+ * правке.
  *
- * Логика общая с главной: те же ступени взноса, те же поля, тот же шаг в
- * пятьсот рублей. Разная только раскладка.
+ * Не берётся только обвязка: вкладки «Помочь» и «Помощники», лента
+ * помощников и подопечный, висящий над верхней кромкой панели. Всё это
+ * устроено под широкую секцию, а в окне читалось мусором, и подопечный ещё
+ * налезал на заголовок.
  *
- * Оплата пока не подключена, и форма об этом говорит прямо, а не притворяется
- * рабочей: кнопка платежа выключена и подписана.
+ * Оплата пока не подключена: об этом говорит сама кнопка платежа внутри
+ * полей, она выключена и подписана.
  */
 
-const RUB = new Intl.NumberFormat("ru-RU");
-
 export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; onReady: () => void }) {
-  const id = useId();
   const [intent, setIntent] = useState<DonationIntent | null>(null);
   const [cadence, setCadence] = useState<"monthly" | "once">("once");
   const [amount, setAmount] = useState(500);
-  const [custom, setCustom] = useState("");
-  const [name, setName] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
+  const [donorName, setDonorName] = useState("");
   const [email, setEmail] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [consent, setConsent] = useState(false);
+  const selectedTier = useMemo(() => getDonationTier(amount), [amount]);
 
   /* Назначение приходит событием: кнопка «Помочь» на карточке сбора шлёт
-     сбор и сумму, кнопка «Сделать взнос» в финале не шлёт ничего. */
+     сбор и сумму, кнопки «Сделать взнос» и «Помочь без цели» не шлют ничего. */
   useEffect(() => {
     const receive = (event: Event) => {
       const detail = (event as CustomEvent<DonationIntent>).detail;
@@ -43,7 +50,7 @@ export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; 
       setIntent(detail);
       setCadence("once");
       setAmount(detail.amount);
-      setCustom(DONATION_TIERS.some((tier) => tier.amount === detail.amount) ? "" : String(detail.amount));
+      setCustomAmount(DONATION_TIERS.some((tier) => tier.amount === detail.amount) ? "" : String(detail.amount));
     };
     window.addEventListener(DONATION_INTENT_EVENT, receive);
     /* Окно ждёт этого сигнала: событие с назначением могло прийти раньше, чем
@@ -52,15 +59,20 @@ export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; 
     return () => window.removeEventListener(DONATION_INTENT_EVENT, receive);
   }, [onReady]);
 
-  const pickTier = (value: number) => {
-    setAmount(value);
-    setCustom("");
+  const chooseTier = (next: number) => {
+    setAmount(next);
+    setCustomAmount("");
   };
 
-  const changeCustom = (value: string) => {
-    setCustom(value);
+  const changeCustomAmount = (value: string) => {
+    setCustomAmount(value);
     const parsed = Number(value);
     if (Number.isFinite(parsed) && parsed > 0) setAmount(parsed);
+  };
+
+  const changeAnonymous = (next: boolean) => {
+    setAnonymous(next);
+    if (next) setConsent(false);
   };
 
   return (
@@ -86,123 +98,33 @@ export function CampaignDonateForm({ onClose, onReady }: { onClose: () => void; 
         </p>
       )}
 
-      <fieldset className="camp-form__block">
-        <legend>Сколько</legend>
-        <div className="camp-form__tiers">
-          {DONATION_TIERS.map((tier) => (
-            <button
-              key={tier.id}
-              aria-pressed={!custom && amount === tier.amount}
-              className="camp-form__tier"
-              onClick={() => pickTier(tier.amount)}
-              type="button"
-            >
-              <b>{RUB.format(tier.amount)} ₽</b>
-              <small>{tier.shortLabel}</small>
-            </button>
-          ))}
-        </div>
-        <label className="camp-form__field camp-form__field--amount" htmlFor={`${id}-amount`}>
-          <span>Своя сумма</span>
-          <input
-            id={`${id}-amount`}
-            inputMode="numeric"
-            min={1}
-            name="amount"
-            onChange={(event) => changeCustom(event.target.value)}
-            placeholder="например, 750"
-            type="number"
-            value={custom}
-          />
-        </label>
-      </fieldset>
+      <DonationTierPicker
+        customAmount={customAmount}
+        onCustomAmountChange={changeCustomAmount}
+        onSelect={chooseTier}
+        selected={selectedTier}
+      />
 
-      <fieldset className="camp-form__block">
-        <legend>Как часто</legend>
-        <div className="camp-form__cadence">
-          {[
-            { key: "once", label: "Разово", note: "один взнос", Icon: HandCoins },
-            { key: "monthly", label: "Каждый месяц", note: "опека", Icon: CalendarHeart },
-          ].map(({ key, label, note, Icon }) => (
-            <label data-selected={cadence === key} key={key}>
-              <input
-                checked={cadence === key}
-                name={`${id}-cadence`}
-                onChange={() => setCadence(key as "monthly" | "once")}
-                type="radio"
-                value={key}
-              />
-              <Icon aria-hidden="true" size={18} />
-              <span>
-                <b>{label}</b>
-                <small>{note}</small>
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <DonationFields
+        amount={amount}
+        anonymous={anonymous}
+        cadence={cadence}
+        consent={consent}
+        donorName={donorName}
+        email={email}
+        onAnonymousChange={changeAnonymous}
+        onCadenceChange={setCadence}
+        onConsentChange={setConsent}
+        onDonorNameChange={setDonorName}
+        onEmailChange={setEmail}
+      />
 
-      <label className="camp-form__toggle">
-        <input checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} type="checkbox" />
-        <i aria-hidden="true" />
-        <span>
-          <b>Анонимно</b>
-          <small>без имени и почты</small>
-        </span>
-      </label>
-
-      {anonymous ? null : (
-        <div className="camp-form__person">
-          <label className="camp-form__field" htmlFor={`${id}-name`}>
-            <span>
-              <UserRound aria-hidden="true" size={15} /> Имя
-            </span>
-            <input
-              autoComplete="name"
-              id={`${id}-name`}
-              name="donorName"
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Как к вам обращаться"
-              type="text"
-              value={name}
-            />
-          </label>
-          <label className="camp-form__field" htmlFor={`${id}-email`}>
-            <span>
-              <Mail aria-hidden="true" size={15} /> Почта для чека
-            </span>
-            <input
-              autoComplete="email"
-              id={`${id}-email`}
-              name="email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="mail@example.ru"
-              type="email"
-              value={email}
-            />
-          </label>
-          <label className="camp-form__consent">
-            <input checked={consent} onChange={(event) => setConsent(event.target.checked)} type="checkbox" />
-            <span aria-hidden="true" />
-            <small>
-              Согласен с <a href="/privacy">обработкой персональных данных</a>
-            </small>
-          </label>
-        </div>
-      )}
-
-      <button aria-disabled="true" className="camp-form__pay" disabled type="button">
-        <span>
-          <b>Перевести {RUB.format(amount)} ₽</b>
-          <small>онлайн-оплата подключается</small>
-        </span>
-        <ArrowUpRight aria-hidden="true" size={18} />
-      </button>
-
+      {/* Про то, что оплата не подключена, говорит сама кнопка платежа внутри
+          полей; здесь только выход. */}
       <p className="camp-form__note">
-        Оплата пока не подключена: перевести можно по реквизитам из подвала.{" "}
+        Перевести можно по реквизитам из подвала сайта.{" "}
         <button onClick={onClose} type="button">
-          Закрыть
+          Закрыть окно
         </button>
       </p>
     </form>

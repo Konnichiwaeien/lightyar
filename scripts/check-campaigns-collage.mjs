@@ -440,23 +440,61 @@ try {
     assert.equal(sheet, compact, `${viewport.name}: окно помощи в виде ${sheet ? "листа" : "окна"}`);
     assert.equal(intentTitle, firstTitle, `${viewport.name}: в панели не тот сбор: «${intentTitle}»`);
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(600);
+    /* Ждём исчезновения узла, а не отмеренную паузу: уход листа ведёт пружина,
+       и на узком экране она идёт дольше, чем окно на широком. */
+    await page.locator(".camp-donate").waitFor({ state: "detached", timeout: 5_000 }).catch(() => {});
     assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 0, `${viewport.name}: окно не закрылось по Escape`);
 
     // «Сделать взнос» в финале открывает панель без назначения.
     await page.locator(".camp-call__cta").scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
     await page.locator(".camp-call__cta").click();
-    await page.locator(".camp-form__pay").waitFor({ state: "visible", timeout: 20_000 });
+    /* Кнопка платежа приходит из общих полей главной: ждём именно её, иначе
+       проверка успеет пройти по полупустой форме. */
+    await page.locator(".camp-donate__body .donation-provider-button").waitFor({ state: "visible", timeout: 20_000 });
+    /* Пауза на пружину открытия: пока окно растёт от 96 процентов, ширины
+       снятые с экрана меньше настоящих, и любая проверка размеров врёт. */
+    await page.waitForTimeout(600);
     assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 1, `${viewport.name}: окно помощи не открылось из финала`);
     // Взнос без цели: назначения в форме нет.
     const free = await page.$eval(".camp-form__intent", (node) => node.className.includes("--free"));
     assert.ok(free, `${viewport.name}: из финала окно открылось с назначением`);
+
+    /* Ступени и поля в окне те же, что на главной, и стоят столбцом: в широкой
+       секции список ступеней это лента со снапом, и в окне она оставалась
+       лентой, которую надо тащить вбок. */
+    const form = await page.evaluate(() => {
+      const panel = document.querySelector(".camp-donate__body");
+      const list = panel.querySelector(".donation-tier-picker__list");
+      const tiers = [...panel.querySelectorAll(".donation-tier")];
+      return {
+        tiers: tiers.length,
+        fields: Boolean(panel.querySelector(".donation-fields")),
+        sideways: Math.round(list.scrollWidth - list.clientWidth),
+        narrow: tiers.filter((tier) => tier.offsetWidth < list.clientWidth - 8).length,
+      };
+    });
+    assert.ok(form.tiers >= 5, `${viewport.name}: ступени с главной не приехали (${form.tiers})`);
+    assert.ok(form.fields, `${viewport.name}: полей с главной в окне нет`);
+    assert.equal(form.sideways, 0, `${viewport.name}: ступени остались лентой (${form.sideways}px вбок)`);
+    assert.equal(form.narrow, 0, `${viewport.name}: ${form.narrow} ступеней уже колонки`);
+
+    /* Прокрутка внутри окна проверяется колесом, а не присвоением scrollTop:
+       присвоение прошло бы и с поломкой, из-за которой окно не прокручивалось
+       вовсе. Плавная прокрутка съедала колесо, пока на теле окна не появился
+       data-lenis-prevent. */
+    const sheetBox = await page.locator(".camp-donate__body").boundingBox();
+    await page.mouse.move(sheetBox.x + sheetBox.width / 2, sheetBox.y + sheetBox.height / 2);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(400);
+    const wheeled = await page.$eval(".camp-donate__body", (node) => Math.round(node.scrollTop));
+    assert.ok(wheeled > 80, `${viewport.name}: окно не прокручивается колесом (${wheeled}px), потерян data-lenis-prevent?`);
+
     await page.locator(".camp-donate__close").click();
-    await page.waitForTimeout(600);
+    await page.locator(".camp-donate").waitFor({ state: "detached", timeout: 5_000 }).catch(() => {});
     assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 0, `${viewport.name}: окно не закрылось крестиком`);
     console.log(
-      `${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает ${sheet ? "лист" : "окно"} со сбором «${intentTitle.slice(0, 24)}…», финал открывает его без назначения`,
+      `${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает ${sheet ? "лист" : "окно"} со сбором «${intentTitle.slice(0, 24)}…», финал открывает его без назначения, ступеней ${form.tiers} в столбец, колесо прокручивает на ${wheeled}px`,
     );
 
     // Финал: миска падает, пока секция входит в экран. Внизу экрана её ещё
