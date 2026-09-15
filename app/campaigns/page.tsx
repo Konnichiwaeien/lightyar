@@ -8,10 +8,11 @@ import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
 import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
 import { CampaignCover } from "@/components/campaigns/campaign-cover";
+import { CampaignRoute } from "@/components/campaigns/campaign-route";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
-import { getCampaignSummary } from "@/lib/campaigns/summary";
+import { PLEDGE, getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 import "@/components/campaigns/campaigns.css";
 
@@ -204,6 +205,13 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             <CampaignsPagination currentPage={safePage} totalPages={totalPages} />
           </Suspense>
         </div>
+
+        {/* Лента «Куда уходит взнос»: секция 3 плана. Стоит после карточек
+            намеренно, это блок доверия: он работает, когда читатель уже
+            посмотрел сборы. Станции без своих сборов подписи не получают. */}
+        {summary && summary.stations.length > 0 ? (
+          <CampaignRoute stations={summary.stations} unit={PLEDGE} />
+        ) : null}
       </main>
     </div>
   );

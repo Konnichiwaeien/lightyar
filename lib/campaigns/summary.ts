@@ -7,6 +7,48 @@ import { campaignsService } from "@/lib/api/services/campaigns";
  * страницы под обложкой меняются, а нужда приюта от этого не меняется.
  */
 
+/** Шаг взноса. Тот же, что подставляет кнопка «Помочь» на карточке сбора. */
+export const PLEDGE = 500;
+
+/**
+ * Станции ленты «Куда уходит взнос».
+ *
+ * Координата это центр станции в долях длины картины. Числа те же, что в
+ * брифе на съёмку, `docs/asset-brief-campaigns-ribbon.md`: по ним художник
+ * ставит предметы, а код ставит подписи. Разъехаться они не могут только
+ * потому, что число здесь одно на обоих.
+ */
+const STATIONS: { at: number; tag: string }[] = [
+  { at: 0.22, tag: "Корм" },
+  { at: 0.39, tag: "Медицина" },
+  { at: 0.56, tag: "Реабилитация" },
+  { at: 0.73, tag: "Срочно" },
+];
+
+/**
+ * Момент, когда подпись станции договаривает, в долях пути ленты.
+ *
+ * Станция выходит на середину экрана при прогрессе (at * r - 0.5) / (r - 1),
+ * где r это длина ленты в окнах. r зависит от ширины экрана, поэтому точное
+ * число в CSS не посчитать: там нельзя поделить длину на длину. Берём прямую,
+ * проведённую по типичному рабочему столу, где лента длиной в 2,4 окна.
+ * Зависимость от at при любом r остаётся прямой, меняется только наклон,
+ * поэтому порядок подписей верен на всех ширинах, а расходится только их
+ * точный момент, и расходится в пределах десятой доли пути.
+ */
+const say = (at: number) => Math.min(0.98, Math.max(0.14, 1.714 * at - 0.357));
+
+export interface RouteStation {
+  /** Центр станции в долях длины ленты. */
+  at: number;
+  /** Тег сбора, он же подпись станции. */
+  tag: string;
+  /** Сколько собрано по этому тегу. */
+  collected: number;
+  /** Доля пути, к которой подпись станции проявлена целиком. */
+  say: number;
+}
+
 export interface CampaignSummary {
   /** Сколько сборов открыто. */
   funds: number;
@@ -16,6 +58,8 @@ export interface CampaignSummary {
   got: number;
   /** Сколько не хватает до всех целей. */
   rest: number;
+  /** Станции ленты: только те, у которых есть открытые сборы. */
+  stations: RouteStation[];
 }
 
 export async function getCampaignSummary(): Promise<CampaignSummary | null> {
@@ -26,5 +70,16 @@ export async function getCampaignSummary(): Promise<CampaignSummary | null> {
   const goal = open.reduce((sum, fund) => sum + (Number(fund.total) || 0), 0);
   const got = open.reduce((sum, fund) => sum + (Number(fund.current) || 0), 0);
 
-  return { funds: open.length, goal, got, rest: Math.max(0, goal - got) };
+  /* Станция без своих сборов подписи не получает: ноль рублей под предметом
+     читался бы поломкой, а не правдой. Предметы на картине при этом остаются,
+     она одна на все состояния данных. */
+  const stations = STATIONS.map((station) => ({
+    ...station,
+    say: say(station.at),
+    collected: open
+      .filter((fund) => (fund.tag || "").trim().toLowerCase() === station.tag.toLowerCase())
+      .reduce((sum, fund) => sum + (Number(fund.current) || 0), 0),
+  })).filter((station) => station.collected > 0);
+
+  return { funds: open.length, goal, got, rest: Math.max(0, goal - got), stations };
 }

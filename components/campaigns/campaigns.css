@@ -331,6 +331,253 @@
   }
 }
 
+/* ---------------- секция 3: лента «Куда уходит взнос» -------------------
+
+   Одна длинная картина едет влево, пока читатель прокручивает страницу вниз.
+   Секция высокая, внутри неё липкая сцена во весь экран, и прокрутка внутри
+   липкой части и есть путь ленты.
+
+   Отрезок contain. У секции выше экрана он совпадает с тем временем, пока она
+   держит экран целиком, то есть ровно с липкостью: лента начинает ехать, когда
+   сцена прилипла, и доезжает, когда отлипает. Ни cover, ни entry так не умеют.
+
+   Путь ленты считается в единицах контейнера: ширина картины это её высота,
+   умноженная на десять, а окно это 100cqw полосы. Поэтому никакого замера в
+   JavaScript не нужно, и сцена остаётся серверной.
+
+   Конечное состояние объявлено статикой, исходное лежит в keyframes: при
+   гашении движения читатель видит проявленные подписи и зажжённый свет.
+
+   Замысел в docs/campaigns-scroll-plan.md, бриф на картину в
+   docs/asset-brief-campaigns-ribbon.md.
+------------------------------------------------------------------------ */
+
+.camp-route {
+  --route-h: clamp(240px, 38svh, 460px);
+
+  position: relative;
+  /* Путь ленты. Меньше двух экранов лента проезжает рывком, больше трёх
+     читатель успевает заскучать на середине. */
+  height: 260vh;
+  margin-bottom: var(--c-gap);
+  background: var(--c-paper);
+  view-timeline: --route block;
+}
+
+.camp-route__sticky {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--c-gap-sm);
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* Шапка секции тянется во всю ширину сама.
+   Внутри колоночного флекса блок с margin: 0 auto ужимается по содержимому и
+   встаёт по центру, и заголовок уезжал в середину экрана, хотя вся страница
+   набрана от левого поля. */
+.camp-route__head {
+  width: 100%;
+}
+
+.camp-route__head h2 {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  font-weight: 760;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+}
+
+.camp-route__head h2 em {
+  display: block;
+  color: var(--c-amber-text);
+  font-family: var(--font-serif);
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* Контейнер нужен, чтобы лента знала ширину окна: от неё считается путь. */
+.camp-route__track {
+  position: relative;
+  height: var(--route-h);
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* Ширина считается от высоты: картина 9000 на 900, то есть десять к одному.
+   Так пропорция держится на любой высоте экрана и лента не растягивается.
+
+   Десять, а не шесть. При шести лента на экране 1440 выходила длиной в 1,27
+   окна, и весь её путь укладывался в четыреста пикселей прокрутки: сцена
+   читалась как подрагивание, а не как поездка. */
+.camp-route__strip {
+  position: relative;
+  width: calc(var(--route-h) * 10);
+  height: 100%;
+  translate: calc(100cqw - var(--route-h) * 10) 0;
+  animation: camp-route-ride 1ms linear both;
+  animation-timeline: --route;
+  animation-range: contain 4% contain 96%;
+}
+
+@keyframes camp-route-ride {
+  from {
+    translate: 0 0;
+  }
+}
+
+/* Временная замена картины: предметы вишлиста на кремовой полосе. Когда
+   придёт ribbon.webp, здесь останется один img на всю полосу, а эти правила
+   уйдут вместе с разметкой. */
+.camp-route__thing {
+  position: absolute;
+  bottom: 14%;
+  width: calc(var(--route-h) * 0.44);
+  height: calc(var(--route-h) * 0.5);
+  object-fit: contain;
+  object-position: bottom;
+  translate: -50% 0;
+}
+
+/* Подпись станции стоит над предметом и едет вместе с лентой: она привязана
+   к станции, а не к экрану. Момент проявления приходит числом из данных. */
+.camp-route__station {
+  position: absolute;
+  top: 6%;
+  width: max-content;
+  max-width: 18rem;
+  margin: 0;
+  text-align: center;
+  translate: -50% 0;
+  animation: camp-route-say 1ms linear both;
+  animation-timeline: --route;
+  animation-range: contain calc((var(--say) - 0.12) * 100%) contain calc(var(--say) * 100%);
+}
+
+@keyframes camp-route-say {
+  from {
+    opacity: 0;
+    translate: -50% 18px;
+  }
+}
+
+.camp-route__station figcaption {
+  color: var(--c-amber-text);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.camp-route__station b {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+.camp-route__station span {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--c-muted);
+  font-size: 0.82rem;
+}
+
+/* Тёплый свет поверх ленты: к концу пути бумага теплеет. Меняется только
+   прозрачность, поэтому кадр остаётся дешёвым. */
+.camp-route__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(245, 158, 11, 0) 0%,
+    rgba(245, 158, 11, 0.06) 42%,
+    rgba(245, 158, 11, 0.22) 100%
+  );
+  animation: camp-route-warm 1ms linear both;
+  animation-timeline: --route;
+  animation-range: contain 6% contain 96%;
+}
+
+@keyframes camp-route-warm {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Узкий экран: держать липкую сцену на телефоне негде. Секция становится
+   обычной полосой, и лента проезжает свой путь, пока полоса идёт через экран.
+   Отрезок меняется на cover: contain у секции ниже экрана длится считаные
+   пиксели. */
+@media (max-width: 860px) {
+  .camp-route {
+    height: auto;
+  }
+
+  .camp-route__sticky {
+    position: static;
+    height: auto;
+    padding: var(--c-gap) 0;
+  }
+
+  /* Путь кончается на 70 процентах прохода, а не на 92: секция стоит
+     последней на странице, и прокрутки за её низом попросту нет. С 92
+     процентами лента на планшете не доезжала полторы сотни пикселей. */
+  .camp-route__strip {
+    animation-range: cover 14% cover 70%;
+  }
+
+  .camp-route__station {
+    animation-range: cover calc(14% + (var(--say) - 0.12) * 56%) cover calc(14% + var(--say) * 56%);
+  }
+
+  .camp-route__glow {
+    animation-range: cover 16% cover 70%;
+  }
+}
+
+/* Меньше движения: лента никуда не едет и ничего не липнет. Полосу можно
+   пролистать рукой, подписи стоят все сразу, свет зажжён. */
+@media (prefers-reduced-motion: reduce) {
+  .camp-route {
+    height: auto;
+  }
+
+  .camp-route__sticky {
+    position: static;
+    height: auto;
+    padding: var(--c-gap) 0;
+  }
+
+  .camp-route__track {
+    overflow-x: auto;
+  }
+
+  .camp-route__strip,
+  .camp-route__station,
+  .camp-route__glow {
+    animation: none;
+  }
+
+  /* Гасить мало: без этой строки лента осталась бы в конечном положении,
+     то есть отъехавшей, и читатель увидел бы её хвост. */
+  .camp-route__strip {
+    translate: 0 0;
+  }
+}
+
 /* ---------------- фильтр и сортировка ---------------- */
 
 .camp-controls {
