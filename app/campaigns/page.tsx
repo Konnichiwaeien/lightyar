@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, PawPrint } from "lucide-react";
 
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
@@ -168,16 +168,30 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                         </Link>
                       </div>
 
-                      {/* Тег и пометка о чужом кадре стоят на листе, а не на
-                          снимке: у круга нет углов, и на кромке их срезало. */}
+                      {/* Тег и имя подопечного это бейджи, и оба стоят на листе,
+                          а не на снимке: у круга нет углов, и на кромке их
+                          срезало. Сбор ради конкретного подопечного видно по
+                          бейджу с лапой: раньше имя стояло тихой капителью у
+                          заголовка и читалось его частью. */}
                       <p className="camp-item__meta">
-                        <span className="camp-item__tag">{fund.tag}</span>
+                        <span className="camp-badge camp-badge--tag">{fund.tag}</span>
+                        {/* В бейдже одно имя, без предлога: клички приходят из
+                            CMS в именительном падеже, и «сбор для Бакс» читалось
+                            бы ошибкой. Смысл добирает подпись для читалки. */}
+                        {fund.petName ? (
+                          <span
+                            aria-label={`Сбор ради подопечного: ${fund.petName}`}
+                            className="camp-badge camp-badge--pet"
+                          >
+                            <PawPrint aria-hidden="true" size={12} />
+                            {fund.petName}
+                          </span>
+                        ) : null}
                         {fund.shot.borrowed ? <span className="camp-item__borrowed">кадр из жизни приюта</span> : null}
                       </p>
 
                       <h3 className="camp-item__title">
                         <Link href={`/campaigns/${fund.id}`}>{fund.title}</Link>
-                        {fund.petName ? <span className="camp-item__pet">{fund.petName}</span> : null}
                       </h3>
                       <p className="camp-item__desc">{fund.desc}</p>
 

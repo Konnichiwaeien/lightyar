@@ -26,6 +26,7 @@ const allViewports = [
   { name: "desktop", width: 1440, height: 900 },
   { name: "desktop-tall", width: 1440, height: 1200 },
   { name: "wide", width: 1920, height: 1080 },
+  { name: "huge", width: 2560, height: 1440 },
   { name: "laptop", width: 1024, height: 800 },
   { name: "tablet", width: 768, height: 900 },
   { name: "mobile", width: 390, height: 844 },
@@ -204,9 +205,24 @@ try {
           (btn) => getComputedStyle(btn).backgroundColor === "rgb(28, 28, 28)",
         ).length,
         cta: document.querySelector(".camp-cover__cta")?.textContent.trim() ?? "",
+        /* Сцена держит пропорцию: на большом окне она вытягивалась под него,
+           круг вырастал вдвое, а вещи сбивались в кучу у нижней кромки. */
+        scene: (() => {
+          const r = document.querySelector(".camp-route__scene").getBoundingClientRect();
+          return { w: Math.round(r.width), h: Math.round(r.height) };
+        })(),
         dialogHidden: document.querySelector(".camp-donate")?.hidden ?? null,
       };
     });
+
+    /* Пропорция проверяется там, где сцена закреплена: на узком экране
+       липкость снята, сцена идёт в потоке и нарочно выше своей ширины. */
+    if (!compact) {
+      assert.ok(
+        shape.scene.h <= shape.scene.w,
+        `${viewport.name}: сцена вытянулась выше своей ширины (${shape.scene.w}×${shape.scene.h})`,
+      );
+    }
 
     // Кнопка обложки: «Помочь», ведёт к каталогу на этой же странице.
     assert.equal(shape.cta, "Помочь", `${viewport.name}: кнопка обложки «${shape.cta}»`);

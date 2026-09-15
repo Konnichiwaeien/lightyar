@@ -414,15 +414,36 @@
   }
 }
 
-/* На телефоне остаётся один Капрал: Мира не помещается рядом с текстом. */
+/* На телефоне композиция собирается у нижней кромки: Капрал справа крупно и
+   Джек слева мелко, оба лапами через шов, точки за заголовком в левом углу.
+   Одна собака посреди пустого поля выглядела одиноко, а Мира рядом с текстом
+   не помещается вовсе. */
 @media (max-width: 600px) {
+  .camp-cover__copy {
+    padding-bottom: clamp(190px, 50vw, 250px);
+  }
+
   .camp-cover__unit--lead {
-    right: -2%;
-    width: clamp(215px, 58vw, 280px);
+    right: -4%;
+    bottom: calc(-1 * var(--c-bleed));
+    width: clamp(205px, 56vw, 270px);
   }
 
   .camp-cover__unit--mira {
     display: none;
+  }
+
+  /* Джек снят общим правилом для узких экранов и здесь возвращается.
+     Признак в селекторе не для красоты: модификатор это один класс, он
+     весит меньше правила с атрибутом, и без признака display не перебьёт
+     его ни при каком порядке. */
+  .camp-cover__unit--dzhek[data-small="true"] {
+    top: auto;
+    right: auto;
+    bottom: 1%;
+    left: -3%;
+    display: block;
+    width: clamp(88px, 27vw, 120px);
   }
 }
 
@@ -812,12 +833,39 @@
   margin: 0;
 }
 
-.camp-item__tag {
-  color: var(--c-amber-text);
-  font-size: 0.66rem;
+/* Бейджи сбора: нужда и подопечный. Тег тихий, на листе; подопечный
+   заметнее, с лапой, потому что это главное отличие сбора ради конкретного
+   животного от сбора на нужду приюта. */
+.camp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
+  line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.camp-badge--tag {
+  background: rgba(168, 84, 6, 0.1);
+  color: var(--c-amber-text);
+}
+
+.camp-badge--pet {
+  background: var(--c-ink);
+  color: var(--c-sheet);
+}
+
+.camp-badge--pet svg {
+  color: var(--c-amber);
+}
+
+.camp-item[data-status="closed"] .camp-badge--pet {
+  background: #4c5038;
 }
 
 .camp-item__borrowed {
@@ -826,10 +874,6 @@
 }
 
 .camp-item__title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem;
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.3rem;
@@ -845,17 +889,6 @@
 
 .camp-item__title a:hover {
   color: var(--c-amber-text);
-}
-
-.camp-item__pet {
-  flex: none;
-  color: var(--c-amber-deep);
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 /* Описание забирает лишнюю высоту, поэтому шкалы и суммы у соседей по ряду
@@ -1006,18 +1039,39 @@
   letter-spacing: -0.03em;
 }
 
+/* Сцена стоит по центру свободной высоты: на высоком окне она держит свою
+   пропорцию, и снизу иначе оставалась пустая треть поля. */
+/* Сцена стоит по центру свободной высоты: на высоком окне она держит свою
+   пропорцию, и снизу иначе оставалась пустая треть поля.
+
+   Колонка задана явно. Без неё колонка считается по содержимому, а ширина
+   сцены внутри задана как min(1180px, 100%): процент от неопределённой
+   колонки не разрешается, берётся тысяча сто восемьдесят, и колонка растёт
+   вслед. На экране в триста двадцать пикселей сцена так разъезжалась до
+   пятисот и уезжала за кромку вместе с собакой. */
 .camp-route__body {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
   width: 100%;
   min-height: 0;
   margin-top: var(--c-gap-sm);
 }
 
+/* Сцена держит свою пропорцию и не растёт выше неё.
+
+   Раньше здесь была только высота в сто процентов, и на большом экране
+   сцена вытягивалась под окно: круг вырастал до восьмисот пикселей, а вещи
+   оставались размером от ширины и сбивались в кучу у нижней кромки. Теперь
+   пропорция задана, и на любом окне композиция одна и та же: на низком
+   сцену ограничивает высота, на высоком ширина. */
 .camp-route__scene {
   position: relative;
-  max-width: 1180px;
-  height: 100%;
+  width: min(1180px, 100%);
+  max-height: 100%;
   margin: 0 auto;
+  aspect-ratio: 1180 / 700;
 }
 
 /* Круг под подопечным. */
@@ -1034,16 +1088,29 @@
   transform-origin: 50% 50%;
 }
 
+/* Подопечный: четыре кадра друг над другом, видно тот, чей отрезок пути
+   идёт сейчас. Пропорция кадра 1200 на 1500, поэтому ширина считается от
+   высоты, а не берётся у квадратного холста вырезки. */
 .camp-route__dog {
   position: absolute;
   bottom: 2%;
   left: 50%;
   z-index: 2;
   height: 86%;
+  aspect-ratio: 1200 / 1500;
   translate: -50% 0;
 }
 
-.camp-route__dog img,
+.camp-route__dog img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+}
+
 .camp-route__item img {
   display: block;
   width: auto;
@@ -1089,7 +1156,7 @@
    лекарства, рядом со своими вещами. */
 .camp-route__labels {
   position: absolute;
-  inset: 0 var(--c-inner);
+  inset: 0 max(var(--c-inner), calc((100% - 1300px) / 2));
   z-index: 5;
   margin: 0;
   padding: 0;
@@ -1229,6 +1296,19 @@
     gap: 1.75rem 1rem;
     margin-top: var(--c-gap-sm);
     pointer-events: auto;
+  }
+
+  /* На очень узком экране две колонки режут суммы: «5 200 ₽» не влезает
+     рядом с тегом. Одна колонка. */
+  @media (max-width: 430px) {
+    .camp-route__labels {
+      grid-template-columns: 1fr;
+      gap: 1.35rem;
+    }
+
+    .camp-route__scene {
+      height: clamp(300px, 92vw, 440px);
+    }
   }
 
   .camp-route__label,

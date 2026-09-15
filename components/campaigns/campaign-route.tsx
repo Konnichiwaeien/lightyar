@@ -19,6 +19,16 @@ import { useMotionPreference } from "@/components/reports/use-motion-preference"
  * сумма набегает от нуля, «из» цели, тонкая шкала. Ничего не кликается,
  * это картина, а не список.
  *
+ * Сам Серкан по ходу сцены оживает: начинает настороженным и к концу, когда
+ * вещи вокруг собраны, стоит доверчивым. Это те же четыре кадра, что панель
+ * помощи показывает по размеру взноса, снятые в одну смену: свет и поза
+ * совпадают, меняются голова и хвост. Кадры сменяются, а не анимируются:
+ * видео весило бы вдесятеро больше и требовало бы двух форматов ради Safari.
+ *
+ * Прежняя вырезка Серкана из public/pets стояла здесь с обрезанными лапами:
+ * при вырезке заливкой от кромки светлые лапы на снегу ушли вместе с фоном.
+ * Эти кадры сняты иначе, лапы целы.
+ *
  * Секция высотой в два с половиной экрана, сцена внутри липкая. На узком
  * экране липкость снимается: держать сцену на телефоне некуда, и вещи
  * съезжаются, пока секция идёт мимо экрана. Подписи там стоят под сценой.
@@ -52,10 +62,24 @@ const ease = (p: number, a: number, b: number) => {
 const PHASE = {
   disc: [0, 0.1],
   dog: [0, 0.12],
+  /* Четыре кадра подопечного на путь сцены: настороженный, осторожный,
+     расслабленный, доверчивый. Последний застаёт собранный натюрморт. */
+  mood: (i: number) => [i * 0.24, 0.24 + i * 0.24],
   item: (i: number) => [0.14 + i * 0.16, 0.32 + i * 0.16],
   label: (i: number) => [0.26 + i * 0.16, 0.34 + i * 0.16],
   count: (i: number) => [0.26 + i * 0.16, 0.5 + i * 0.16],
 } as const;
+
+/**
+ * Кадры подопечного по ходу сцены. Порядок тот же, что у ступеней взноса в
+ * панели помощи, и файлы те же: они уже в проекте и уже знакомы читателю.
+ */
+const MOODS = [
+  "/donate/serkan/worried.webp",
+  "/donate/serkan/cautious.webp",
+  "/donate/serkan/relieved.webp",
+  "/donate/serkan/trusting.webp",
+];
 
 /**
  * Место вещи в натюрморте по тегу, а не по порядковому номеру: если у тега
@@ -83,6 +107,38 @@ function useCompact(query = "(max-width: 860px)") {
     return () => media.removeEventListener("change", sync);
   }, [query]);
   return compact;
+}
+
+/** Один кадр подопечного: держит свой отрезок пути и мягко уступает следующему. */
+function Mood({
+  src,
+  index,
+  progress,
+  still,
+}: {
+  src: string;
+  index: number;
+  progress: MotionValue<number>;
+  still: boolean;
+}) {
+  const [a, b] = PHASE.mood(index);
+  const last = index === MOODS.length - 1;
+  const opacity = useTransform(progress, (p) => {
+    // Первый кадр виден с самого начала и гаснет, когда приходит второй.
+    if (index === 0) return 1 - ease(p, b - 0.06, b + 0.02);
+    const shown = ease(p, a - 0.06, a + 0.02);
+    return last ? shown : Math.max(0, shown - ease(p, b - 0.06, b + 0.02));
+  });
+
+  return (
+    <motion.img
+      alt=""
+      decoding="async"
+      loading={index === 0 ? "eager" : "lazy"}
+      src={src}
+      style={still ? { opacity: last ? 1 : 0 } : { opacity }}
+    />
+  );
 }
 
 function Item({
@@ -205,8 +261,9 @@ export function CampaignRoute({ stations }: { stations: (RouteStation & { art: s
               style={still ? { scale: 1 } : { scale: discScale }}
             />
             <motion.div className="camp-route__dog" style={still ? { y: 0 } : { y: dogY }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="" decoding="async" loading="lazy" src="/pets/cutout-serkan.webp" />
+              {MOODS.map((src, index) => (
+                <Mood index={index} key={src} progress={scrollYProgress} src={src} still={still} />
+              ))}
             </motion.div>
             {stations.map((station, index) => (
               <Item index={index} key={station.tag} progress={scrollYProgress} station={station} still={still} />
