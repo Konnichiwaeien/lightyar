@@ -199,12 +199,26 @@
   text-align: center;
 }
 
-/* Капрал, главная группа: справа внизу, лапами через шов. Круг чуть правее
+/* Сетка точек накрывает всё поле, а не стоит блоком у одной вырезки. Блоком
+   она читалась заплаткой: квадрат точек посреди поля не держит ничего. По
+   краям гуще, к середине сходит на нет, иначе спорит с типографикой. */
+.camp-cover::before,
+.camp-call::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--dots, rgba(168, 84, 6, 0.3)) 1.8px, transparent 1.9px);
+  background-size: clamp(24px, 2.2vw, 34px) clamp(24px, 2.2vw, 34px);
+  content: "";
+  mask-image: radial-gradient(ellipse 58% 54% at 50% 50%, transparent 40%, #000 100%);
+  pointer-events: none;
+}
+
 /* Капрал: справа внизу, на круге, лапами через шов. */
 .camp-cover__unit--lead {
-  right: 2%;
+  right: 4%;
   bottom: calc(-1 * var(--c-bleed));
-  width: clamp(250px, 27vw, 390px);
+  width: clamp(270px, 31vw, 440px);
 }
 
 .camp-cover__unit--lead i {
@@ -218,11 +232,11 @@
 /* Волонтёр треплет собаку по животу: слева, на моховом круге. Вырезка
    широкая, поэтому и круг под ней шире. */
 .camp-cover__unit--care {
-  --ratio: 760 / 688;
+  --ratio: 900 / 780;
 
-  top: 13%;
-  left: 2%;
-  width: clamp(200px, 22vw, 320px);
+  top: 8%;
+  left: 1%;
+  width: clamp(240px, 27vw, 390px);
 }
 
 .camp-cover__unit--care i {
@@ -233,33 +247,27 @@
   background: rgba(111, 115, 85, 0.42);
 }
 
-/* Пёс встаёт лапами на руку: слева внизу, высокая вырезка на точках. */
-.camp-cover__unit--greet {
-  --ratio: 620 / 1119;
+/* Двое волонтёров на скамейке: слева внизу. Своей фигуры у них нет, точки
+   теперь накрывают всё поле. */
+.camp-cover__unit--bench {
+  --ratio: 780 / 1034;
 
-  bottom: 9%;
-  left: 11%;
-  width: clamp(96px, 11vw, 165px);
-}
-
-.camp-cover__unit--greet i {
-  top: 10%;
-  left: -28%;
-  width: 88%;
-  aspect-ratio: 1;
-  background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
-  background-size: 19px 19px;
+  bottom: 2%;
+  left: 5%;
+  width: clamp(140px, 16vw, 235px);
 }
 
 /* Выход на прогулку: строй людей с собаками низкой полосой справа вверху.
    Своей фигуры у него нет: строй сам длинная фигура, и круг за ним читался
    бы пятном. */
+/* Строй стоит выше подопечного и уже его: на одной высоте они наезжали
+   друг на друга, и люди читались фоном за собакой. */
 .camp-cover__unit--walk {
   --ratio: 1200 / 676;
 
-  top: 13%;
-  right: 3%;
-  width: clamp(200px, 24vw, 350px);
+  top: 7%;
+  right: -2%;
+  width: clamp(220px, 27vw, 410px);
 }
 
 
@@ -379,7 +387,7 @@
     width: clamp(190px, 22vw, 280px);
   }
 
-  .camp-cover__unit--greet {
+  .camp-cover__unit--bench {
     display: none;
   }
 }
@@ -1385,6 +1393,8 @@
 ------------------------------------------------------------------------ */
 
 .camp-call {
+  --dots: rgba(28, 28, 28, 0.22);
+
   position: relative;
   z-index: 1;
   display: grid;
@@ -1402,9 +1412,9 @@
    её пропорции, 1400 на 1078. */
 .camp-call__unit {
   position: absolute;
-  top: -9%;
-  right: 8%;
-  width: clamp(230px, 26vw, 370px);
+  top: -12%;
+  right: 4%;
+  width: clamp(280px, 36vw, 540px);
   aspect-ratio: 1;
 }
 
@@ -1436,10 +1446,10 @@
 .camp-call__disc {
   position: absolute;
   z-index: 1;
-  top: 20%;
-  left: 8%;
+  top: 16%;
+  left: 6%;
   display: block;
-  width: 72%;
+  width: 78%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: rgba(250, 245, 236, 0.72);
@@ -1455,18 +1465,9 @@
   }
 }
 
-/* Точки уходят вправо за группу и вниз: они держат пустой нижний угол поля,
-   который иначе остаётся голым янтарём. */
+/* Своих точек у группы больше нет: сетка накрывает всё поле секции. */
 .camp-call__dots {
-  position: absolute;
-  z-index: 0;
-  top: 8%;
-  right: -18%;
-  display: block;
-  width: 48%;
-  aspect-ratio: 3 / 4;
-  background-image: radial-gradient(circle, rgba(28, 28, 28, 0.26) 1.7px, transparent 1.8px);
-  background-size: 21px 21px;
+  display: none;
 }
 
 /* Ширина явная: в сетке блок с auto-полями ужимается до содержимого и
