@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright-core";
 
 /**
- * Контракт на страницу сборов: обложку, каталог, «Куда уходит взнос» и
- * финальный призыв.
+ * Контракт на страницу сборов: обложку, каталог, закреплённую сцену «На что
+ * идут ваши деньги» и финальный призыв.
  *
  * Проверяется не красота, а грамматика, которую подтвердил владелец, и то,
- * что сцены действительно играют: плоское поле своего цвета у каждой секции,
- * вырезки лежат поверх него, геометрические фигуры за ними, главная вырезка
- * переходит через шов и не наступает на фильтр, слои плывут по прокрутке с
- * разной скоростью, нужды въезжают по очереди, миска падает, подвал ложится
- * на янтарное поле, а не на серый лист.
+ * что механики с референсов действительно играют: плоское поле своего цвета
+ * у каждой секции, вырезки на своих фигурах, главная вырезка через шов и не
+ * на фильтре, вырезки едут за мышью, плашки прочерчены, вещи в сцене
+ * съезжаются по прокрутке и суммы набегают, миска падает, подвал ложится на
+ * янтарное поле, а не на серый лист.
  *
  * Скриншот показывает один кадр и молчит о том, когда этот кадр наступает,
  * поэтому движение снимается замером в нескольких точках. Хороший вывод это
@@ -36,13 +36,19 @@ const allViewports = [
 const viewports = filter ? allViewports.filter((v) => v.name === filter) : allViewports;
 assert.ok(viewports.length > 0, `неизвестная ширина: ${filter}`);
 
-/** Доли пути секции мимо экрана, в которых снимается движение. */
+/** Доли пути сцены, в которых снимается движение. */
 const STOPS = [0, 0.25, 0.5, 0.75, 1];
 
-/** Сдвиг слоя по вертикали. framer пишет его в transform, а не в translate. */
-const shift = (page, selector) =>
-  page.$$eval(selector, (nodes) =>
-    nodes.map((node) => Math.round(new DOMMatrixReadOnly(getComputedStyle(node).transform).m42)),
+/** Сдвиг слоя по горизонтали и вертикали. framer пишет его в transform. */
+const shift = (page, selector, axis = "y") =>
+  page.$$eval(
+    selector,
+    (nodes, ax) =>
+      nodes.map((node) => {
+        const m = new DOMMatrixReadOnly(getComputedStyle(node).transform);
+        return Math.round(ax === "x" ? m.m41 : m.m42);
+      }),
+    axis,
   );
 
 /** Прокрутка с проверкой, что она встала: Fast Refresh любит сбрасывать её. */
@@ -50,14 +56,14 @@ async function scrollTo(page, target, label) {
   let landed = -1;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     await page.evaluate((y) => window.scrollTo(0, y), target);
-    await page.waitForTimeout(240);
+    await page.waitForTimeout(260);
     landed = await page.evaluate(() => Math.round(window.scrollY));
     if (Math.abs(landed - target) <= 2) break;
   }
   assert.ok(Math.abs(landed - target) <= 2, `${label}: прокрутка не встала на ${target}px, осталась на ${landed}px`);
 }
 
-/** Где секция стоит в документе и сколько нужно прокрутить до её доли пути. */
+/** Где секция стоит в документе. */
 async function passage(page, selector) {
   return page.evaluate((sel) => {
     const box = document.querySelector(sel).getBoundingClientRect();
@@ -70,11 +76,17 @@ async function passage(page, selector) {
   }, selector);
 }
 
-const at = (section, stop) =>
+/** Прокрутка до доли прохода секции мимо экрана. */
+const through = (section, stop) =>
   Math.max(
     0,
     Math.min(section.max, Math.round(section.top - section.viewport + stop * (section.height + section.viewport))),
   );
+
+/** Прокрутка до доли пути закреплённой сцены: от верха секции у верха экрана
+    до низа секции у низа экрана. */
+const pinned = (section, stop) =>
+  Math.max(0, Math.min(section.max, Math.round(section.top + stop * (section.height - section.viewport))));
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 let failed = false;
@@ -82,6 +94,7 @@ let failed = false;
 try {
   for (const viewport of viewports) {
     const reduced = viewport.reducedMotion === "reduce";
+    const compact = viewport.width <= 860;
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       reducedMotion: reduced ? "reduce" : "no-preference",
@@ -107,8 +120,8 @@ try {
       null,
       { timeout: 30_000 },
     );
-    // Вырезки вскакивают на поле пружиной; ждём, пока все встанут.
-    await page.waitForTimeout(2600);
+    // Вырезки вскакивают на поле пружиной, плашки прочерчиваются; ждём.
+    await page.waitForTimeout(2800);
 
     const shape = await page.evaluate(() => {
       const paint = (selector) => getComputedStyle(document.querySelector(selector)).backgroundColor;
@@ -134,6 +147,9 @@ try {
           scale: Math.round(new DOMMatrixReadOnly(style.transform).a * 100) / 100,
         };
       });
+      const marks = [...document.querySelectorAll(".camp-cover .camp-mark")].map(
+        (mark) => getComputedStyle(mark).backgroundSize,
+      );
       const lead = document.querySelector(".camp-cover__pet--lead img");
       const controls = document.querySelector(".camp-controls");
       const call = document.querySelector(".camp-call");
@@ -146,13 +162,17 @@ try {
         sheetPaint: paint(".camp"),
         callBleed: -Math.round(bowl.offsetTop),
         ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
-        pets: document.querySelectorAll(".camp-cover__pet").length,
+        pets: shown.length,
         landed,
-        discs: document.querySelectorAll(".camp-cover__disc, .camp-cover__ring, .camp-route__disc, .camp-call__disc").length,
-        dots: document.querySelectorAll(".camp-cover__dots, .camp-route__dots, .camp-call__dots").length,
-        needs: document.querySelectorAll(".camp-route__need").length,
-        sums: [...document.querySelectorAll(".camp-route__need b")].map((n) => n.textContent.trim()),
+        marks,
+        discs: document.querySelectorAll(".camp-cover__disc, .camp-route__disc, .camp-call__disc").length,
+        dots: document.querySelectorAll(".camp-cover__dots, .camp-call__dots").length,
+        items: document.querySelectorAll(".camp-route__item img").length,
+        labels: document.querySelectorAll(".camp-route__label").length,
+        links: document.querySelectorAll(".camp-route a").length,
         goals: [...document.querySelectorAll(".camp-route__of")].map((n) => n.textContent.trim()),
+        title: document.querySelector(".camp-cover h1")?.textContent.replace(/\s+/g, " ").trim() ?? "",
+        routeTitle: document.querySelector("#camp-route-title")?.textContent.replace(/\s+/g, " ").trim() ?? "",
         bleed: Math.max(...pets),
         plate: getComputedStyle(document.querySelector(".camp-cover h1 em")).backgroundColor,
         pawsToControls: Math.round(rect(controls).top - rect(lead).bottom),
@@ -163,6 +183,9 @@ try {
         cards: document.querySelectorAll(".camp-item").length,
         shots: document.querySelectorAll(".camp-item__shot img").length,
         heading: document.querySelector("#camp-list-title")?.textContent.trim() ?? "",
+        blackButtons: [...document.querySelectorAll(".camp .camp-btn")].filter(
+          (btn) => getComputedStyle(btn).backgroundColor === "rgb(28, 28, 28)",
+        ).length,
       };
     });
 
@@ -172,6 +195,13 @@ try {
     assert.notEqual(shape.coverPaint, shape.sheetPaint, `${viewport.name}: обложка не отличается от листа`);
     assert.notEqual(shape.routePaint, shape.callPaint, `${viewport.name}: финал не отличается от предыдущего поля`);
 
+    // Заголовки, как просил владелец: «Все сборы», «На что идут ваши деньги».
+    assert.equal(shape.title, "Все сборы", `${viewport.name}: заголовок обложки «${shape.title}»`);
+    assert.equal(shape.routeTitle, "На что идут ваши деньги", `${viewport.name}: заголовок сцены «${shape.routeTitle}»`);
+
+    // Чёрных кнопок на странице нет.
+    assert.equal(shape.blackButtons, 0, `${viewport.name}: чёрных кнопок ${shape.blackButtons}`);
+
     // Миска висит над верхней кромкой финала и заходит на предыдущее поле.
     assert.ok(shape.callBleed > 4, `${viewport.name}: миска не переходит через шов (${shape.callBleed}px)`);
 
@@ -180,22 +210,25 @@ try {
     assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
     assert.ok(shape.pets >= 2, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы две`);
-    // Фигура без предмета не встречается: у каждой нужды свой круг и своя
-    // сетка точек, плюс по группе на обложке и в финале.
-    assert.ok(shape.discs >= shape.needs + 2, `${viewport.name}: кругов ${shape.discs} при ${shape.needs} нуждах`);
-    assert.ok(shape.dots >= shape.needs + 2, `${viewport.name}: сеток точек ${shape.dots} при ${shape.needs} нуждах`);
-    assert.ok(shape.goals.every((goal) => /\d/.test(goal)), `${viewport.name}: у нужды нет «собрано из»`);
-    assert.ok(shape.needs >= 1, `${viewport.name}: нужд на поле нет вовсе`);
-    assert.ok(
-      shape.sums.every((sum) => /\d/.test(sum)),
-      `${viewport.name}: у нужды пропала сумма`,
-    );
+    assert.ok(shape.discs >= 3, `${viewport.name}: кругов ${shape.discs}, по одному на секцию`);
+    assert.ok(shape.dots >= 2, `${viewport.name}: сеток точек ${shape.dots}`);
+    assert.ok(shape.items >= 1, `${viewport.name}: вещей на сцене нет вовсе`);
+    assert.equal(shape.labels, shape.items, `${viewport.name}: подписей ${shape.labels} при ${shape.items} вещах`);
+    assert.equal(shape.links, 0, `${viewport.name}: на сцене есть ссылки, а она не кликается`);
+    assert.ok(shape.goals.every((goal) => /\d/.test(goal)), `${viewport.name}: у нужды нет «из»`);
 
     // Вырезки вскочили и стоят: непрозрачные, в натуральную величину.
     for (const pet of shape.landed) {
       assert.ok(pet.opacity > 0.98, `${viewport.name}: вырезка не проявилась (${pet.opacity})`);
       assert.ok(Math.abs(pet.scale - 1) < 0.03, `${viewport.name}: вырезка не встала в размер (${pet.scale})`);
     }
+
+    // Плашки на словах прочерчены до конца.
+    assert.ok(shape.marks.length >= 3, `${viewport.name}: плашек на обложке ${shape.marks.length}`);
+    assert.ok(
+      shape.marks.every((size) => size.startsWith("100%")),
+      `${viewport.name}: плашка не прочерчена: ${shape.marks.join(" | ")}`,
+    );
 
     // Прямоугольных фотоблоков в сценах быть не должно: за них отклонены семь
     // предыдущих заходов.
@@ -237,6 +270,30 @@ try {
     );
     assert.ok(overflow <= 1, `${viewport.name}: перелив по горизонтали ${overflow}px`);
 
+    // Мышиный параллакс, механика с обложки Vogue: вырезки едут за курсором.
+    // Курсор слева и справа, главная вырезка сдвинута в разные стороны.
+    let mouse = "нет мыши";
+    if (!compact) {
+      const cover = await page.$eval(".camp-cover", (node) => {
+        const box = node.getBoundingClientRect();
+        return { left: box.left, top: box.top, width: box.width, height: box.height };
+      });
+      await page.mouse.move(cover.left + cover.width * 0.08, cover.top + cover.height * 0.5, { steps: 8 });
+      await page.waitForTimeout(900);
+      const [leftX] = await shift(page, ".camp-cover__pet--lead .camp-cover__mouse", "x");
+      await page.mouse.move(cover.left + cover.width * 0.92, cover.top + cover.height * 0.5, { steps: 8 });
+      await page.waitForTimeout(900);
+      const [rightX] = await shift(page, ".camp-cover__pet--lead .camp-cover__mouse", "x");
+      mouse = `${leftX} → ${rightX}`;
+      if (reduced) {
+        assert.ok(leftX === 0 && rightX === 0, `reduced motion: вырезки едут за мышью (${mouse})`);
+      } else {
+        assert.ok(leftX < -8 && rightX > 8, `${viewport.name}: вырезки не едут за мышью (${mouse})`);
+      }
+      await page.mouse.move(cover.left + cover.width * 0.5, cover.top + cover.height * 0.5);
+      await page.waitForTimeout(600);
+    }
+
     // Обложка: слои стоят на месте при нулевой прокрутке и уезжают по мере
     // её ухода. Раньше отсчёт шёл от середины пути, и при загрузке всё было
     // уже сдвинуто.
@@ -251,82 +308,56 @@ try {
       assert.ok(movedLead < -10, `${viewport.name}: обложка не плывёт по прокрутке (${movedLead}px)`);
     }
 
-    // «Куда уходит взнос»: дрейф слоёв и очередь въезда нужд.
+    // Сцена: вещи съезжаются по прокрутке. На широком экране сцена
+    // закреплена и путь идёт внутри секции, на узком по её проходу.
     const route = await passage(page, ".camp-route");
     const row = [];
     for (const stop of STOPS) {
-      await scrollTo(page, at(route, stop), viewport.name);
-      row.push({
-        stop,
-        needs: await shift(page, ".camp-route__figure"),
-        shown: await page.$$eval(
-          ".camp-route__link",
-          (links) => links.filter((link) => Number(getComputedStyle(link).opacity) > 0.85).length,
-        ),
-      });
+      await scrollTo(page, compact ? through(route, stop) : pinned(route, stop), viewport.name);
+      const xs = await shift(page, ".camp-route__item", "x");
+      const home = await page.$$eval(
+        ".camp-route__item",
+        (nodes) =>
+          nodes.filter((node) => {
+            const m = new DOMMatrixReadOnly(getComputedStyle(node).transform);
+            return Math.abs(m.m41) < 2 && Number(getComputedStyle(node).opacity) > 0.95;
+          }).length,
+      );
+      row.push({ stop, xs, home });
     }
 
-    const line = row
-      .map((point) => `${Math.round(point.stop * 100)}%:${point.needs.join("/")} (видно ${point.shown})`)
-      .join("  ");
+    const line = row.map((point) => `${Math.round(point.stop * 100)}%:${point.xs.join("/")} (на месте ${point.home})`).join("  ");
     console.log(
-      `${viewport.name.padEnd(15)} поля ${shape.coverPaint} и ${shape.routePaint}, вырезок ${shape.pets}, нужд ${shape.needs}, зазор до фильтра ${shape.pawsToControls}px, подвал на поле ${shape.footerOverlap}px`,
+      `${viewport.name.padEnd(15)} вырезок ${shape.pets}, вещей ${shape.items}, мышь ${mouse}, зазор до фильтра ${shape.pawsToControls}px, подвал на поле ${shape.footerOverlap}px`,
     );
     console.log(`${" ".repeat(16)}${line}`);
 
     if (reduced) {
-      // Гашение движения: слои стоят на местах, нужды видны сразу.
-      const moved = row.flatMap((point) => point.needs).filter((value) => value !== 0);
-      assert.deepEqual(moved, [], "reduced motion: слои коллажа всё ещё плывут");
-      assert.ok(
-        row.every((point) => point.shown === shape.needs),
-        "reduced motion: нужды не показаны итогом",
-      );
-      console.log(`${" ".repeat(16)}гашение: дрейфа нет, нужды стоят`);
+      assert.ok(row.every((point) => point.home === shape.items), "reduced motion: вещи не стоят на местах");
+      console.log(`${" ".repeat(16)}гашение: вещи стоят`);
     } else {
-      const first = row[0].needs;
-      const last = row[row.length - 1].needs;
-
-      // Слои плывут и плывут по-разному: одинаковая скорость это не коллаж,
-      // а одна картинка, которую подвинули целиком.
-      assert.ok(
-        first.some((value, index) => value !== last[index]),
-        `${viewport.name}: слои не сдвинулись за весь проход`,
-      );
-      assert.ok(new Set(last).size > 1, `${viewport.name}: все слои уехали на одно и то же, глубины нет`);
-
+      // В начале пути вещи за кадром, к концу все на местах, и число вставших
+      // не убывает: это очередь, а не мигание.
+      assert.equal(row[0].home, 0, `${viewport.name}: вещи на местах до начала пути (${row[0].home})`);
+      assert.equal(row[row.length - 1].home, shape.items, `${viewport.name}: не все вещи доехали`);
       for (let i = 1; i < row.length; i += 1) {
-        for (let n = 0; n < row[i].needs.length; n += 1) {
-          assert.ok(
-            row[i].needs[n] <= row[i - 1].needs[n] + 1,
-            `${viewport.name}: слой ${n} поехал назад на ${STOPS[i]}`,
-          );
-        }
-      }
-
-      // Нужды въезжают по очереди: пока секция внизу экрана, их не видно, к
-      // концу прохода видны все, и число видимых не убывает.
-      assert.equal(row[0].shown, 0, `${viewport.name}: нужды видны до входа секции (${row[0].shown})`);
-      assert.equal(row[row.length - 1].shown, shape.needs, `${viewport.name}: не все нужды въехали`);
-      for (let i = 1; i < row.length; i += 1) {
-        assert.ok(row[i].shown >= row[i - 1].shown, `${viewport.name}: нужда пропала на ${STOPS[i]}`);
+        assert.ok(row[i].home >= row[i - 1].home, `${viewport.name}: вещь уехала обратно на ${STOPS[i]}`);
       }
     }
 
     // Суммы набежали до настоящих значений: ни одна не осталась на нуле.
-    await page.waitForTimeout(1700);
-    const counted = await page.$$eval(".camp-route__need b", (nodes) => nodes.map((n) => n.textContent.trim()));
+    const counted = await page.$$eval(".camp-route__label b", (nodes) => nodes.map((n) => n.textContent.trim()));
     assert.ok(
-      counted.every((sum) => !/^0\s*₽/.test(sum)),
+      counted.every((sum) => /\d/.test(sum) && !/^0\s*₽/.test(sum)),
       `${viewport.name}: сумма осталась на нуле: ${counted.join(", ")}`,
     );
 
     // Финал: миска падает, пока секция входит в экран. Внизу экрана её ещё
     // нет, к середине входа она на месте.
     const call = await passage(page, ".camp-call");
-    await scrollTo(page, at(call, 0), viewport.name);
+    await scrollTo(page, through(call, 0), viewport.name);
     const bowlBefore = await page.$eval(".camp-call__bowl img", (img) => Number(getComputedStyle(img).opacity));
-    await scrollTo(page, at(call, 0.5), viewport.name);
+    await scrollTo(page, through(call, 0.5), viewport.name);
     const bowlAfter = await page.$eval(".camp-call__bowl img", (img) => Number(getComputedStyle(img).opacity));
     if (reduced) {
       assert.ok(bowlBefore > 0.98 && bowlAfter > 0.98, "reduced motion: миска не показана итогом");

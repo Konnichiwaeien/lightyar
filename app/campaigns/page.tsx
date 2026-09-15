@@ -14,7 +14,7 @@ import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
 import { needArt } from "@/lib/campaigns/collage";
-import { PLEDGE, getCampaignSummary } from "@/lib/campaigns/summary";
+import { getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 import { plural } from "@/lib/reports/shelter-scales";
 import "@/components/campaigns/campaigns.css";
@@ -86,8 +86,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
             <div className="camp-inner camp-cover__copy">
               <p className="camp-kicker">Чем помочь прямо сейчас</p>
               <h1>
-                Открытые
-                <em>сборы</em>
+                Все <em>сборы</em>
               </h1>
               <p className="camp-cover__lead">
                 Здесь появятся сборы на корм, лечение и содержание приюта. Открытых сборов сейчас нет.
@@ -216,14 +215,12 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        {/* «Куда уходит взнос»: секция 3 плана. Стоит после каталога
-            намеренно, это блок доверия: он работает, когда читатель уже
-            посмотрел сборы. Станции без своих сборов подписи не получают. */}
+        {/* «На что идут ваши деньги»: секция 3 плана, закреплённая сцена.
+            Стоит после каталога намеренно, это блок доверия: он работает,
+            когда читатель уже посмотрел сборы. Нужды без своих сборов на
+            сцену не приезжают. */}
         {summary && summary.stations.length > 0 ? (
-          <CampaignRoute
-            stations={summary.stations.map((station) => ({ ...station, art: needArt(station.tag) }))}
-            unit={PLEDGE}
-          />
+          <CampaignRoute stations={summary.stations.map((station) => ({ ...station, art: needArt(station.tag) }))} />
         ) : null}
 
         {/* Финальный призыв: секция 5 плана. Заменила янтарную карточку
