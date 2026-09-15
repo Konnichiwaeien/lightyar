@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, PawPrint } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, PawPrint, Tag } from "lucide-react";
 
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
@@ -103,7 +103,6 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
         ) : (
           <section className="camp-cover camp-cover--empty">
             <div className="camp-inner camp-cover__copy">
-              <p className="camp-kicker">Чем помочь прямо сейчас</p>
               <h1>
                 Все <em>сборы</em>
               </h1>
@@ -121,7 +120,6 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
           <div className="camp-inner">
             <header className="camp-list__head">
               <div className="camp-list__title">
-                <p className="camp-kicker">Каталог сборов</p>
                 <h2 id="camp-list-title">
                   {total} {plural(total, "сбор", "сбора", "сборов")}{" "}
                   <em>
@@ -174,7 +172,10 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                           бейджу с лапой: раньше имя стояло тихой капителью у
                           заголовка и читалось его частью. */}
                       <p className="camp-item__meta">
-                        <span className="camp-badge camp-badge--tag">{fund.tag}</span>
+                        <span className="camp-badge camp-badge--tag">
+                          <Tag aria-hidden="true" size={12} />
+                          {fund.tag}
+                        </span>
                         {/* В бейдже одно имя, без предлога: клички приходят из
                             CMS в именительном падеже, и «сбор для Бакс» читалось
                             бы ошибкой. Смысл добирает подпись для читалки. */}
@@ -187,7 +188,6 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                             {fund.petName}
                           </span>
                         ) : null}
-                        {fund.shot.borrowed ? <span className="camp-item__borrowed">кадр из жизни приюта</span> : null}
                       </p>
 
                       <h3 className="camp-item__title">

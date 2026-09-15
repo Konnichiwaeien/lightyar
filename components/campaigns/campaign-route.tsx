@@ -247,7 +247,6 @@ export function CampaignRoute({ stations }: { stations: (RouteStation & { art: s
     <section aria-labelledby="camp-route-title" className="camp-route" ref={sectionRef}>
       <div className="camp-route__stage">
         <header className="camp-inner camp-route__head">
-          <p className="camp-kicker">Куда уходит взнос</p>
           <h2 id="camp-route-title">
             На что идут <em>ваши деньги</em>
           </h2>

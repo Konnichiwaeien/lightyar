@@ -134,15 +134,13 @@ try {
          слои коллажа сдвинуты трансформацией дрейфа. По offsetTop дрейфа
          не видно, а видно именно то, что задано в стилях. */
       const coverField = document.querySelector(".camp-cover__field");
-      const pets = [...document.querySelectorAll(".camp-cover__unit")].map((node) =>
-        Math.round(node.offsetTop + node.offsetHeight - coverField.offsetHeight),
-      );
-      const shown = [...document.querySelectorAll(".camp-cover__unit")].filter(
+      const pet = document.querySelector(".camp-cover__pet");
+      const bleed = Math.round(pet.offsetTop + pet.offsetHeight - coverField.offsetHeight);
+      /* Кадры коллажа: видимые снимки приюта вокруг типографики. */
+      const shown = [...document.querySelectorAll(".camp-cover__shot")].filter(
         (node) => getComputedStyle(node).display !== "none",
       );
-      /* Фигура есть у каждой видимой группы: круг или сетка точек. */
-      const shapeless = shown.filter((node) => !node.querySelector("i")).length;
-      const landed = shown.map((node) => {
+      const landed = [pet, ...shown].map((node) => {
         const img = node.querySelector("img");
         const style = getComputedStyle(img);
         return {
@@ -153,7 +151,7 @@ try {
       const marks = [...document.querySelectorAll(".camp-cover .camp-mark")].map(
         (mark) => getComputedStyle(mark).backgroundSize,
       );
-      const lead = document.querySelector(".camp-cover__unit--lead img");
+      const lead = document.querySelector(".camp-cover__pet img");
       const controls = document.querySelector(".camp-controls");
       const call = document.querySelector(".camp-call");
       const footer = document.querySelector("footer");
@@ -165,20 +163,20 @@ try {
         sheetPaint: paint(".camp"),
         callBleed: -Math.round(bowl.offsetTop),
         ownCard: document.querySelectorAll(".camp-grid__own, .camp-card--own").length,
-        pets: shown.length,
+        pets: shown.length + 1,
         landed,
         marks,
         // Фигура без предмета не встречается: круги и точки лежат внутри
         // групп, по одной фигуре на вырезку.
-        discs: document.querySelectorAll(".camp-cover__unit i, .camp-route__disc, .camp-call__disc").length,
-        dots: document.querySelectorAll(".camp-cover__unit--dzhessi i, .camp-call__dots").length,
+        discs: document.querySelectorAll(".camp-cover__pet i, .camp-route__disc, .camp-call__disc").length,
+        dots: document.querySelectorAll(".camp-cover__dots, .camp-call__dots").length,
         items: document.querySelectorAll(".camp-route__item img").length,
         labels: document.querySelectorAll(".camp-route__label").length,
         links: document.querySelectorAll(".camp-route a").length,
         goals: [...document.querySelectorAll(".camp-route__of")].map((n) => n.textContent.trim()),
         title: document.querySelector(".camp-cover h1")?.textContent.replace(/\s+/g, " ").trim() ?? "",
         routeTitle: document.querySelector("#camp-route-title")?.textContent.replace(/\s+/g, " ").trim() ?? "",
-        bleed: Math.max(...pets),
+        bleed,
         plate: getComputedStyle(document.querySelector(".camp-cover h1 em")).backgroundColor,
         pawsToControls: Math.round(rect(controls).top - rect(lead).bottom),
         footerOverlap: Math.round(rect(call).bottom - rect(footer).top),
@@ -200,7 +198,6 @@ try {
           const x0 = left !== null ? r.left + left : r.right - right - width;
           return { x0: Math.round(x0), x1: Math.round(x0 + width), size: Math.round(width), tone: cs.backgroundColor, side: left !== null ? "left" : "right" };
         }),
-        shapeless,
         blackButtons: [...document.querySelectorAll(".camp .camp-btn")].filter(
           (btn) => getComputedStyle(btn).backgroundColor === "rgb(28, 28, 28)",
         ).length,
@@ -248,10 +245,10 @@ try {
        это же, и держать обе означало сказать одно дважды. */
     assert.equal(shape.ownCard, 0, `${viewport.name}: дублирующая карточка «Просто помочь» вернулась`);
 
-    // На телефоне остаётся один Капрал: вторая вырезка в углу наступала на кикер.
-    const leastPets = viewport.width <= 600 ? 1 : 2;
-    assert.ok(shape.pets >= leastPets, `${viewport.name}: вырезок на обложке ${shape.pets}, ожидалось хотя бы ${leastPets}`);
-    assert.equal(shape.shapeless, 0, `${viewport.name}: ${shape.shapeless} вырезок без своей фигуры`);
+    /* Кадры приюта вокруг типографики: на телефоне их меньше, там в ряд они
+       превращаются в кашу. Вырезка подопечного считается отдельно. */
+    const leastShots = compact ? 3 : 4;
+    assert.ok(shape.pets >= leastShots, `${viewport.name}: слоёв коллажа ${shape.pets}, ожидалось ${leastShots}`);
 
     // Круги каталога стоят вразнобой и не режутся боковой кромкой.
     if (shape.orbs.length >= 4) {
@@ -320,8 +317,10 @@ try {
     );
     assert.ok(overflow <= 1, `${viewport.name}: перелив по горизонтали ${overflow}px`);
 
-    // Мышиный параллакс, механика с обложки Vogue: вырезки едут за курсором.
-    // Курсор слева и справа, главная вырезка сдвинута в разные стороны.
+    /* Мышиного параллакса на обложке больше нет: слои ехали за курсором через
+       пружину, их смещение пересчитывалось в доли пикселя, и коллаж мелко
+       дрожал, пока мышь была над полем. Проверяем обратное: курсор ходит по
+       полю, а слои стоят. */
     let mouse = "нет мыши";
     if (!compact) {
       const cover = await page.$eval(".camp-cover", (node) => {
@@ -329,29 +328,25 @@ try {
         return { left: box.left, top: box.top, width: box.width, height: box.height };
       });
       await page.mouse.move(cover.left + cover.width * 0.08, cover.top + cover.height * 0.5, { steps: 8 });
-      await page.waitForTimeout(900);
-      const [leftX] = await shift(page, ".camp-cover__unit--lead > .camp-cover__mouse", "x");
+      await page.waitForTimeout(700);
+      const [leftX] = await shift(page, ".camp-cover__shot--care", "x");
       await page.mouse.move(cover.left + cover.width * 0.92, cover.top + cover.height * 0.5, { steps: 8 });
-      await page.waitForTimeout(900);
-      const [rightX] = await shift(page, ".camp-cover__unit--lead > .camp-cover__mouse", "x");
+      await page.waitForTimeout(700);
+      const [rightX] = await shift(page, ".camp-cover__shot--care", "x");
       mouse = `${leftX} → ${rightX}`;
-      if (reduced) {
-        assert.ok(leftX === 0 && rightX === 0, `reduced motion: вырезки едут за мышью (${mouse})`);
-      } else {
-        assert.ok(leftX < -8 && rightX > 8, `${viewport.name}: вырезки не едут за мышью (${mouse})`);
-      }
+      assert.equal(leftX, rightX, `${viewport.name}: коллаж ходит за мышью (${mouse})`);
       await page.mouse.move(cover.left + cover.width * 0.5, cover.top + cover.height * 0.5);
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(400);
     }
 
     // Обложка: слои стоят на месте при нулевой прокрутке и уезжают по мере
     // её ухода. Раньше отсчёт шёл от середины пути, и при загрузке всё было
     // уже сдвинуто.
     const cover = await passage(page, ".camp-cover");
-    const restingLead = (await shift(page, ".camp-cover__unit--lead"))[0];
+    const restingLead = (await shift(page, ".camp-cover__pet"))[0];
     assert.equal(restingLead, 0, `${viewport.name}: вырезка при загрузке уже сдвинута на ${restingLead}px`);
     await scrollTo(page, Math.min(cover.max, Math.round(cover.height * 0.5)), viewport.name);
-    const movedLead = (await shift(page, ".camp-cover__unit--lead"))[0];
+    const movedLead = (await shift(page, ".camp-cover__pet"))[0];
     if (reduced) {
       assert.equal(movedLead, 0, "reduced motion: обложка плывёт");
     } else {

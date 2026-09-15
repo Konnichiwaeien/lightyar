@@ -133,61 +133,18 @@
   margin: 0 auto;
 }
 
-/* ---------------- общее для групп ----------------------------------------
+/* ---------------- обложка: коллаж из кадров приюта -----------------------
 
-   Группа это связка «фигура и вырезка на ней». Собрана разметкой, а не
-   процентами по полю, и вот почему: холст у всех вырезок квадратный, 620 на
-   620, а собака внутри занимает от трети ширины (Капрал) до девяти десятых
-   (Мира). Круг, поставленный процентами от поля, совпадал с боксом вырезки,
-   но не с самой собакой, и группы разъезжались тем сильнее, чем уже была
-   вырезка. Внутри группы фигура считается от её размера и не разъезжается.
+   Вокруг типографики лежат настоящие снимки: руки на морде, котёнок, пёс,
+   встающий к человеку, общий выход на выгул. У каждого своя форма, свой
+   наклон и свой путь по прокрутке. Справа внизу единственная вырезка на
+   янтарном круге уходит лапами через шов в каталог.
 
-   Размер группы задан по стороне бокса вырезки, а не по видимой собаке:
-   бокс квадратный, и высота собаки в нём одна на все вырезки, 88 процентов.
-------------------------------------------------------------------------- */
-
-.camp-cover__unit {
-  position: absolute;
-  aspect-ratio: 1;
-}
-
-.camp-cover__unit > .camp-cover__mouse,
-.camp-cover__unit > .camp-cover__shape {
-  position: absolute;
-  inset: 0;
-}
-
-/* Фигура под вырезкой лежит ниже её по слоям и едет вдвое медленнее. */
-.camp-cover__unit > .camp-cover__shape {
-  z-index: 0;
-}
-
-.camp-cover__unit > .camp-cover__mouse {
-  z-index: 1;
-}
-
-.camp-cover__unit i {
-  position: absolute;
-  display: block;
-  aspect-ratio: 1;
-}
-
-.camp-cover__unit img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transform-origin: 50% 85%;
-}
-
-/* ---------------- обложка: коллаж ---------------------------------------
-
-   Типографика по центру, по углам поля четыре группы сопоставимого веса,
-   и каждая уходит за свою кромку, как на обеих обложках референсов.
-   Капрал лапами через шов.
+   Формы даёт скругление, а не запечённая маска: кадр остаётся
+   прямоугольным, и его можно переснять, не перерисовывая ассет.
 
    Поле режется только по горизонтали. По вертикали оно нарочно открыто:
-   hidden по одной оси заставил бы вторую стать auto и срезал бы вырезки.
+   hidden по одной оси заставил бы вторую стать auto и срезал бы вырезку.
 ------------------------------------------------------------------------- */
 
 .camp-cover {
@@ -195,88 +152,144 @@
   z-index: 2;
   display: grid;
   align-items: center;
-  min-height: clamp(600px, 74svh, 860px);
+  min-height: clamp(620px, 80svh, 900px);
   padding: clamp(5.5rem, 12vh, 7rem) 0 var(--c-gap-sm);
   overflow-x: clip;
   background: #ece3d2;
   text-align: center;
 }
 
-/* Капрал, главная группа: справа внизу, лапами через шов. Круг чуть правее
-   и выше собаки, лапы ломают его нижнюю кромку. */
-.camp-cover__unit--lead {
-  right: 3%;
-  bottom: calc(-1 * var(--c-bleed));
-  width: clamp(280px, 30vw, 440px);
+/* Кадр коллажа: наклон свой у каждого, кайма светлая и тонкая, как у
+   наклеенной карточки. Тень мягкая и одна на всех: снимки лежат на одном
+   поле, значит и свет у них один. */
+.camp-cover__shot {
+  position: absolute;
 }
 
-.camp-cover__unit--lead i {
-  top: 16%;
-  left: 25%;
-  width: 58%;
+.camp-cover__shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 6px solid #fbf7ef;
+  object-fit: cover;
+  box-shadow: 0 18px 40px -22px rgba(28, 28, 28, 0.45);
+}
+
+/* Руки на морде: круг слева над заголовком. */
+.camp-cover__shot--care {
+  top: 9%;
+  left: 4%;
+  width: clamp(150px, 15vw, 215px);
+  aspect-ratio: 1;
+  rotate: -4deg;
+}
+
+.camp-cover__shot--care img {
   border-radius: 50%;
-  background: var(--c-amber);
 }
 
-/* Мира, слева внизу: вырезка широкая, круг под ней тоже шире. */
-.camp-cover__unit--mira {
-  bottom: 4%;
+/* Пёс встаёт к человеку: арка слева внизу. Форма другая нарочно, иначе
+   четыре кадра читаются одним приёмом. */
+.camp-cover__shot--greet {
+  bottom: 6%;
+  left: 7%;
+  width: clamp(140px, 14vw, 196px);
+  aspect-ratio: 3 / 4;
+  rotate: 3deg;
+}
+
+.camp-cover__shot--greet img {
+  border-radius: 999px 999px 26px 26px;
+}
+
+/* Котёнок: малый круг справа вверху. */
+.camp-cover__shot--kitten {
+  top: 7%;
+  right: 8%;
+  width: clamp(110px, 11vw, 160px);
+  aspect-ratio: 1;
+  rotate: 5deg;
+}
+
+.camp-cover__shot--kitten img {
+  border-radius: 50%;
+}
+
+/* Выход на выгул: широкая полоса внизу по центру, под текстом. */
+.camp-cover__shot--team {
+  right: 30%;
+  bottom: -2%;
+  width: clamp(180px, 19vw, 265px);
+  aspect-ratio: 16 / 9;
+  rotate: -2deg;
+}
+
+.camp-cover__shot--team img {
+  border-radius: 22px;
+}
+
+/* Сетка точек за кругом с руками. */
+.camp-cover__dots {
+  position: absolute;
+  top: 3%;
   left: 1%;
-  width: clamp(200px, 21vw, 310px);
+  width: clamp(90px, 9vw, 130px);
+  aspect-ratio: 1;
 }
 
-.camp-cover__unit--mira i {
-  top: 16%;
-  left: 6%;
-  width: 84%;
-  border-radius: 50%;
-  background: rgba(111, 115, 85, 0.42);
-}
-
-/* Джесси, слева вверху: за ней сетка точек, а не круг. Второй тип
-   геометрии, иначе все четыре угла читаются одним приёмом. */
-.camp-cover__unit--dzhessi {
-  top: 5%;
-  left: 6%;
-  width: clamp(130px, 13.5vw, 200px);
-}
-
-.camp-cover__unit--dzhessi i {
-  top: 0;
-  left: -12%;
-  width: 82%;
+.camp-cover__dots i {
+  display: block;
+  width: 100%;
+  height: 100%;
   background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
   background-size: 19px 19px;
 }
 
-/* Джек, справа вверху: почти квадратная вырезка, круг ровно под ней. */
-.camp-cover__unit--dzhek {
-  top: 7%;
-  right: 14%;
-  width: clamp(110px, 11.5vw, 170px);
+/* Подопечный на янтарном круге, справа внизу, лапами через шов. */
+.camp-cover__pet {
+  position: absolute;
+  right: 3%;
+  bottom: calc(-1 * var(--c-bleed));
+  width: clamp(250px, 27vw, 400px);
+  aspect-ratio: 1;
 }
 
-.camp-cover__unit--dzhek i {
-  top: 10%;
-  left: 12%;
-  width: 78%;
+.camp-cover__pet i {
+  position: absolute;
+  top: 18%;
+  left: 26%;
+  display: block;
+  width: 54%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  background: #fbf6ec;
+  background: var(--c-amber);
+}
+
+.camp-cover__pet img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 85%;
 }
 
 .camp-cover__copy {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 42rem;
+  max-width: 40rem;
 }
 
 .camp-cover h1 {
   /* Плашка красит всю строчную коробку, и при плотном интерлиньяже соседние
-     строки налезают друг на друга. Ниже 1.06 не опускать. */
+     строки налезают друг на друга. Ниже 1.06 не опускать.
+
+     Кегль подобран так, чтобы «Все сборы» стояло одной строкой: разорванное
+     плашкой надвое, оно занимало пол-обложки и спорило с кадрами. */
   margin: 0 0 1.4rem;
   font-family: var(--font-sans);
-  font-size: clamp(3.4rem, 8vw, 7rem);
+  font-size: clamp(2.9rem, 6.2vw, 5.4rem);
   font-weight: 800;
   line-height: 1.06;
   letter-spacing: -0.04em;
@@ -353,38 +366,44 @@
   }
 }
 
-/* На ноутбуке поле уже: текст короче по строке, группы по краям мельче и
-   ближе к кромкам, Джек снимается. */
+/* На ноутбуке поле уже: текст короче по строке, кадры мельче и ближе к
+   кромкам, полоса с выгулом снимается, иначе она лезет под кнопку. */
 @media (min-width: 861px) and (max-width: 1200px) {
   .camp-cover__copy {
-    max-width: 33rem;
+    max-width: 32rem;
   }
 
-  .camp-cover__unit--lead {
-    right: 0;
-    width: clamp(240px, 26vw, 300px);
+  .camp-cover__shot--care {
+    top: 7%;
+    left: 2%;
+    width: clamp(130px, 14vw, 170px);
   }
 
-  .camp-cover__unit--mira {
-    bottom: 3%;
-    left: -1%;
-    width: clamp(170px, 19vw, 230px);
-  }
-
-  .camp-cover__unit--dzhessi {
-    top: 4%;
+  .camp-cover__shot--greet {
+    bottom: 5%;
     left: 3%;
     width: clamp(120px, 13vw, 160px);
   }
 
-  .camp-cover__unit--dzhek {
+  .camp-cover__shot--kitten {
+    top: 15%;
+    right: 3%;
+    width: clamp(96px, 10vw, 130px);
+  }
+
+  .camp-cover__shot--team {
     display: none;
+  }
+
+  .camp-cover__pet {
+    right: 0;
+    width: clamp(230px, 25vw, 290px);
   }
 }
 
-/* На планшете текст занимает верх, под ним полоса: Капрал справа лапами
-   через шов, Мира слева. Мелкие группы сняты, две собаки рядом с текстом
-   это каша. */
+/* На планшете текст занимает верх, под ним полоса коллажа: подопечный
+   справа лапами через шов, руки на морде слева, котёнок мелко над ними.
+   Полоса с выгулом снимается: в ряд она не встаёт. */
 @media (max-width: 860px) {
   .camp-cover {
     align-items: start;
@@ -393,57 +412,78 @@
   }
 
   .camp-cover__copy {
-    padding-bottom: clamp(200px, 45vw, 280px);
+    padding-bottom: clamp(210px, 48vw, 300px);
   }
 
-  .camp-cover__unit--lead {
-    right: -1%;
-    width: clamp(240px, 48vw, 320px);
+  .camp-cover__shot--care {
+    top: auto;
+    bottom: 12%;
+    left: 3%;
+    width: clamp(120px, 26vw, 180px);
   }
 
-  .camp-cover__unit--mira {
+  .camp-cover__shot--greet {
     bottom: 2%;
+    left: 34%;
+    width: clamp(100px, 22vw, 150px);
+  }
+
+  .camp-cover__shot--kitten {
+    top: auto;
+    right: auto;
+    bottom: 30%;
+    left: 2%;
+    width: clamp(78px, 17vw, 115px);
+  }
+
+  .camp-cover__dots {
+    top: auto;
+    bottom: 14%;
     left: -2%;
-    width: clamp(150px, 27vw, 200px);
+    width: clamp(70px, 16vw, 110px);
+  }
+
+  .camp-cover__pet {
+    right: -2%;
+    width: clamp(230px, 48vw, 320px);
   }
 
   /* Снимаются по признаку в разметке, а не по порядковому номеру: все слои
      поля это div, и nth-of-type считал среди них же. */
-  .camp-cover__unit[data-small="true"] {
+  .camp-cover__shot[data-small="true"] {
     display: none;
   }
 }
 
-/* На телефоне композиция собирается у нижней кромки: Капрал справа крупно и
-   Джек слева мелко, оба лапами через шов, точки за заголовком в левом углу.
-   Одна собака посреди пустого поля выглядела одиноко, а Мира рядом с текстом
-   не помещается вовсе. */
+/* На телефоне у нижней кромки остаются подопечный и один кадр: три снимка в
+   ряд там превращаются в кашу. */
 @media (max-width: 600px) {
   .camp-cover__copy {
-    padding-bottom: clamp(190px, 50vw, 250px);
+    padding-bottom: clamp(195px, 52vw, 260px);
   }
 
-  .camp-cover__unit--lead {
-    right: -4%;
-    bottom: calc(-1 * var(--c-bleed));
-    width: clamp(205px, 56vw, 270px);
+  .camp-cover__shot--care {
+    bottom: 3%;
+    left: 2%;
+    width: clamp(112px, 30vw, 150px);
   }
 
-  .camp-cover__unit--mira {
+  .camp-cover__shot--greet {
     display: none;
   }
 
-  /* Джек снят общим правилом для узких экранов и здесь возвращается.
-     Признак в селекторе не для красоты: модификатор это один класс, он
-     весит меньше правила с атрибутом, и без признака display не перебьёт
-     его ни при каком порядке. */
-  .camp-cover__unit--dzhek[data-small="true"] {
+  .camp-cover__shot--kitten[data-small="true"] {
     top: auto;
-    right: auto;
-    bottom: 1%;
-    left: -3%;
+    right: 4%;
+    bottom: 34%;
+    left: auto;
     display: block;
-    width: clamp(88px, 27vw, 120px);
+    width: clamp(72px, 19vw, 100px);
+  }
+
+  .camp-cover__pet {
+    right: -4%;
+    width: clamp(215px, 55vw, 280px);
   }
 }
 
@@ -806,21 +846,19 @@
   /* Морда обычно в верхней трети кадра, и круг режет по краям сильнее
      прямоугольника: центр тяжести кадра сдвинут вверх. */
   object-position: 50% 35%;
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Поднимается только круг, и поднимается он целым. Снимок внутри круга
+   раньше ещё и наезжал масштабом, и на кромке это читалось дрожью: круг
+   режет картинку маской, а маска пересчитывается на каждый кадр
+   масштабирования. */
 .camp-item:hover .camp-item__shot,
 .camp-item__shot:focus-visible {
   transform: translateY(-6px);
 }
 
-.camp-item:hover .camp-item__shot img {
-  transform: scale(1.05);
-}
-
 .camp-item[data-status="closed"] .camp-item__shot img {
-  filter: grayscale(1);
-  opacity: 0.78;
+  filter: grayscale(0.55);
 }
 
 /* Тег и пометка о чужом кадре стоят строкой на листе, а не на снимке.
@@ -840,6 +878,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 24px;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   font-size: 0.64rem;
@@ -866,11 +905,6 @@
 
 .camp-item[data-status="closed"] .camp-badge--pet {
   background: #4c5038;
-}
-
-.camp-item__borrowed {
-  color: var(--c-muted);
-  font-size: 0.72rem;
 }
 
 .camp-item__title {
@@ -903,23 +937,52 @@
 
 .camp-item__bar {
   position: relative;
-  height: 4px;
+  height: 10px;
   overflow: hidden;
-  border-radius: 2px;
-  background: rgba(28, 28, 28, 0.12);
+  border-radius: 999px;
+  background: rgba(28, 28, 28, 0.1);
 }
 
 .camp-item__bar i {
   position: absolute;
   inset: 0 auto 0 0;
   width: var(--fill);
-  min-width: 6px;
-  border-radius: 2px;
+  min-width: 12px;
+  border-radius: 999px;
   background: var(--c-amber);
   transform-origin: 0 50%;
   animation: camp-item-fill 1ms linear both;
   animation-timeline: view();
   animation-range: entry 30% entry 90%;
+}
+
+/* Блик бежит по набранной части: сбор идёт прямо сейчас, и шкала это
+   единственное место, где движение говорит о деле, а не украшает. У
+   закрытого сбора блика нет: там уже всё собрано. */
+.camp-item[data-status="active"] .camp-item__bar i::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.75) 45%,
+    rgba(255, 255, 255, 0.75) 55%,
+    transparent 80%
+  );
+  content: "";
+  translate: -100% 0;
+  animation: camp-shimmer 2.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@keyframes camp-shimmer {
+  0% {
+    translate: -100% 0;
+  }
+
+  60%,
+  100% {
+    translate: 220% 0;
+  }
 }
 
 @keyframes camp-item-fill {
@@ -965,6 +1028,36 @@
   width: auto;
 }
 
+/* Закрытый сбор.
+
+   Раньше он отличался только серым снимком и зелёной шкалой, и в ряду с
+   открытыми читался сломанным, а не завершённым. Теперь у него свой вид:
+   мшистая лента через кадр, полная шкала без блика и строка «цель собрана»
+   вместо призыва. Кнопка «Помочь» у него не стоит вовсе. */
+.camp-item[data-status="closed"] .camp-item__figure::after {
+  position: absolute;
+  top: 12%;
+  left: -6%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 62%;
+  padding: 0.35rem 0;
+  border-radius: 999px;
+  background: #4c5038;
+  color: var(--c-sheet);
+  content: "Собрано";
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  rotate: -8deg;
+  text-transform: uppercase;
+}
+
+.camp-item[data-status="closed"] .camp-item__money b {
+  color: #4c5038;
+}
+
 .camp-item__closed {
   display: inline-flex;
   flex: 1 1 auto;
@@ -972,8 +1065,11 @@
   justify-content: center;
   gap: 0.5rem;
   min-height: 46px;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid rgba(76, 80, 56, 0.35);
+  border-radius: 999px;
   color: #4c5038;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
@@ -1357,10 +1453,11 @@
    её пропорции, 1400 на 1078. */
 .camp-call__unit {
   position: absolute;
-  top: -6%;
-  right: 9%;
-  width: clamp(225px, 24vw, 345px);
-  aspect-ratio: 1400 / 1078;
+  top: -8%;
+  right: 10%;
+  width: clamp(190px, 21vw, 300px);
+  aspect-ratio: 3 / 4;
+  rotate: -3deg;
 }
 
 .camp-call__unit img {
@@ -1368,7 +1465,11 @@
   z-index: 2;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  border: 7px solid #fbf7ef;
+  border-radius: 999px 999px 28px 28px;
+  object-fit: cover;
+  box-shadow: 0 22px 44px -26px rgba(28, 28, 28, 0.5);
   animation: camp-bowl-in 1ms linear both;
   animation-timeline: --call;
   animation-range: entry 0% entry 70%;
@@ -1390,10 +1491,10 @@
 .camp-call__disc {
   position: absolute;
   z-index: 1;
-  top: 38%;
-  left: -6%;
+  top: 52%;
+  left: -24%;
   display: block;
-  width: 66%;
+  width: 62%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: rgba(250, 245, 236, 0.72);
@@ -1414,10 +1515,10 @@
 .camp-call__dots {
   position: absolute;
   z-index: 0;
-  top: 46%;
-  right: -26%;
+  top: 10%;
+  right: -22%;
   display: block;
-  width: 62%;
+  width: 52%;
   aspect-ratio: 3 / 4;
   background-image: radial-gradient(circle, rgba(28, 28, 28, 0.26) 1.7px, transparent 1.8px);
   background-size: 21px 21px;
@@ -1527,14 +1628,14 @@
 
   .camp-call__unit {
     top: -5%;
-    right: 2%;
-    width: clamp(215px, 58vw, 330px);
+    right: 4%;
+    width: clamp(165px, 42vw, 240px);
   }
 
   .camp-call__dots {
-    top: 52%;
-    right: -6%;
-    width: 46%;
+    top: 14%;
+    right: -14%;
+    width: 44%;
   }
 }
 
