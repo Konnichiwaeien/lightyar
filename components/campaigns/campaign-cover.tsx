@@ -18,7 +18,7 @@ import { useLenis } from "@/components/ui/smooth-scroll";
  * По краям поля группы сопоставимого веса, и каждая уходит за свою кромку.
  *
  * На поле не только подопечные, но и люди: волонтёр, треплющий собаку по
- * животу, двое на скамейке и общий выход на прогулку. Это
+ * животу, волонтёр с собакой на поводке и общий выход на прогулку. Это
  * настоящие кадры приюта, вырезанные по контуру через rembg
  * (`public/campaigns/people`, разбор в docs/campaigns-scroll-plan.md).
  *
@@ -85,9 +85,9 @@ const UNITS = [
     delay: 0.24,
   },
   {
-    src: "/campaigns/people/bench.webp",
-    alt: "Волонтёры отдыхают на скамейке в приюте",
-    mod: "bench",
+    src: "/campaigns/people/leash.webp",
+    alt: "Волонтёр ведёт собаку на поводке",
+    mod: "leash",
     small: true,
     shape: "none",
     drift: -150,

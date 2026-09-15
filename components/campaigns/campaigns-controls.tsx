@@ -70,8 +70,10 @@ export function CampaignsControls({ counts }: { counts: { active: number; closed
         ))}
       </div>
 
+      {/* Подписи «Сортировка» рядом нет: список сам показывает выбранное
+          («Сначала новые»), и слово рядом было бы повтором. Для читалки
+          подпись осталась в самом списке. */}
       <div className="camp-sort">
-        <span>Сортировка</span>
         <CustomDropdown
           label="Сортировка"
           value={currentSort}
