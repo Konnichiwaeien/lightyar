@@ -15,8 +15,16 @@ import { useLenis } from "@/components/ui/smooth-scroll";
  *
  * Устройство с обоих референсов. Типографика по центру поля, как у Vogue и
  * Wikimedia: «Все» гротеском и «сборы» на янтарной плашке в одну строку.
- * По углам поля четыре группы сопоставимого веса, и каждая уходит за свою
- * кромку.
+ * По краям поля группы сопоставимого веса, и каждая уходит за свою кромку.
+ *
+ * На поле не только подопечные, но и люди: волонтёр, треплющий собаку по
+ * животу, пёс, встающий лапами на руку, и общий выход на прогулку. Это
+ * настоящие кадры приюта, вырезанные по контуру через rembg
+ * (`public/campaigns/people`, разбор в docs/campaigns-scroll-plan.md).
+ *
+ * Именно вырезанные, а не вставленные снимками: заход, где кадры лежали
+ * карточками в круге и арке с каймой и тенью, отклонён. Снимок в рамке это
+ * прямоугольный фотоблок, которого в грамматике нет.
  *
  * Группа это связка «фигура и вырезка на ней», собранная разметкой, а не
  * процентами по полю. Так было не всегда, и вот почему пришлось: холст у
@@ -58,7 +66,7 @@ const money = (value: number) => `${RUB.format(Math.round(value))} ₽`;
 const UNITS = [
   {
     src: "/pets/cutout-kapral.webp",
-    name: "Капрал",
+    alt: "",
     mod: "lead",
     small: false,
     shape: "disc",
@@ -67,33 +75,33 @@ const UNITS = [
     delay: 0.08,
   },
   {
-    src: "/pets/cutout-mira.webp",
-    name: "Мира",
-    mod: "mira",
+    src: "/campaigns/people/care.webp",
+    alt: "Волонтёр треплет собаку по животу",
+    mod: "care",
     small: false,
     shape: "disc",
-    drift: -105,
-    rotate: 3,
-    delay: 0.26,
+    drift: -110,
+    rotate: -3,
+    delay: 0.24,
   },
   {
-    src: "/pets/cutout-dzhessi.webp",
-    name: "Джесси",
-    mod: "dzhessi",
+    src: "/campaigns/people/greet.webp",
+    alt: "Пёс встаёт лапами на руку волонтёра",
+    mod: "greet",
     small: true,
     shape: "dots",
-    drift: -165,
-    rotate: -7,
-    delay: 0.4,
+    drift: -170,
+    rotate: 4,
+    delay: 0.38,
   },
   {
-    src: "/pets/cutout-dzhek.webp",
-    name: "Джек",
-    mod: "dzhek",
+    src: "/campaigns/people/walk.webp",
+    alt: "Волонтёры вывели собак на прогулку",
+    mod: "walk",
     small: true,
-    shape: "disc",
-    drift: -140,
-    rotate: 6,
+    shape: "none",
+    drift: -75,
+    rotate: 0,
     delay: 0.5,
   },
 ];
@@ -128,10 +136,11 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
   return (
     <MotionConfig reducedMotion="user">
       <section className="camp-cover" ref={sectionRef}>
-        <div aria-hidden="true" className="camp-cover__field">
+        <div className="camp-cover__field">
           {UNITS.map((unit) => (
             <Drift
               className={`camp-cover__unit camp-cover__unit--${unit.mod}`}
+              data-shape={unit.shape}
               distance={unit.drift}
               rotate={unit.rotate}
               origin="start"
@@ -140,16 +149,20 @@ export function CampaignCover({ summary }: { summary: CampaignSummary }) {
               small={unit.small}
               still={still}
             >
-              {/* Фигура внутри группы: круг или сетка точек. */}
-              <span className="camp-cover__shape">
-                {unit.shape === "disc" ? (
-                  <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: unit.delay - 0.06 }} />
-                ) : (
-                  <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: unit.delay }} />
-                )}
-              </span>
+              {/* Фигура внутри группы: круг или сетка точек. У выхода на
+                  прогулку фигуры нет: строй людей с собаками сам длинная
+                  фигура, и круг за ним читался бы пятном. */}
+              {unit.shape === "none" ? null : (
+                <span className="camp-cover__shape">
+                  {unit.shape === "disc" ? (
+                    <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...spring, delay: unit.delay - 0.06 }} />
+                  ) : (
+                    <motion.i initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: unit.delay }} />
+                  )}
+                </span>
+              )}
               <motion.img
-                alt=""
+                alt={unit.alt}
                 src={unit.src}
                 initial={{ opacity: 0, scale: 0.55, rotate: -10 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}

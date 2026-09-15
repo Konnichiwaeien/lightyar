@@ -200,66 +200,68 @@
 }
 
 /* Капрал, главная группа: справа внизу, лапами через шов. Круг чуть правее
-   и выше собаки, лапы ломают его нижнюю кромку. */
+/* Капрал: справа внизу, на круге, лапами через шов. */
 .camp-cover__unit--lead {
-  right: 3%;
+  right: 2%;
   bottom: calc(-1 * var(--c-bleed));
-  width: clamp(280px, 30vw, 440px);
+  width: clamp(250px, 27vw, 390px);
 }
 
 .camp-cover__unit--lead i {
-  top: 16%;
-  left: 25%;
+  top: 17%;
+  left: 24%;
   width: 58%;
   border-radius: 50%;
   background: var(--c-amber);
 }
 
-/* Мира, слева внизу: вырезка широкая, круг под ней тоже шире. */
-.camp-cover__unit--mira {
-  bottom: 4%;
-  left: 1%;
-  width: clamp(200px, 21vw, 310px);
+/* Волонтёр треплет собаку по животу: слева, на моховом круге. Вырезка
+   широкая, поэтому и круг под ней шире. */
+.camp-cover__unit--care {
+  --ratio: 760 / 688;
+
+  top: 13%;
+  left: 2%;
+  width: clamp(200px, 22vw, 320px);
 }
 
-.camp-cover__unit--mira i {
-  top: 16%;
-  left: 6%;
-  width: 84%;
+.camp-cover__unit--care i {
+  top: 2%;
+  left: 22%;
+  width: 62%;
   border-radius: 50%;
   background: rgba(111, 115, 85, 0.42);
 }
 
-/* Джесси, слева вверху: за ней сетка точек, а не круг. Второй тип
-   геометрии, иначе все четыре угла читаются одним приёмом. */
-.camp-cover__unit--dzhessi {
-  top: 5%;
-  left: 6%;
-  width: clamp(130px, 13.5vw, 200px);
+/* Пёс встаёт лапами на руку: слева внизу, высокая вырезка на точках. */
+.camp-cover__unit--greet {
+  --ratio: 620 / 1119;
+
+  bottom: 9%;
+  left: 11%;
+  width: clamp(96px, 11vw, 165px);
 }
 
-.camp-cover__unit--dzhessi i {
-  top: 0;
-  left: -12%;
-  width: 82%;
+.camp-cover__unit--greet i {
+  top: 10%;
+  left: -28%;
+  width: 88%;
+  aspect-ratio: 1;
   background-image: radial-gradient(circle, rgba(168, 84, 6, 0.34) 1.7px, transparent 1.8px);
   background-size: 19px 19px;
 }
 
-/* Джек, справа вверху: почти квадратная вырезка, круг ровно под ней. */
-.camp-cover__unit--dzhek {
-  top: 7%;
-  right: 14%;
-  width: clamp(110px, 11.5vw, 170px);
+/* Выход на прогулку: строй людей с собаками низкой полосой справа вверху.
+   Своей фигуры у него нет: строй сам длинная фигура, и круг за ним читался
+   бы пятном. */
+.camp-cover__unit--walk {
+  --ratio: 1200 / 676;
+
+  top: 13%;
+  right: 3%;
+  width: clamp(200px, 24vw, 350px);
 }
 
-.camp-cover__unit--dzhek i {
-  top: 10%;
-  left: 12%;
-  width: 78%;
-  border-radius: 50%;
-  background: #fbf6ec;
-}
 
 .camp-cover__copy {
   position: relative;
@@ -353,38 +355,38 @@
   }
 }
 
-/* На ноутбуке поле уже: текст короче по строке, группы по краям мельче и
-   ближе к кромкам, Джек снимается. */
+/* На ноутбуке поле уже: текст короче по строке, группы мельче и ближе к
+   кромкам, пёс у руки снимается. */
 @media (min-width: 861px) and (max-width: 1200px) {
   .camp-cover__copy {
-    max-width: 33rem;
+    max-width: 32rem;
   }
 
   .camp-cover__unit--lead {
-    right: 0;
-    width: clamp(240px, 26vw, 300px);
+    right: -1%;
+    width: clamp(230px, 25vw, 290px);
   }
 
-  .camp-cover__unit--mira {
-    bottom: 3%;
-    left: -1%;
-    width: clamp(170px, 19vw, 230px);
+  .camp-cover__unit--care {
+    top: 12%;
+    left: -2%;
+    width: clamp(180px, 20vw, 240px);
   }
 
-  .camp-cover__unit--dzhessi {
-    top: 4%;
-    left: 3%;
-    width: clamp(120px, 13vw, 160px);
+  .camp-cover__unit--walk {
+    top: 5%;
+    right: 2%;
+    width: clamp(190px, 22vw, 280px);
   }
 
-  .camp-cover__unit--dzhek {
+  .camp-cover__unit--greet {
     display: none;
   }
 }
 
-/* На планшете текст занимает верх, под ним полоса: Капрал справа лапами
-   через шов, Мира слева. Мелкие группы сняты, две собаки рядом с текстом
-   это каша. */
+/* На планшете текст занимает верх, под ним полоса коллажа: Капрал справа
+   лапами через шов, волонтёр с собакой слева. Мелкие группы сняты, в ряд
+   они не встают. */
 @media (max-width: 860px) {
   .camp-cover {
     align-items: start;
@@ -393,18 +395,19 @@
   }
 
   .camp-cover__copy {
-    padding-bottom: clamp(200px, 45vw, 280px);
+    padding-bottom: clamp(210px, 48vw, 300px);
   }
 
   .camp-cover__unit--lead {
-    right: -1%;
-    width: clamp(240px, 48vw, 320px);
+    right: -2%;
+    width: clamp(230px, 46vw, 310px);
   }
 
-  .camp-cover__unit--mira {
+  .camp-cover__unit--care {
+    top: auto;
     bottom: 2%;
-    left: -2%;
-    width: clamp(150px, 27vw, 200px);
+    left: -3%;
+    width: clamp(180px, 42vw, 260px);
   }
 
   /* Снимаются по признаку в разметке, а не по порядковому номеру: все слои
@@ -414,36 +417,22 @@
   }
 }
 
-/* На телефоне композиция собирается у нижней кромки: Капрал справа крупно и
-   Джек слева мелко, оба лапами через шов, точки за заголовком в левом углу.
-   Одна собака посреди пустого поля выглядела одиноко, а Мира рядом с текстом
-   не помещается вовсе. */
+/* На телефоне у нижней кромки остаются двое: подопечный справа и волонтёр с
+   собакой слева. Третья вырезка рядом с ними превращается в кашу. */
 @media (max-width: 600px) {
   .camp-cover__copy {
-    padding-bottom: clamp(190px, 50vw, 250px);
+    padding-bottom: clamp(195px, 52vw, 265px);
   }
 
   .camp-cover__unit--lead {
-    right: -4%;
-    bottom: calc(-1 * var(--c-bleed));
-    width: clamp(205px, 56vw, 270px);
+    right: -5%;
+    width: clamp(200px, 54vw, 265px);
   }
 
-  .camp-cover__unit--mira {
-    display: none;
-  }
-
-  /* Джек снят общим правилом для узких экранов и здесь возвращается.
-     Признак в селекторе не для красоты: модификатор это один класс, он
-     весит меньше правила с атрибутом, и без признака display не перебьёт
-     его ни при каком порядке. */
-  .camp-cover__unit--dzhek[data-small="true"] {
-    top: auto;
-    right: auto;
-    bottom: 1%;
-    left: -3%;
-    display: block;
-    width: clamp(88px, 27vw, 120px);
+  .camp-cover__unit--care {
+    bottom: 3%;
+    left: -8%;
+    width: clamp(150px, 44vw, 210px);
   }
 }
 

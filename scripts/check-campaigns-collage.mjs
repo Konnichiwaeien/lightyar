@@ -142,8 +142,12 @@ try {
       const shown = [...document.querySelectorAll(".camp-cover__unit")].filter(
         (node) => getComputedStyle(node).display !== "none",
       );
-      /* Фигура есть у каждой видимой группы: круг или сетка точек. */
-      const shapeless = shown.filter((node) => !node.querySelector("i")).length;
+      /* Фигура есть у каждой видимой группы: круг или сетка точек. Группа
+         может объявить, что фигура ей не нужна: строй людей с собаками сам
+         длинная фигура, и круг за ним читался бы пятном. */
+      const shapeless = shown.filter(
+        (node) => node.dataset.shape !== "none" && !node.querySelector("i"),
+      ).length;
       const landed = shown.map((node) => {
         const img = node.querySelector("img");
         const style = getComputedStyle(img);

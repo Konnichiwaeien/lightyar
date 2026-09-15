@@ -32,6 +32,7 @@ export function Drift({
   style,
   children,
   small,
+  ...rest
 }: {
   className: string;
   /** Полный путь слоя по вертикали в пикселях. Отрицательный: слой уезжает вверх. */
@@ -45,7 +46,7 @@ export function Drift({
   children?: React.ReactNode;
   /** Мелкий слой: на узком экране такие снимаются, чтобы поле не стало кашей. */
   small?: boolean;
-}) {
+} & Record<`data-${string}`, string | undefined>) {
   const at = (value: number) => (origin === "start" ? value : value - 0.5);
   const y = useTransform(progress, (value) => at(value) * distance);
   const turn = useTransform(progress, (value) => at(value) * rotate);
@@ -54,6 +55,7 @@ export function Drift({
       className={className}
       data-small={small ? "true" : undefined}
       style={still ? style : { ...style, y, rotate: turn }}
+      {...rest}
     >
       {children}
     </motion.div>
