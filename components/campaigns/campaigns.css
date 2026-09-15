@@ -335,7 +335,7 @@
 .camp-route__needs {
   position: relative;
   z-index: 1;
-  height: clamp(420px, 52svh, 620px);
+  height: clamp(540px, 64svh, 780px);
   margin-top: var(--c-gap-sm);
 }
 
@@ -346,10 +346,16 @@
   gap: 0.6rem;
 }
 
+/* Размер задаёт высота, а не ширина: предметы сняты и вертикально, и
+   горизонтально, и по ширине мешок вышел бы вдвое выше миски. Множитель
+   у каждого места свой, потому что одинаковый размер это ряд, а не коллаж. */
 .camp-route__need img {
   display: block;
-  width: 100%;
-  height: auto;
+  width: auto;
+  max-width: min(22rem, 24vw);
+  height: calc(clamp(120px, 15vw, 210px) * var(--art, 1));
+  object-fit: contain;
+  object-position: bottom left;
 }
 
 .camp-route__need figure {

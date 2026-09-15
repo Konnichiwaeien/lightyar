@@ -34,10 +34,10 @@ const money = (value: number) => `${new Intl.NumberFormat("ru-RU").format(Math.r
  * следующее поле.
  */
 const SLOTS = [
-  { left: "4%", top: "20%", size: "20%", drift: -30 },
-  { left: "30%", top: "54%", size: "23%", drift: -62 },
-  { left: "56%", top: "14%", size: "19%", drift: -44 },
-  { left: "76%", top: "48%", size: "22%", drift: -78 },
+  { left: "3%", top: "4%", art: 1, drift: -30 },
+  { left: "27%", top: "36%", art: 0.82, drift: -62 },
+  { left: "53%", top: "2%", art: 0.92, drift: -44 },
+  { left: "76%", top: "34%", art: 1.08, drift: -78 },
 ];
 
 export function CampaignRoute({
@@ -80,7 +80,7 @@ export function CampaignRoute({
               key={station.tag}
               progress={scrollYProgress}
               still={still}
-              style={{ left: slot.left, top: slot.top, width: slot.size }}
+              style={{ left: slot.left, top: slot.top, "--art": slot.art } as React.CSSProperties}
             >
               {station.art ? (
                 // eslint-disable-next-line @next/next/no-img-element
