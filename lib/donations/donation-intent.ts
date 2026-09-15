@@ -23,10 +23,10 @@ export function requestDonateOpen() {
 }
 
 /**
- * Подтянуть код панели помощи заранее, при наведении или фокусе на кнопку:
- * панель грузится динамически, и к клику её код уже на месте. Проверка на
+ * Подтянуть код формы взноса заранее, при наведении или фокусе на кнопку:
+ * форма грузится динамически, и к клику её код уже на месте. Проверка на
  * окно, чтобы модуль не попадал в серверную сборку.
  */
 export function preloadDonatePanel() {
-  if (typeof window !== "undefined") void import("@/components/campaigns/campaign-donate-panel");
+  if (typeof window !== "undefined") void import("@/components/campaigns/campaign-donate-form");
 }

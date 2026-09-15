@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, PawPrint, Tag } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, PawPrint, Tag, PackageOpen, Sparkles } from "lucide-react";
 
 import { CampaignsControls } from "@/components/campaigns/campaigns-controls";
 import { CampaignsPagination } from "@/components/campaigns/campaigns-pagination";
@@ -12,10 +12,9 @@ import { CampaignCover } from "@/components/campaigns/campaign-cover";
 import { CampaignRoute } from "@/components/campaigns/campaign-route";
 import { CampaignCall } from "@/components/campaigns/campaign-call";
 import { CampaignDonateDialog } from "@/components/campaigns/campaign-donate-dialog";
+import { CampaignBlankDonate } from "@/components/campaigns/campaign-blank-donate";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { campaignsService } from "@/lib/api/services/campaigns";
-import { donationsService } from "@/lib/api/services/donations";
-import type { DonationFeedState } from "@/lib/donations/donation-feed-state";
 import { resolveCovers } from "@/lib/campaigns/cover";
 import { needArt } from "@/lib/campaigns/collage";
 import { getCampaignSummary } from "@/lib/campaigns/summary";
@@ -29,6 +28,16 @@ export const metadata: Metadata = {
   description: "Открытые и закрытые сборы АНБО «Светлый»: на что собираем, сколько уже есть и сколько осталось.",
   alternates: { canonical: "/campaigns" },
 };
+
+/**
+ * Страница собирается на сервере при каждом запросе: фильтр, сортировка и
+ * номер страницы живут в адресе, и по ним каждый раз своя выборка. Данные
+ * при этом кэшируются на минуту в самих запросах к CMS
+ * (`next: { revalidate: 60 }` в сервисах), поэтому частые заходы не будят
+ * Strapi заново. В браузере ничего не дозагружается: список, суммы и кадры
+ * приходят готовыми в разметке.
+ */
+export const revalidate = 60;
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -73,7 +82,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
      а число закрытых нужно вкладке фильтра. Запросы идут разом:
      последовательно они выстроились бы в лесенку и задержали бы первый байт
      на время лишнего обхода CMS. */
-  const [campaignsData, summary, closedData, donationsRaw] = await Promise.all([
+  const [campaignsData, summary, closedData] = await Promise.all([
     campaignsService.getCampaigns({
       status,
       sort: SORTS[sort] ?? SORTS.date_desc,
@@ -82,21 +91,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
     }),
     getCampaignSummary(),
     campaignsService.getCampaigns({ status: "closed", limit: 1 }),
-    donationsService.getRecentDonations(20),
   ]);
-
-  /* Лента помощников для панели помощи в диалоге: та же, что на главной. */
-  const feed: DonationFeedState =
-    donationsRaw.status === "ready"
-      ? {
-          status: "ready",
-          items: donationsRaw.donations.map((donation) => ({
-            name: donation.donorName || "Анонимный помощник",
-            amount: donation.amount,
-            type: donation.type,
-          })),
-        }
-      : { status: donationsRaw.status, items: [] };
 
   const list = await resolveCovers((campaignsData.data || []).map(normalizeCampaignData));
   const total = campaignsData.meta?.pagination?.total || 0;
@@ -270,11 +265,28 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
                 })}
               </ul>
             ) : (
-              <p className="camp-empty">
-                {status === "closed"
-                  ? "Закрытых сборов пока нет. Посмотрите те, что идут сейчас."
-                  : "Открытых сборов сейчас нет. Помочь приюту можно на главной странице."}
-              </p>
+              /* Пустое состояние это карточка, а не строка текста: строка
+                 посреди пустого листа читается сбоем загрузки. Отсюда же
+                 ведёт выход: к открытым сборам или к взносу без цели. */
+              <div className="camp-blank">
+                <span aria-hidden="true" className="camp-blank__badge">
+                  {status === "closed" ? <CheckCircle2 size={30} /> : <PackageOpen size={30} />}
+                </span>
+                <h3>{status === "closed" ? "Закрытых сборов пока нет" : "Открытых сборов сейчас нет"}</h3>
+                <p>
+                  {status === "closed"
+                    ? "Как только сбор закроется, он останется здесь: с итоговой суммой и историей, на что ушли деньги."
+                    : "Приют собирает на нужды по мере их появления. Пока новых сборов нет, помочь можно взносом без цели."}
+                </p>
+                {status === "closed" ? (
+                  <Link className="camp-btn camp-blank__cta" href="/campaigns?status=active">
+                    <Sparkles aria-hidden="true" size={17} />
+                    Посмотреть, что идёт сейчас
+                  </Link>
+                ) : (
+                  <CampaignBlankDonate />
+                )}
+              </div>
             )}
 
             <Suspense fallback={null}>
@@ -305,9 +317,11 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
         />
       </main>
 
-      {/* Панель помощи в диалоге: кнопки «Помочь» на карточках и «Сделать
-          взнос» в финале открывают её здесь, а не уводят на главную. */}
-      <CampaignDonateDialog feed={feed} />
+      {/* Окно помощи: кнопки «Помочь» на карточках, «Сделать взнос» в финале
+          и «Помочь без цели» в пустом состоянии открывают его здесь, а не
+          уводят на главную. Ленты помощников в нём нет, поэтому и запроса за
+          ней страница больше не делает. */}
+      <CampaignDonateDialog />
     </div>
   );
 }

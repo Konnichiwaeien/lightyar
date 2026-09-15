@@ -222,7 +222,7 @@ try {
           const r = document.querySelector(".camp-route__scene").getBoundingClientRect();
           return { w: Math.round(r.width), h: Math.round(r.height) };
         })(),
-        dialogHidden: document.querySelector(".camp-donate")?.hidden ?? null,
+        dialogMounted: Boolean(document.querySelector(".camp-donate")),
       };
     });
 
@@ -237,7 +237,7 @@ try {
 
     // Кнопка обложки: «Помочь», ведёт к каталогу на этой же странице.
     assert.equal(shape.cta, "Помочь", `${viewport.name}: кнопка обложки «${shape.cta}»`);
-    assert.equal(shape.dialogHidden, true, `${viewport.name}: диалог помощи открыт при загрузке`);
+    assert.equal(shape.dialogMounted, false, `${viewport.name}: окно помощи есть в разметке до открытия`);
 
     /* Поле у каждой секции своё, и это часть языка, а не украшение: в
        референсах цвет меняется от секции к секции. */
@@ -431,25 +431,33 @@ try {
     const firstTitle = (await page.locator(".camp-item__title a").first().textContent()).trim();
     await page.locator(".camp-item .camp-btn").first().click();
     await page.waitForTimeout(300);
-    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), false, `${viewport.name}: панель помощи не открылась с карточки`);
-    // Панель грузится динамически: ждём её, а не фиксированную паузу.
-    await page.locator(".camp-donate .donation-intent strong").waitFor({ state: "visible", timeout: 20_000 });
-    const intentTitle = (await page.locator(".camp-donate .donation-intent strong").textContent()).trim();
+    // Форма грузится динамически: ждём её, а не фиксированную паузу.
+    await page.locator(".camp-form__intent strong").waitFor({ state: "visible", timeout: 20_000 });
+    const intentTitle = (await page.locator(".camp-form__intent strong").textContent()).trim();
+    /* На узком экране это лист снизу, на широком окно по центру: проверяем,
+       что раскладка совпала с шириной. */
+    const sheet = await page.$eval(".camp-donate", (node) => node.dataset.sheet === "true");
+    assert.equal(sheet, compact, `${viewport.name}: окно помощи в виде ${sheet ? "листа" : "окна"}`);
     assert.equal(intentTitle, firstTitle, `${viewport.name}: в панели не тот сбор: «${intentTitle}»`);
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
-    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), true, `${viewport.name}: панель не закрылась по Escape`);
+    await page.waitForTimeout(600);
+    assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 0, `${viewport.name}: окно не закрылось по Escape`);
 
     // «Сделать взнос» в финале открывает панель без назначения.
     await page.locator(".camp-call__cta").scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
     await page.locator(".camp-call__cta").click();
-    await page.waitForTimeout(400);
-    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), false, `${viewport.name}: панель помощи не открылась из финала`);
+    await page.locator(".camp-form__pay").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 1, `${viewport.name}: окно помощи не открылось из финала`);
+    // Взнос без цели: назначения в форме нет.
+    const free = await page.$eval(".camp-form__intent", (node) => node.className.includes("--free"));
+    assert.ok(free, `${viewport.name}: из финала окно открылось с назначением`);
     await page.locator(".camp-donate__close").click();
-    await page.waitForTimeout(300);
-    assert.equal(await page.$eval(".camp-donate", (node) => node.hidden), true, `${viewport.name}: панель не закрылась крестиком`);
-    console.log(`${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает панель со сбором «${intentTitle.slice(0, 24)}…», финал открывает панель`);
+    await page.waitForTimeout(600);
+    assert.equal(await page.$$eval(".camp-donate", (nodes) => nodes.length), 0, `${viewport.name}: окно не закрылось крестиком`);
+    console.log(
+      `${" ".repeat(16)}кнопки: обложка везёт к каталогу (${listTop}px), карточка открывает ${sheet ? "лист" : "окно"} со сбором «${intentTitle.slice(0, 24)}…», финал открывает его без назначения`,
+    );
 
     // Финал: миска падает, пока секция входит в экран. Внизу экрана её ещё
     // нет, к середине входа она на месте.

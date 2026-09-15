@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 
-import type { DonationFeedState } from "@/lib/donations/donation-feed-state";
 import {
   DONATE_OPEN_EVENT,
   DONATION_INTENT_EVENT,
@@ -14,41 +14,58 @@ import {
 import { useLenis } from "@/components/ui/smooth-scroll";
 
 /**
- * Панель помощи в диалоге поверх страницы сборов.
+ * Окно помощи на странице сборов.
  *
- * Панель та же, что на главной: назначение взноса, ступени, поля, лента
- * помощников. На главной она стоит секцией, и кнопки «Помочь» на карточках
- * сборов прокручивают к ней. Здесь секции нет, и до этого кнопки на
- * карточках отправляли событие в пустоту: панель не была смонтирована, и
- * нажатие ничего не делало.
+ * На широком экране это окно по центру, на узком лист, выезжающий снизу: на
+ * телефоне окно по центру оставляет поля по краям и всё равно упирается в
+ * клавиатуру, а лист начинается от большого пальца. Точка перелома одна на
+ * страницу, 860 пикселей.
  *
- * Панель грузится динамически по первому открытию и дальше остаётся
- * смонтированной, диалог только прячет её: так не теряется набранное в
- * полях. Событие с назначением, которое пришло раньше, чем панель успела
- * подписаться, диалог запоминает и повторяет, когда панель готова.
+ * Внутри своя форма, а не панель с главной. Та вписана в широкую секцию:
+ * вкладки, лента помощников, подопечный над верхней кромкой. В окне это
+ * лишнее, а подопечный ещё и налезал на заголовок.
  *
- * Открывается на событие назначения (карточка сбора) и на событие открытия
- * без назначения (финальный призыв). Закрывается крестиком, клавишей
- * Escape и щелчком по затемнению; фокус ходит по кругу внутри и после
- * закрытия возвращается на кнопку, с которой пришли.
+ * Открытие и закрытие ведёт framer: окно всплывает и растёт от 96 процентов,
+ * лист выезжает снизу, оба уходят обратно тем же путём. AnimatePresence нужен
+ * ради выхода: без него узел исчезал бы мгновенно, и закрытие читалось бы
+ * обрывом. При «меньше движения» остаётся только проявление.
+ *
+ * Форма грузится динамически по первому открытию: её код не нужен, пока
+ * читатель не решил помочь. Событие с назначением, пришедшее раньше, чем
+ * форма успела подписаться, окно запоминает и повторяет, когда форма готова.
+ *
+ * Закрытие уносит и форму: набранное в полях не сохраняется. Пока оплата не
+ * подключена, терять там нечего; когда подключат, значения нужно будет
+ * поднять сюда, иначе случайное закрытие будет стоить читателю ввода.
  */
 
-const CampaignDonatePanel = dynamic(
-  () => import("@/components/campaigns/campaign-donate-panel").then((module) => module.CampaignDonatePanel),
+const CampaignDonateForm = dynamic(
+  () => import("@/components/campaigns/campaign-donate-form").then((module) => module.CampaignDonateForm),
   {
     ssr: false,
     loading: () => (
       <p className="camp-donate__loading" role="status">
-        Открываем панель помощи…
+        Открываем форму…
       </p>
     ),
   },
 );
 
-export function CampaignDonateDialog({ feed }: { feed: DonationFeedState }) {
+/** Узкий экран: там окно превращается в лист снизу. */
+function useSheet(query = "(max-width: 860px)") {
+  const [sheet, setSheet] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const sync = () => setSheet(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, [query]);
+  return sheet;
+}
+
+export function CampaignDonateDialog() {
   const [open, setOpen] = useState(false);
-  /* Панель монтируется по первому открытию и больше не размонтируется. */
-  const [opened, setOpened] = useState(false);
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState<DonationIntent | null>(null);
   const readyRef = useRef(false);
@@ -57,18 +74,17 @@ export function CampaignDonateDialog({ feed }: { feed: DonationFeedState }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const { getLenis } = useLenis();
+  const sheet = useSheet();
+  const still = useReducedMotion();
 
   useEffect(() => {
     const show = () => {
       openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setOpen(true);
-      setOpened(true);
     };
     const receiveIntent = (event: Event) => {
-      // Повтор события для панели: диалог его уже видел.
       if (replayingRef.current) return;
       const detail = (event as CustomEvent<DonationIntent>).detail;
-      // Панель ещё не подписана: запомнить и повторить, когда будет.
       if (!readyRef.current && detail) setPending(detail);
       show();
     };
@@ -97,7 +113,7 @@ export function CampaignDonateDialog({ feed }: { feed: DonationFeedState }) {
   useEffect(() => {
     if (!open) return;
 
-    /* Страница под диалогом стоит: и обычная прокрутка, и плавная. */
+    /* Страница под окном стоит: и обычная прокрутка, и плавная. */
     const lenis = getLenis();
     lenis?.stop();
     const previousOverflow = document.body.style.overflow;
@@ -137,35 +153,69 @@ export function CampaignDonateDialog({ feed }: { feed: DonationFeedState }) {
     };
   }, [open, getLenis]);
 
+  /* Лист выезжает снизу, окно всплывает и растёт. При «меньше движения»
+     остаётся проявление: пружина и выезд сняты. */
+  const panelMotion = still
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 } }
+    : sheet
+      ? {
+          initial: { y: "100%" },
+          animate: { y: 0 },
+          exit: { y: "100%" },
+          transition: { type: "spring" as const, stiffness: 320, damping: 34, mass: 0.9 },
+        }
+      : {
+          initial: { opacity: 0, scale: 0.96, y: 18 },
+          animate: { opacity: 1, scale: 1, y: 0 },
+          exit: { opacity: 0, scale: 0.97, y: 10 },
+          transition: { type: "spring" as const, stiffness: 300, damping: 30, mass: 0.8 },
+        };
+
   return (
-    <div
-      className="camp-donate"
-      hidden={!open}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) setOpen(false);
-      }}
-    >
-      <div
-        aria-labelledby="camp-donate-title"
-        aria-modal="true"
-        className="camp-donate__panel"
-        ref={panelRef}
-        role="dialog"
-      >
-        <div className="camp-donate__head">
-          <h2 id="camp-donate-title">Помочь приюту</h2>
-          <button
-            aria-label="Закрыть"
-            className="camp-donate__close"
-            onClick={() => setOpen(false)}
-            ref={closeRef}
-            type="button"
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          animate={{ opacity: 1 }}
+          className="camp-donate"
+          data-sheet={sheet ? "true" : undefined}
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+          transition={{ duration: 0.22 }}
+        >
+          <motion.div
+            aria-labelledby="camp-donate-title"
+            aria-modal="true"
+            className="camp-donate__panel"
+            ref={panelRef}
+            role="dialog"
+            {...panelMotion}
           >
-            <X aria-hidden="true" size={20} />
-          </button>
-        </div>
-        {opened ? <CampaignDonatePanel feed={feed} onReady={onReady} /> : null}
-      </div>
-    </div>
+            {/* Ручка листа: на телефоне она говорит, что это выдвижной лист,
+                и её видно раньше, чем читатель тронет экран. */}
+            <span aria-hidden="true" className="camp-donate__grip" />
+
+            <header className="camp-donate__head">
+              <h2 id="camp-donate-title">Помочь приюту</h2>
+              <button
+                aria-label="Закрыть"
+                className="camp-donate__close"
+                onClick={() => setOpen(false)}
+                ref={closeRef}
+                type="button"
+              >
+                <X aria-hidden="true" size={18} />
+              </button>
+            </header>
+
+            <div className="camp-donate__body">
+              <CampaignDonateForm onClose={() => setOpen(false)} onReady={onReady} />
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
