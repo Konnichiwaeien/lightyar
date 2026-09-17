@@ -92,7 +92,7 @@ test("year slices parse dates by format, not by Number()", () => {
 });
 
 test("census links every animal to its own page", () => {
-  assert.match(census, /\/pets\/\$\{pet\.documentId\}/);
+  assert.match(census, /\/pets\/\$\{pet\.slug \|\| pet\.documentId\}/);
   // Выбор разреза взаимоисключающий, поэтому переключатель, а не набор
   // независимых кнопок: скринридер объявляет «такой-то из шести».
   assert.match(census, /role="radiogroup"/);

@@ -10,6 +10,7 @@ type ResilientImageProps = Omit<ImageProps, "onError"> & {
 
 export function ResilientImage({ fallbackLabel = "Фото временно недоступно", src, alt, ...props }: ResilientImageProps) {
   const [failedSrc, setFailedSrc] = useState<ImageProps["src"] | null>(null);
+  const [directSrc, setDirectSrc] = useState<ImageProps["src"] | null>(null);
   const failed = failedSrc === src;
 
   if (failed) {
@@ -25,5 +26,9 @@ export function ResilientImage({ fallbackLabel = "Фото временно не
     );
   }
 
-  return <Image {...props} src={src} alt={alt} onError={() => setFailedSrc(src)} />;
+  return <Image {...props} unoptimized={props.unoptimized || directSrc === src} src={src} alt={alt} onError={() => {
+    // A failed optimisation request does not imply that the source is missing.
+    if (!props.unoptimized && directSrc !== src) setDirectSrc(src);
+    else setFailedSrc(src);
+  }} />;
 }

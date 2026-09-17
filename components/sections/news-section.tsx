@@ -13,10 +13,11 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 interface NewsSectionProps {
+  unavailable?: boolean;
   initialNews?: StrapiNews[];
 }
 
-export function NewsSection({ initialNews = [] }: NewsSectionProps) {
+export function NewsSection({ initialNews = [], unavailable = false }: NewsSectionProps) {
   const { textEnter, textLeave } = useCursor();
   
   const hasNews = initialNews && initialNews.length > 0;
@@ -72,9 +73,9 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
             </span>
-            <h3 className="text-3xl font-serif text-[#1c1c1c] mb-4">Не удалось загрузить новости</h3>
+            <h3 className="text-3xl font-serif text-[#1c1c1c] mb-4">{unavailable ? "Не удалось загрузить новости" : "Здесь появятся новости приюта"}</h3>
             <p className="text-[#1c1c1c]/50 font-light leading-relaxed mb-8 max-w-md">
-              Новости пока не загрузились. Попробуйте обновить страницу или загляните к нам во ВКонтакте.
+              {unavailable ? "Попробуйте обновить страницу или загляните к нам во ВКонтакте." : "Расскажем о наших подопечных и жизни «Светлого»."}
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -99,7 +100,7 @@ export function NewsSection({ initialNews = [] }: NewsSectionProps) {
                 {newsItems.map((item) => (
                   <SwiperSlide key={item.id}>
                     {/* On mobile, cards are strictly normal vertical (isLarge={false}) */}
-                    <NewsCard article={item} isLarge={false} />
+                    <NewsCard article={item} isLarge={false} as="article" />
                   </SwiperSlide>
                 ))}
               </Swiper>

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/page-metadata";
 import { AboutNarrative } from "@/components/about/about-narrative";
 import { HomeHeader } from "@/components/home/home-header";
 import { aboutPageService } from "@/lib/api/services/about-page";
 
 export const metadata: Metadata = {
+  ...pageMetadata("О нас", "Миссия, история развития и команда благотворительной организации АНБО «Светлый». Узнайте, как стать волонтером, выгуливать собак или помочь приюту в Ярославле и Рыбинске.", "/about"),
   title: "О нас",
   description: "Миссия, история развития и команда благотворительной организации АНБО «Светлый». Узнайте, как стать волонтером, выгуливать собак или помочь приюту в Ярославле и Рыбинске.",
   keywords: [
@@ -16,12 +18,6 @@ export const metadata: Metadata = {
     "рыбинск",
     "ярославская область"
   ],
-  openGraph: {
-    title: "О нас | АНБО «Светлый» — Системная помощь животным",
-    description: "Узнайте историю проекта, познакомьтесь с Мариной Морозовой, Светланой Клюкиной и Андреем Синицыным, и внесите свой вклад в помощь приюту.",
-    type: "website",
-    locale: "ru_RU",
-  },
 };
 
 export default async function AboutPage() {

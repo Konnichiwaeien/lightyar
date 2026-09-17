@@ -167,11 +167,13 @@ interface Stat {
 }
 
 export function AboutSection({
+  statsAvailable = true,
   imageUrl,
   total,
   dogs,
   adopted,
 }: {
+  statsAvailable?: boolean;
   imageUrl?: string;
   total: number;
   dogs: number;
@@ -222,7 +224,7 @@ export function AboutSection({
             одинокой цифры по центру и выглядела пустой.
           */}
           <ul className="about-stats relative z-20 mb-10 w-full px-2 md:mb-14 md:px-4 lg:px-8 xl:px-12">
-            {stats.map(({ value, unit, note, photo, mark }) => (
+            {(statsAvailable ? stats : []).map(({ value, unit, note, photo, mark }) => (
               <li key={unit} className="about-stat flex min-w-0 items-center">
                 {/* мягкий круг позади вырезки — приём из отчётов Wikimedia:
                     он держит силуэт на фоне, не превращая его в карточку */}

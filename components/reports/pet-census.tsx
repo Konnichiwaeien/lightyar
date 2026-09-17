@@ -33,7 +33,7 @@ const CensusField = memo(function CensusField({
               className="reports-face"
               data-status={pet.status}
               data-year={pet.intakeYear ?? ""}
-              href={`/pets/${pet.documentId}`}
+              href={`/pets/${pet.slug || pet.documentId}`}
               title={`${pet.name}${pet.intakeYear ? ` · под опекой с ${pet.intakeYear}` : ""}`}
             >
               {pet.photo && !broken ? (
@@ -118,7 +118,7 @@ export function PetCensus({ pets }: { pets: CensusPet[] }) {
       {/* Выбор взаимоисключающий, поэтому это переключатель, а не набор
           независимых кнопок: скринридер объявит «такой-то из шести». */}
       <div className="reports-tabs" role="radiogroup" aria-label="Разрез переписи">
-        {options.map((option) => {
+        {options.map((option, index) => {
           const checked = option.lens === lens && option.year === year;
           return (
             <button
@@ -128,6 +128,18 @@ export function PetCensus({ pets }: { pets: CensusPet[] }) {
               aria-checked={checked}
               tabIndex={checked ? 0 : -1}
               onClick={() => { setLens(option.lens); setYear(option.year); }}
+              onKeyDown={(event) => {
+                let next: number;
+                if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % options.length;
+                else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + options.length) % options.length;
+                else if (event.key === "Home") next = 0;
+                else if (event.key === "End") next = options.length - 1;
+                else return;
+                event.preventDefault();
+                setLens(options[next].lens);
+                setYear(options[next].year);
+                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus();
+              }}
             >
               {option.label}
             </button>

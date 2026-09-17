@@ -9,6 +9,7 @@ import Link from "next/link";
 
 interface PetCardData {
   id: string;
+  slug?: string;
   name: string;
   tag: string;
   image: string;
@@ -76,7 +77,7 @@ export function DogsStoriesSection({ initialPets = [] }: DogsStoriesSectionProps
             >
               {!dog.isLink ? (
                 <Link
-                  href={`/pets/${dog.id}`}
+                  href={`/pets/${dog.slug || dog.id}`}
                   className="absolute inset-0 block focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden rounded-2xl md:rounded-3xl"
                 >
                   {dog.image ? (

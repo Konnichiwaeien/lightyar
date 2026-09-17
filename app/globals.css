@@ -97,6 +97,7 @@ body {
    кнопкой в шапке дёргается вбок на её ширину. */
 html {
   scrollbar-gutter: stable;
+  scroll-behavior: smooth;
 }
 
 /* Restore standard cursors on pages where the custom cursor is not loaded */
@@ -119,7 +120,7 @@ body.has-custom-cursor [data-cursor-glow] {
 
 /* Accessibility: respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
-  html:focus-within {
+  html, html:focus-within {
     scroll-behavior: auto;
   }
 

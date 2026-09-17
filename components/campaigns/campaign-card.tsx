@@ -36,7 +36,7 @@ export function CampaignCard({ fund, index }: { fund: CampaignCardFund; index: n
   return (
     <li className="camp-item" data-status={fund.status} style={{ "--i": index } as React.CSSProperties}>
       <div className="camp-item__figure">
-        <Link className="camp-item__shot" href={`/campaigns/${fund.id}`} aria-label={fund.title}>
+        <Link className="camp-item__shot" href={`/campaigns/${fund.slug || fund.id}`} aria-label={fund.title}>
           {fund.shot.src ? (
             <Image
               src={fund.shot.src}
@@ -70,7 +70,7 @@ export function CampaignCard({ fund, index }: { fund: CampaignCardFund; index: n
       </p>
 
       <h3 className="camp-item__title">
-        <Link href={`/campaigns/${fund.id}`}>{fund.title}</Link>
+        <Link href={`/campaigns/${fund.slug || fund.id}`}>{fund.title}</Link>
       </h3>
       <p className="camp-item__desc">{fund.desc}</p>
 
@@ -109,7 +109,7 @@ export function CampaignCard({ fund, index }: { fund: CampaignCardFund; index: n
         <Link
           aria-label={`Подробнее о сборе: ${fund.title}`}
           className="camp-btn camp-btn--quiet"
-          href={`/campaigns/${fund.id}`}
+          href={`/campaigns/${fund.slug || fund.id}`}
         >
           Подробнее
           <ArrowUpRight size={16} aria-hidden="true" />

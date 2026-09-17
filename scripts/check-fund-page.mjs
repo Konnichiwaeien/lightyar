@@ -4,8 +4,8 @@ import { chromium } from "playwright-core";
 /**
  * Приёмка страницы одного сбора.
  *
- * Страница переехала в язык каталога: плоские цветные поля, кадр в круге,
- * рисованные значки, окно помощи вместо своей формы. Здесь это проверяется
+ * Страница использует поля каталога, split-обложку на компьютере,
+ * встроенную форму и общее окно помощи. Здесь это проверяется
  * замерами, а не взглядом на один снимок.
  *
  * Запуск: node scripts/check-fund-page.mjs [адрес] [имя окна]
@@ -99,9 +99,7 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
           title: document.querySelector("h1")?.textContent.trim() ?? "",
           headings: [...document.querySelectorAll("h2")].map((node) => node.textContent.trim()),
           tabs: [...document.querySelectorAll('[role="tab"]')].map((node) => node.textContent.trim()),
-          /* Кадр это разворот на половину экрана: полоса без скруглений,
-             уходящая под правый край окна. Круг, стоявший здесь сначала,
-             съедал сам снимок. */
+          /* На десктопе фото доходит до края окна, ниже — следует сетке. */
           shot: shot
             ? {
                 radius: getComputedStyle(shot).borderRadius,
@@ -110,7 +108,7 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
                 edge: Math.round(window.innerWidth - shot.getBoundingClientRect().right),
               }
             : null,
-          framed: [...document.querySelectorAll("main img")].filter((img) => {
+          framed: [...document.querySelectorAll("main img:not(.fund-shots__thumb img)")].filter((img) => {
             const box = img.closest("div, figure, span, a");
             if (!box) return false;
             const style = getComputedStyle(box);
@@ -153,16 +151,15 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
       `${viewport.name}: вкладки не те: ${shape.tabs.join(" | ")}`,
     );
     assert.ok(shape.shot, `${viewport.name}: кадра сбора нет вовсе`);
-    assert.equal(shape.shot.radius, "0px", `${viewport.name}: полоса кадров скруглена (${shape.shot.radius})`);
-    /* Полоса уходит под правый край окна. Полосе прокрутки оставлено до
-       двадцати пикселей: она съедает край, а вылет считается от 100vw. */
+    assert.equal(shape.shot.radius, viewport.width <= 1100 ? "24px" : "0px", `${viewport.name}: неверное скругление фотографий (${shape.shot.radius})`);
+    /* Полноразмерная правая половина на десктопе, отступы на планшете/телефоне. */
     assert.ok(
-      shape.shot.edge <= 20,
-      `${viewport.name}: полоса не дошла до края окна, осталось ${shape.shot.edge}px`,
+      viewport.width > 1100 ? shape.shot.edge >= 0 && shape.shot.edge <= 20 : shape.shot.edge >= 12,
+      `${viewport.name}: неверная правая граница снимка (${shape.shot.edge}px)`,
     );
     if (!compact) {
       assert.ok(
-        shape.shot.wide >= viewport.width * 0.4,
+        shape.shot.wide >= Math.min(viewport.width * 0.3, 400),
         `${viewport.name}: полоса шириной ${shape.shot.wide}px при окне ${viewport.width}`,
       );
     }
@@ -171,10 +168,10 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
     assert.ok(shape.overflow <= 1, `${viewport.name}: перелив по горизонтали ${shape.overflow}px`);
     assert.doesNotMatch(shape.emoji, EMOJI, `${viewport.name}: в тексте остались эмодзи вместо значков`);
     assert.equal(shape.dock, 0, `${viewport.name}: кнопка-догонялка висит с самого верха`);
-    assert.equal(shape.bar, "21px", `${viewport.name}: шкала сбора высотой ${shape.bar}`);
+    assert.equal(shape.bar, "36px", `${viewport.name}: шкала сбора высотой ${shape.bar}`);
     assert.equal(
       shape.shimmer,
-      viewport.reducedMotion === "reduce" ? "none" : "camp-shimmer",
+      viewport.reducedMotion === "reduce" ? "none" : "fund-sheen",
       `${viewport.name}: блик на шкале ведёт себя не так: ${shape.shimmer}`,
     );
 
@@ -202,7 +199,7 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
       const roles = [
         ".fund-cover__lead",
         ".fund-crumbs a",
-        ".fund-money__sums span",
+        ".fund-money__sums small",
         ".fund-dates",
         ".fund-story__text p",
         ".fund-backer__when",
@@ -240,14 +237,14 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
     /* Кадры листаются кнопками, счётчик идёт следом, и всё это работает с
        клавиатуры. */
     let picks = "кадр один";
-    if ((await page.$$(".fund-shots__nav button")).length > 0) {
-      const first = await page.$eval(".fund-shots__img[data-shown]", (node) => node.currentSrc);
-      await page.locator(".fund-shots__nav button").nth(1).focus();
+    if ((await page.$$(".fund-shots__arrow")).length > 0) {
+      const first = await page.$eval(".fund-shots__main .swiper-slide-active .fund-shots__img", (node) => node.currentSrc);
+      await page.locator(".fund-shots__arrow--next").focus();
       await page.keyboard.press("Enter");
       await page.waitForTimeout(500);
       const state = await page.evaluate(() => ({
-        src: document.querySelector(".fund-shots__img[data-shown]").currentSrc,
-        count: document.querySelector(".fund-shots__nav span").textContent.replace(/\s+/g, " ").trim(),
+        src: document.querySelector(".fund-shots__main .swiper-slide-active .fund-shots__img").currentSrc,
+        count: document.querySelector(".fund-shots__count").textContent.replace(/\s+/g, " ").trim(),
       }));
       assert.notEqual(state.src, first, `${viewport.name}: кадр не сменился с клавиатуры`);
       assert.match(state.count, /^2 \/ \d+$/, `${viewport.name}: счётчик кадров показывает «${state.count}»`);
@@ -281,6 +278,12 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
     assert.ok(inline.поля, `${viewport.name}: полей в форме нет`);
     assert.equal(inline.назначение, shape.title, `${viewport.name}: в форме не тот сбор: «${inline.назначение}»`);
 
+    await page.getByRole("tab", { name: "Сделать взнос", exact: true }).click();
+    await page.locator(".fund-form").getByRole("textbox", { name: "Имя", exact: true }).fill("Проверка");
+    await page.getByRole("tab", { name: "Наши герои", exact: true }).click();
+    await page.getByRole("tab", { name: "Сделать взнос", exact: true }).click();
+    assert.equal(await page.locator(".fund-form").getByRole("textbox", { name: "Имя", exact: true }).inputValue(), "Проверка", `${viewport.name}: вкладки сбросили форму`);
+
     /* Кнопка-догонялка появляется, когда кнопка обложки ушла вверх, и только
        на узком экране. Прыжок в конец страницы её тоже включает: наблюдатель
        пересечения такой прыжок проходил молча.
@@ -299,21 +302,22 @@ for (const viewport of VIEWPORTS.filter((item) => !only || item.name === only)) 
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);
 
-    /* Кнопка помощи открывает то же окно, что и в каталоге, с этим сбором. */
+    /* Кнопка обложки возвращает к встроенной форме, в том числе из героев. */
+    await page.getByRole("tab", { name: "Наши герои", exact: true }).click();
+    const heroesHeight = await page.locator("#fund-contribution .fund-switch__stage").evaluate(node => node.getBoundingClientRect().height);
     await page.locator(".fund-cover__actions .camp-btn, .camp-blank .camp-btn").first().click();
-    await page.locator(".camp-donate__body .donation-provider-button").waitFor({ state: "visible", timeout: 20_000 });
-    await page.waitForTimeout(500);
-    const intent = (await page.locator(".camp-donate .camp-form__intent strong").textContent()).trim();
-    assert.equal(intent, shape.title, `${viewport.name}: в окне помощи не тот сбор: «${intent}»`);
-    const sheet = await page.$eval(".camp-donate", (node) => node.dataset.sheet === "true");
-    assert.equal(sheet, compact, `${viewport.name}: окно помощи в виде ${sheet ? "листа" : "окна"}`);
-    await page.keyboard.press("Escape");
-    await page.locator(".camp-donate").waitFor({ state: "detached", timeout: 5_000 });
+    await page.waitForTimeout(1100);
+    assert.equal(await page.getByRole("tab", { name: "Сделать взнос", exact: true }).getAttribute("aria-selected"), "true", `${viewport.name}: кнопка не открыла вкладку формы`);
+    assert.equal(await page.locator(".camp-donate").count(), 0, `${viewport.name}: вместо прокрутки открылось окно`);
+    const contribution = await page.locator("#fund-contribution").evaluate(node => ({top: node.getBoundingClientRect().top, height: node.querySelector(".fund-switch__stage").getBoundingClientRect().height}));
+    assert.ok(contribution.top >= 0 && contribution.top <= 80, `${viewport.name}: форма не прокручена к началу экрана (${contribution.top})`);
+    assert.ok(Math.abs(contribution.height - heroesHeight) <= 1, `${viewport.name}: высота героев отличается от формы`);
+    assert.equal(await page.locator(".fund-form").getByRole("textbox", { name: "Имя", exact: true }).inputValue(), "Проверка", `${viewport.name}: кнопка помощи сбросила форму`);
 
     assert.deepEqual(noise, [], `${viewport.name}: ошибки в консоли: ${noise.join(" | ")}`);
 
     console.log(
-      `${viewport.name.padEnd(15)} поля по ряду, полоса ${shape.shot.wide}×${shape.shot.tall}px, строка ${shape.measure} знаков, ${picks}, окно с этим сбором, догонялка внизу ${dockAtEnd}`,
+      `${viewport.name.padEnd(15)} поля по ряду, полоса ${shape.shot.wide}×${shape.shot.tall}px, строка ${shape.measure} знаков, ${picks}, прокрутка к форме, догонялка внизу ${dockAtEnd}`,
     );
   } catch (error) {
     failed += 1;

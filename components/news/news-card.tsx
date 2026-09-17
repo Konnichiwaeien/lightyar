@@ -14,6 +14,7 @@ interface NewsCardProps {
   article: StrapiNews;
   isLarge?: boolean;
   isReversed?: boolean;
+  as?: "li" | "article";
 }
 
 function formatDate(dateStr?: string): string {
@@ -29,7 +30,8 @@ function formatDate(dateStr?: string): string {
   return `${day} ${month} ${year}`;
 }
 
-export function NewsCard({ article, isLarge = false }: NewsCardProps) {
+export function NewsCard({ article, isLarge = false, as = "li" }: NewsCardProps) {
+  const Root = as === "article" ? motion.article : motion.li;
   const { textEnter, textLeave } = useCursor();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -45,7 +47,7 @@ export function NewsCard({ article, isLarge = false }: NewsCardProps) {
   const excerpt = article.excerpt || article.content;
 
   return (
-    <motion.li
+    <Root
       initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -141,6 +143,6 @@ export function NewsCard({ article, isLarge = false }: NewsCardProps) {
           </div>
         </div>
       </Link>
-    </motion.li>
+    </Root>
   );
 }

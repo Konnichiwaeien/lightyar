@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/page-metadata";
 import Link from "next/link";
 import { InnerHeader } from "@/components/layout/inner-header";
 
 export const metadata: Metadata = {
+  ...pageMetadata("Политика конфиденциальности", "Правила обработки персональных данных на сайте АНБО «Светлый».", "/privacy"),
   title: "Политика конфиденциальности",
   description: "Правила обработки персональных данных на сайте АНБО «Светлый».",
 };

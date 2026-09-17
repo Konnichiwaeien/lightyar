@@ -19,6 +19,7 @@ export const MONTHS_IN = [
 
 export interface YearPet {
   documentId: string;
+  slug?: string;
   name: string;
   cover?: string;
   photo?: string;
@@ -86,6 +87,7 @@ function toYearPet(pet: CensusPet, endOfYear: Date): YearPet {
     : undefined;
   return {
     documentId: pet.documentId,
+    slug: pet.slug,
     name: pet.name,
     cover: pet.cover,
     photo: pet.photo,

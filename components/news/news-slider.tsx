@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ExternalLink, Play } from "lucide-react";
-import { useReducedMotion } from "framer-motion";
+import { ResilientImage as Image } from "@/components/ui/resilient-image";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, ExternalLink, Pause, Play } from "lucide-react";
+import { useInView, useReducedMotion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation } from "swiper/modules";
+import { A11y, Autoplay, Navigation } from "swiper/modules";
 import type { Swiper as SwiperInstance } from "swiper";
 
 import type { NewsSlide } from "@/lib/news/news-media";
@@ -23,10 +23,16 @@ export function NewsSlider({ items, title }: NewsSliderProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const swiperRef = useRef<SwiperInstance | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const inView = useInView(rootRef, { amount: .2 });
   const prefersReducedMotion = useReducedMotion();
   const showControls = items.length > 1;
   const hasVideo = items.some((item) => item.kind === "video");
-  const shouldAutoplay = showControls && !hasVideo && !prefersReducedMotion;
+  const shouldAutoplay = showControls && !hasVideo && prefersReducedMotion === false && !paused && inView;
+  useEffect(() => {
+    if (shouldAutoplay) swiperRef.current?.autoplay?.start();
+    else swiperRef.current?.autoplay?.stop();
+  }, [shouldAutoplay]);
 
   const pauseMedia = () => {
     rootRef.current
@@ -39,21 +45,29 @@ export function NewsSlider({ items, title }: NewsSliderProps) {
   return (
     <div
       ref={rootRef}
+      role="region"
+      aria-roledescription="галерея"
+      aria-label={`Медиаматериалы: ${title}`}
+      onFocusCapture={event => { if (!(event.target as HTMLElement).closest(".news-slider-pause")) setPaused(true); }}
       className="news-slider-shell group/slider pointer-events-auto relative mb-12 aspect-video w-full overflow-hidden rounded-[2rem] border border-[#1c1c1c]/5 bg-[#111] shadow-[0_12px_40px_rgb(0,0,0,0.03)]"
     >
       <Swiper
-        modules={[Navigation, Autoplay]}
+        modules={[A11y, Navigation, Autoplay]}
+        a11y={{ prevSlideMessage: "Предыдущий медиаматериал", nextSlideMessage: "Следующий медиаматериал", slideLabelMessage: "{{index}} из {{slidesLength}}", itemRoleDescriptionMessage: "слайд" }}
+        speed={prefersReducedMotion ? 0 : 300}
         navigation={showControls ? {
           prevEl: ".swiper-button-prev-custom",
           nextEl: ".swiper-button-next-custom",
         } : false}
-        autoplay={shouldAutoplay ? {
+        autoplay={showControls && !hasVideo ? {
           delay: 5000,
-          disableOnInteraction: false,
+          disableOnInteraction: true,
+          pauseOnMouseEnter: true,
         } : false}
         loop={showControls && !hasVideo}
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
+          if (!shouldAutoplay) swiper.autoplay?.stop();
         }}
         onSlideChange={(swiper) => {
           pauseMedia();
@@ -63,7 +77,7 @@ export function NewsSlider({ items, title }: NewsSliderProps) {
         className="news-slider h-full w-full"
       >
         {items.map((item, index) => (
-          <SwiperSlide key={item.key} className="relative h-full w-full">
+          <SwiperSlide key={item.key} className="relative h-full w-full" inert={activeIndex !== index} aria-hidden={activeIndex !== index}>
             {item.kind === "image" ? (
               <Image
                 src={item.src}
@@ -72,7 +86,7 @@ export function NewsSlider({ items, title }: NewsSliderProps) {
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "auto"}
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1400px) 80vw, 800px"
+                sizes="(max-width: 599px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), (max-width: 1120px) calc(100vw - 96px), 1024px"
               />
             ) : item.src ? (
               <video
@@ -130,6 +144,11 @@ export function NewsSlider({ items, title }: NewsSliderProps) {
           </SwiperSlide>
         ))}
       </Swiper>
+      {showControls && <span className="sr-only" role="status" aria-live={shouldAutoplay ? "off" : "polite"} aria-atomic="true">Медиаматериал {activeIndex + 1} из {items.length}</span>}
+      {showControls && !hasVideo && <button type="button" className="news-slider-pause"
+        aria-label={paused ? "Продолжить смену слайдов" : "Приостановить смену слайдов"} onClick={() => setPaused(value => !value)}>
+        {paused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}
+      </button>}
 
       {showControls && (
         <>

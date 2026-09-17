@@ -2,16 +2,22 @@ import { InnerHeader } from "@/components/layout/inner-header";
 import { ArrowLeft, Calendar, Tag, ArrowUpRight } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { newsService } from "@/lib/api/services/news";
 import { NewsSlider } from "@/components/news/news-slider";
 import { NewsAttachments } from "@/components/news/news-attachments";
+import "@/components/news/news-article.css";
+import { cache } from "react";
+import { siteUrl } from "@/lib/seo/site";
+import { newsArticleSchema, newsDescription, serializeNewsSchema } from "@/lib/news/news-seo";
+import { parseNewsInline } from "@/lib/news/news-inline";
 import {
   buildNewsSlides,
   getSupplementaryNewsAttachments,
 } from "@/lib/news/news-media";
 
 export const revalidate = 3600; // Enable ISR, revalidate every hour
+const getArticle = cache((slug: string) => newsService.getNewsBySlug(slug));
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -20,17 +26,24 @@ interface PageProps {
 // Generate dynamic SEO metadata
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const article = await newsService.getNewsBySlug(resolvedParams.slug);
+  const article = await getArticle(resolvedParams.slug);
 
   if (!article) {
     return {
-      title: "Новость не найдена",
+      title: "Новость не найдена", robots: { index: false, follow: true },
     };
   }
 
+  const description = newsDescription(article);
+  const url = siteUrl(`/news/${article.slug}`);
+  const image = article.mainImage?.url ? newsService.resolveMediaUrl(article.mainImage.url) : siteUrl("/og-image.jpg");
   return {
     title: `${article.title} | Новости`,
-    description: article.excerpt || "Читайте последние новости и истории спасения в нашем приюте.",
+    description, alternates: { canonical: url },
+    openGraph: { title: article.title, description, url, type: "article", locale: "ru_RU", siteName: "Светлый",
+      publishedTime: article.publishedAt, modifiedTime: article.updatedAt,
+      images: [{ url: image, alt: article.mainImage?.alternativeText || article.title }] },
+    twitter: { card: "summary_large_image", title: article.title, description, images: [image] },
   };
 }
 
@@ -43,54 +56,23 @@ export async function generateStaticParams() {
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  const day = date.getDate();
-  const months = [
-    "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-    "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"
-  ];
-  const month = months[date.getMonth()];
-  const year = date.getFullYear();
-  return `${day} ${month} ${year}`;
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(date);
 }
 
 // Helper to parse VK markdown links like [displayName](url) into clickable React anchor tags
 function parseMarkdownLinks(text: string): React.ReactNode[] {
-  const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  const elements: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    const [, linkText, linkUrl] = match;
-    const startIndex = match.index;
-
-    // Add preceding plain text
-    if (startIndex > lastIndex) {
-      elements.push(text.substring(lastIndex, startIndex));
-    }
-
-    // Add clickable link element
-    elements.push(
+  return parseNewsInline(text).map((part, index) => part.href ? (
       <a
-        key={startIndex}
-        href={linkUrl}
+        key={index}
+        href={part.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-amber-500 hover:text-amber-600 underline font-medium break-all transition-colors duration-300"
+        className="news-article-link"
       >
-        {linkText}
+        {part.text}
       </a>
-    );
-
-    lastIndex = regex.lastIndex;
-  }
-
-  // Add trailing plain text
-  if (lastIndex < text.length) {
-    elements.push(text.substring(lastIndex));
-  }
-
-  return elements.length > 0 ? elements : [text];
+    ) : part.text);
 }
 
 // Helper to split text by paragraphs (double newlines) and lines (single newlines)
@@ -133,7 +115,7 @@ function renderContent(content?: string) {
     });
     
     return (
-      <p key={paraIdx} className="mb-6 leading-relaxed font-light text-[#1c1c1c]/80 text-lg md:text-xl">
+      <p key={paraIdx} className="news-article-paragraph">
         {renderedElements}
       </p>
     );
@@ -142,11 +124,13 @@ function renderContent(content?: string) {
 
 export default async function NewsDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const article = await newsService.getNewsBySlug(resolvedParams.slug);
+  const article = await getArticle(resolvedParams.slug);
 
   if (!article) {
     notFound();
   }
+
+  if (article.slug && resolvedParams.slug !== article.slug) permanentRedirect(`/news/${article.slug}`);
 
   const resolveMediaUrl = (url: string) => newsService.resolveMediaUrl(url);
   const mediaSlides = buildNewsSlides(article, resolveMediaUrl);
@@ -156,38 +140,39 @@ export default async function NewsDetailPage({ params }: PageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-[#e8e4dc] selection:bg-amber-500 selection:text-white font-sans text-[#1c1c1c]">
+    <div className="news-article-page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeNewsSchema(newsArticleSchema(article, mediaSlides.filter(item => item.kind === "image").map(item => item.src))) }} />
       <InnerHeader />
       
-      <main className="max-w-[1400px] mx-auto pt-8 px-6 md:px-12 pb-32">
-        <div className="max-w-5xl mx-auto relative">
+      <main id="main-content" tabIndex={-1} className="news-article-main">
+        <div className="news-article-shell">
           
-          {/* Breadcrumbs */}
+          {/* Return to the news catalog */}
           <Link 
-            href="/#news" 
-            className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 hover:text-amber-500 transition-colors duration-300 mb-8 pointer-events-auto"
+            href="/news#news-feed"
+            className="news-article-back"
           >
-            <ArrowLeft size={14} /> Назад к новостям
+            <ArrowLeft size={17} aria-hidden="true" /> Назад к новостям
           </Link>
 
           {/* Article Header */}
           <article className="w-full">
-            <header className="mb-12">
-              <div className="flex flex-wrap gap-3 mb-6">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-500 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-500/10">
-                  <Tag size={12} /> {article.tags?.[0]?.name || "Новость"}
+            <header className="news-article-header">
+              <div className="news-article-meta">
+                <span className="news-article-topic">
+                  <Tag size={15} aria-hidden="true" /> {article.tags?.[0]?.name || "Новость"}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 bg-[#1c1c1c]/5 px-3.5 py-1.5 rounded-full">
-                  <Calendar size={12} /> {formatDate(article.publishedAt)}
-                </span>
+                <time className="news-article-date" dateTime={article.publishedAt}>
+                  <Calendar size={15} aria-hidden="true" /> {formatDate(article.publishedAt)}
+                </time>
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-[1.1] mb-6 text-[#1c1c1c]">
+              <h1 className="news-article-title">
                 {article.title}
               </h1>
 
-              {article.excerpt && (
-                <p className="text-lg md:text-xl font-light text-[#1c1c1c]/50 leading-relaxed italic border-l-2 border-amber-500 pl-4 mt-4">
+              {article.excerpt && article.excerpt.trim() !== article.title.trim() && (
+                <p className="news-article-lead">
                   {article.excerpt}
                 </p>
               )}
@@ -197,7 +182,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
             <NewsSlider items={mediaSlides} title={article.title} />
 
             {/* Article Content */}
-            <div className="prose prose-lg max-w-3xl mx-auto text-[#1c1c1c]/80 font-sans mt-12">
+            <div className="news-article-content">
               {renderContent(article.content)}
             </div>
 
@@ -205,29 +190,19 @@ export default async function NewsDetailPage({ params }: PageProps) {
 
             {/* VK Call-To-Action (if imported from VK) */}
             {article.vkUrl && (
-              <div className="bg-white rounded-[2rem] p-8 md:p-10 border border-[#1c1c1c]/5 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.05)] transition-all duration-500 flex flex-col md:flex-row justify-between items-center gap-6 mt-16">
-                <div className="flex gap-5 items-start">
-                  <div className="bg-amber-500 text-white p-4 rounded-[1.5rem] shrink-0 shadow-[0_4px_10px_rgba(245,158,11,0.2)]">
-                    <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current">
-                      <path d="M15.023 2H8.977C3.992 2 2 3.992 2 8.977v6.046C2 20.008 3.992 22 8.977 22h6.046c4.985 0 6.977-1.992 6.977-6.977V8.977C22 3.992 20.008 2 15.023 2zm3.365 12.392c.57.557.627.81.627.81v.006c0 .248-.184.453-.453.453h-1.921c-.482 0-.825-.262-1.397-.822-.44-.432-.783-.585-.92-.585-.19 0-.348.053-.473.16-.168.14-.249.385-.249.736v.195c0 .174-.143.316-.316.316h-1.127c-2.316 0-4.636-2.434-4.636-2.434s-2.001-2.128-3.08-5.328c-.059-.174.07-.316.243-.316H7.13c.277 0 .474.153.568.396 0 0 .97 2.378 2.213 3.974.39.5.549.658.694.658.077 0 .193-.05.193-.306V9.431c0-.498-.31-.722-.527-.751-.18-.024-.29-.033-.223-.197.095-.23.491-.482 1.026-.482h1.611c.291 0 .524.233.524.524v3.535c0 .224.102.302.164.302.14 0 .285-.084.582-.379.888-.89 1.455-2.923 1.455-2.923s.098-.242.348-.242h1.921c.224 0 .34.12.34.254a4.42 4.42 0 0 1-.161.76s-1.503 3.518-2.379 4.773c-.276.398-.372.553-.372.678 0 .13.076.223.284.426.602.589 2.002 2.016 2.002 2.016z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-serif text-2xl text-[#1c1c1c] mb-2">Обсудить во ВКонтакте</h4>
-                    <p className="text-sm font-light text-[#1c1c1c]/50 max-w-lg leading-relaxed">
-                      Эта история опубликована в нашем сообществе ВКонтакте. Там вы можете написать комментарий, задать вопрос или поддержать нас репостом.
-                    </p>
-                  </div>
+              <aside className="news-vk" aria-labelledby="news-vk-title">
+                <span className="news-vk__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.547 7h-3.29a.743.743 0 0 0-.655.392s-1.312 2.416-1.734 3.23C14.734 12.813 14 12.126 14 11.11V7.603A1.104 1.104 0 0 0 12.896 6.5h-2.474a1.982 1.982 0 0 0-1.75.813s1.255-.204 1.255 1.49c0 .42.017 1.7.028 2.785.01.98-.686 1.34-1.142.587-.652-1.075-1.445-3.01-1.445-3.01A.756.756 0 0 0 6.698 8.5H3.453a.7.7 0 0 0-.622.39c-.23.444-.011.998.451 2.223l.07.145c.96 2.036 2.2 3.899 3.96 5.089C9.072 17.63 11.1 18 12.78 18h1.538c.575 0 .82-.252.82-.685v-1.428c0-.573.245-.685.425-.685.24 0 .654.096 1.617 1.007 1.104 1.104 1.285 1.6 1.906 1.6h2.96c.436 0 .652-.218.527-.648-.136-.466-.63-1.146-1.283-1.95-.354-.443-.886-1.1-1.048-1.386-.24-.372-.17-.538 0-.868 0 0 2.514-3.548 2.775-4.753.09-.42-.1-.624-.442-.624z" /></svg>
+                </span>
+                <div className="news-vk__copy">
+                  <h2 id="news-vk-title">Обсудить во ВКонтакте</h2>
+                  <p>Эта история опубликована в нашем сообществе ВКонтакте. Там вы можете написать комментарий, задать вопрос или поддержать нас репостом.</p>
                 </div>
-                <a
-                  href={article.vkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#1c1c1c] text-white hover:bg-amber-500 px-8 py-5 rounded-2xl font-bold uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 shadow-sm whitespace-nowrap group-hover:-translate-y-0.5"
-                >
-                  Перейти к посту <ArrowUpRight size={16} />
+                <a href={article.vkUrl} target="_blank" rel="noopener noreferrer" className="news-vk__button">
+                  Перейти к посту <ArrowUpRight size={19} aria-hidden="true" />
+                  <span className="sr-only"> (в новой вкладке)</span>
                 </a>
-              </div>
+              </aside>
             )}
 
           </article>

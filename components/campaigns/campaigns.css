@@ -1614,20 +1614,24 @@
   color: var(--c-amber-text);
 }
 
-/* На узком экране группа занимает верх, текст идёт под ней. */
+/* On narrow screens the cutout overlaps the copy instead of reserving a
+   separate empty row above it. Keep the text in the foreground. */
 @media (max-width: 860px) {
   .camp-call {
     align-items: start;
+    min-height: 0;
+    padding-top: clamp(3rem, 8vw, 4.5rem);
+    padding-bottom: calc(3rem + var(--c-footer-r));
   }
 
   .camp-call__copy {
-    padding-top: clamp(160px, 46vw, 250px);
+    padding-top: 0;
   }
 
   .camp-call__unit {
     top: -5%;
-    right: 2%;
-    width: clamp(200px, 52vw, 300px);
+    right: -8%;
+    width: clamp(300px, 76vw, 460px);
   }
 
   .camp-call__dots {
@@ -1635,6 +1639,22 @@
     right: -12%;
     width: 44%;
   }
+}
+
+@media (min-width: 681px) and (max-width: 860px) {
+  .camp-call__unit { top: -5.5rem; }
+}
+@media (max-width: 680px) {
+  .camp-call__copy h2 { max-width: 8ch; font-size: clamp(2rem, 6vw, 2.5rem); }
+  .camp-call__copy h2 em { white-space: nowrap; }
+  .camp-call__unit { --size: clamp(180px, 42vw, 270px); width: var(--size); top: -4rem; right: -3%; }
+}
+@media (max-width: 500px) {
+  .camp-call { row-gap: 1.5rem; }
+  .camp-call__field { position: relative; inset: auto; width: 100%; }
+  .camp-call__unit { position: relative; inset: auto; width: min(88vw, 360px); margin-inline: auto; transform: none !important; }
+  .camp-call__unit img, .camp-call__disc { animation: none; }
+  .camp-call__copy h2 { max-width: 100%; font-size: clamp(2rem, 8vw, 2.5rem); }
 }
 
 /* ---------------- общее ------------------------------------------------- */
@@ -2046,719 +2066,372 @@
    страницы доходит до полного акцента.
 ======================================================================== */
 
+/* Detail page: one quiet reading column, one photographic field. */
+.camp--fund { --fund-section-space: clamp(3rem, 6vw, 5rem); --fund-section-overlap: 2rem; }
+.camp-btn { position: relative; }
+.camp-btn::after { content: ""; position: absolute; inset: -1px 0 -5px; }
 .fund-cover {
   position: relative;
-  padding: clamp(5.5rem, 12vh, 7rem) 0 var(--c-gap);
+  padding: clamp(5.5rem, 9vw, 7.5rem) 0 calc(var(--fund-section-space) + var(--fund-section-overlap));
   overflow-x: clip;
   background: #ece3d2;
 }
-
+.fund-cover::before { opacity: .32; }
 .fund-cover__inner {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-areas:
-    "copy shots"
-    "deal shots";
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.98fr);
-  align-items: center;
-  gap: clamp(1.5rem, 3vw, 2.5rem) clamp(2rem, 5vw, 4.5rem);
+  grid-template-areas: "copy shots" "deal shots";
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  gap: 2.25rem clamp(2rem, 5vw, 5rem);
+  align-items: start;
 }
-
-.fund-cover__copy {
-  grid-area: copy;
-  align-self: end;
-}
-
-.fund-cover__deal {
-  grid-area: deal;
-  display: grid;
-  align-self: start;
-  gap: 1.15rem;
-  max-width: 34rem;
-}
-
-/* Хлебные крошки тихие: это служебная строка, а не начало чтения. */
+.fund-cover__copy { grid-area: copy; }
+.fund-cover__deal { grid-area: deal; display: grid; gap: 1.5rem; }
 .fund-crumbs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 1.4rem;
-  color: var(--c-muted);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  display: flex; flex-wrap: wrap; gap: .55rem; align-items: center;
+  margin-bottom: 2rem; color: var(--c-muted); font-size: .75rem;
 }
-
-.fund-crumbs a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.25s;
-}
-
-.fund-crumbs a:hover,
-.fund-crumbs a:focus-visible {
-  color: var(--c-amber-text);
-}
-
-.fund-cover__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 0 0 1.1rem;
-}
-
-.camp-badge--term {
-  background: rgba(28, 28, 28, 0.07);
-  color: #4a443b;
-}
-
-/* Срок на исходе: бейдж переходит на полный янтарь. Красного в наборе нет, и
-   заводить его ради одного бейджа значит завести вторую акцентную краску. */
-.camp-badge--urgent {
-  background: var(--c-amber);
-  color: var(--c-ink);
-}
-
-.camp-badge--done {
-  background: rgba(111, 115, 85, 0.18);
-  color: #4c5038;
-}
-
+.fund-crumbs { font-size: .72rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+.fund-crumbs a { color: inherit; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: .35em; border-radius: 3px; transition: color .2s ease, text-decoration-color .2s ease, background-color .2s ease; }
+.fund-crumbs a:hover, .fund-crumbs a:focus-visible { color: var(--c-amber-text); text-decoration-color: currentColor; }
+.fund-crumbs a:focus-visible { outline: 2px solid var(--c-amber-text); outline-offset: 5px; }
+.fund-cover__badges { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; }
+.camp-badge--term { background: rgba(28,28,28,.07); color: #4a443b; }
+.camp-badge--urgent { background: var(--c-amber); color: var(--c-ink); }
+.camp-badge--done { background: rgba(111,115,85,.18); color: #4c5038; }
 .fund-cover__title {
-  margin: 0 0 1rem;
-  font-family: var(--font-sans);
-  font-size: clamp(2.1rem, 4.4vw, 3.6rem);
-  font-weight: 800;
-  line-height: 1.04;
-  letter-spacing: -0.04em;
-  text-wrap: balance;
-}
-
-.fund-cover__lead {
-  max-width: 34rem;
-  margin: 0;
-  color: #574f45;
-  font-size: clamp(1rem, 1.5vw, 1.12rem);
-  line-height: 1.62;
-}
-
-/* Шкала и суммы: то же, что на карточке каталога, но крупнее — здесь это
-   главное число страницы, а не строка в списке. */
-.fund-money {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.fund-money__bar {
-  height: 21px;
-}
-
-.fund-money__sums {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.4rem 1rem;
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.fund-money__sums b {
-  font-family: var(--font-serif);
-  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.fund-money__sums span {
-  color: var(--c-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.fund-cover__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.8rem 1.2rem;
-}
-
-.fund-cover__actions .camp-btn {
-  width: auto;
-  min-width: 11rem;
-}
-
-.fund-closed {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 46px;
-  padding: 0.7rem 1.2rem;
-  border-radius: 999px;
-  background: rgba(111, 115, 85, 0.16);
-  color: #454832;
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-/* Сроки это не подпись мелким шрифтом, а два числа, ради которых читатель и
-   пришёл: когда начали и до каких пор. Подпись осталась капителью, значение
-   набрано крупно тем же шрифтом, что и суммы. */
-.fund-dates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem 2.4rem;
-  margin: 0;
-}
-
-.fund-dates span {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  gap: 0 0.6rem;
-}
-
-.fund-dates svg {
-  grid-row: 1 / span 2;
-  color: var(--c-amber-text);
-}
-
-.fund-dates small {
-  color: var(--c-muted);
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.6;
-  text-transform: uppercase;
-}
-
-.fund-dates b {
-  font-family: var(--font-serif);
-  font-size: 1.16rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-}
-
-/* Кнопка на наведении приподнимается, и у нижней кромки это давало дрожь:
-   элемент уезжает вверх из-под курсора, наведение снимается, кнопка падает
-   обратно — и так по кругу, пока курсор стоит в этой полоске. Невидимая
-   подушка снизу держит наведение всё время подъёма. */
-.camp-btn,
-.fund-share__btn {
-  position: relative;
-}
-
-.camp-btn::after,
-.fund-share__btn::after {
-  content: "";
-  position: absolute;
-  inset: -1px 0 -5px;
-}
-
-/* ---------------- поделиться --------------------------------------------- */
-
-.fund-share {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.fund-share__label {
-  margin-right: 0.2rem;
-  color: var(--c-muted);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.fund-share__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  padding: 0.5rem 0.9rem;
-  border: 1px solid rgba(28, 28, 28, 0.14);
-  border-radius: 999px;
-  background: var(--c-card);
-  color: #4a443b;
-  font: inherit;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition:
-    border-color 0.25s,
-    color 0.25s,
-    transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.fund-share__btn:hover {
-  border-color: var(--c-amber-deep);
-  color: var(--c-amber-text);
-  transform: translateY(-2px);
-}
-
-.fund-share__btn svg {
-  color: var(--c-amber-text);
-}
-
-/* ---------------- кадры сбора --------------------------------------------
-
-   Половина первого экрана под снимок, полоса уходит под правый край окна и
-   ничем не скруглена: это разворот, а не карточка. Круг, стоявший здесь
-   сначала, держал грамматику каталога, но на странице одного сбора съедал
-   кадр — лица и обстановка уходили за кромку, ради которой их и снимали.
-
-   Плоский янтарный круг остался и лежит на шве: половина его под полосой,
-   половина на поле. Фигура при предмете это та же пара, что держит поля выше
-   и ниже, и без неё разворот читался бы вставкой из другого макета.
-------------------------------------------------------------------------- */
-
-.fund-shots {
-  position: relative;
-  grid-area: shots;
-  align-self: stretch;
-  min-height: clamp(22rem, 58vh, 40rem);
-  /* Полоса выходит и за верхнее, и за нижнее поле секции: разворот идёт от
-     кромки до кромки, иначе он читается вставленной картинкой. */
-  margin-top: calc(-1 * clamp(5.5rem, 12vh, 7rem));
-  margin-bottom: calc(-1 * var(--c-gap));
-  /* Вылет до края окна. Считается от окна, а не процентами: проценты у
-     элемента сетки берутся от его колонки, и полоса уезжала втрое дальше
-     нужного. Лишние пиксели под полосой прокрутки срезает сама секция. */
-  margin-right: calc(-1 * (max(0px, (100vw - 1400px) / 2) + var(--c-inner)));
-}
-
-.fund-shots__disc {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  z-index: 0;
-  width: clamp(7rem, 12vw, 12rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--c-amber);
-  translate: -52% -50%;
-}
-
-.fund-shots__stack {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  overflow: hidden;
-  background: var(--c-paper);
-}
-
-.fund-shots__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.fund-shots__img[data-shown="true"] {
-  opacity: 1;
-}
-
-.fund-cover[data-status="closed"] .fund-shots__img {
-  filter: grayscale(0.55);
-}
-
-/* Кнопки листания стоят в углу самой полосы: на поле рядом с ней они
-   читались бы кнопками страницы, а не кадра. Белая пилюля держит их
-   различимыми на любом снимке. */
-.fund-shots__nav {
-  position: absolute;
-  bottom: clamp(0.8rem, 2vw, 1.4rem);
-  left: clamp(0.8rem, 2vw, 1.4rem);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.3rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 26px rgba(43, 32, 17, 0.22);
-}
-
-.fund-shots__nav button {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--c-ink);
-  cursor: pointer;
-  transition:
-    background 0.25s,
-    color 0.25s;
-}
-
-.fund-shots__nav button:hover {
-  background: var(--c-amber);
-}
-
-.fund-shots__nav span {
-  min-width: 3.2rem;
-  color: #4a443b;
-  font-size: 0.82rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.fund-shots__nav span i {
-  margin: 0 0.1rem;
-  color: var(--c-muted);
-  font-style: normal;
-}
-
-/* ---------------- о сборе ------------------------------------------------ */
-
-.fund-title {
-  margin: 0 0 var(--c-gap-sm);
-  font-family: var(--font-sans);
-  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-}
-
-.fund-title em {
-  color: var(--c-amber-text);
-  font-family: var(--font-serif);
-  font-size: 0.94em;
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.fund-story {
-  padding: var(--c-gap) 0;
-  background: var(--c-sheet);
-}
-
-.fund-story__text {
-  display: grid;
-  gap: 1.15rem;
-  /* Строка держится в пределах семидесяти знаков: длиннее глаз теряет начало
-     следующей. */
-  max-width: 38rem;
-  color: #39342c;
-  font-size: 1.04rem;
-  line-height: 1.72;
-}
-
-.fund-story__text p {
-  margin: 0;
-}
-
-/* Первый абзац крупнее: он и есть вступление, отдельного лида у текста из CMS
-   нет. */
-.fund-story__text p:first-child {
-  color: var(--c-ink);
-  font-size: 1.16rem;
-  line-height: 1.6;
-}
-
-/* ---------------- кто помог ---------------------------------------------- */
-
-.fund-backers {
-  padding: var(--c-gap) 0;
-  background: #f3e6cd;
-}
-
-.fund-backers__list {
-  display: grid;
-  max-width: 46rem;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.fund-backers__list li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.2rem 1rem;
-  padding: 0.95rem 0;
-  border-top: 1px solid rgba(28, 28, 28, 0.1);
-}
-
-.fund-backers__list li:last-child {
-  border-bottom: 1px solid rgba(28, 28, 28, 0.1);
-}
-
-.fund-backer__who {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 1.02rem;
-  font-weight: 600;
-}
-
-.fund-backer__mark {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(245, 158, 11, 0.2);
-  color: var(--c-amber-text);
-}
-
-.fund-backer__when {
-  grid-column: 1;
-  padding-left: calc(34px + 0.6rem);
-  color: var(--c-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.fund-backers__list b {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-.fund-backers__more {
-  margin: 1.1rem 0 0;
-  color: var(--c-muted);
-  font-size: 0.86rem;
-}
-
-.fund-backers .camp-blank {
-  background: var(--c-card);
-}
-
-/* ---------------- другие сборы ------------------------------------------- */
-
-.fund-more {
-  padding: var(--c-gap) 0;
-  background: var(--c-sheet);
-}
-
-.fund-more .camp-list__head {
-  align-items: center;
-}
-
-.fund-more__all {
-  width: auto;
-}
-
-
-/* ---------------- две вкладки вместо заголовка ---------------------------
-
-   Пара «заголовок плюс вкладки» дала бы повтор: «О сборе» стояло бы и
-   заголовком, и первой вкладкой. Поэтому вкладки набраны кеглем заголовка,
-   невыбранная уходит в тихий цвет, а под выбранной едет янтарная черта.
-   Название секции осталось для читалки скрытым заголовком.
-------------------------------------------------------------------------- */
-
-.fund-switch__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(1.1rem, 3vw, 2.4rem);
-  margin-bottom: var(--c-gap-sm);
-}
-
-.fund-switch__tab {
-  position: relative;
-  padding: 0 0 0.55rem;
-  border: 0;
-  background: none;
-  color: var(--c-muted);
-  font: inherit;
-  font-family: var(--font-sans);
-  font-size: clamp(1.55rem, 3.2vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.06;
-  cursor: pointer;
-  transition: color 0.25s;
-}
-
-.fund-switch__tab[aria-selected="true"] {
-  color: var(--c-ink);
-}
-
-.fund-switch__tab:hover {
-  color: var(--c-amber-text);
-}
-
-.fund-switch__tab:focus-visible {
-  border-radius: 4px;
-  outline: 3px solid rgba(139, 93, 0, 0.4);
-  outline-offset: 5px;
-}
-
-.fund-switch__mark {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--c-amber);
-}
-
-.fund-switch__panel:focus-visible {
-  outline: 3px solid rgba(139, 93, 0, 0.35);
-  outline-offset: 8px;
-}
-
-/* ---------------- форма взноса прямо на странице -------------------------
-
-   Та же форма, что в окне помощи: ступени и поля с главной. Переменные
-   панели объявлены на секции главной страницы, здесь её нет, поэтому они
-   объявлены заново — без них поля теряют цвета.
-------------------------------------------------------------------------- */
-
-.fund-form {
-  --donation-ink: #27221d;
-  --donation-muted: #746c62;
-  --donation-paper: #fffdf8;
-  --donation-wash: #fff8e8;
-  --donation-line: rgba(54, 46, 38, 0.16);
-  --donation-amber: #f3a400;
-
-  max-width: 46rem;
-}
-
-.fund-form .camp-form__note {
-  margin-top: 0.4rem;
-}
-
-/* На широком поле форма стоит в две колонки, как панель на главной: ступени
-   слева, поля справа. Одной колонкой она занимала левую половину секции, а
-   правая оставалась пустой. */
-@media (min-width: 1120px) {
-  .fund-form {
-    max-width: none;
-  }
-
-  .fund-form .camp-form {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-    gap: 1.2rem clamp(2rem, 4vw, 3.5rem);
-  }
-
-  .fund-form .camp-form__intent,
-  .fund-form .camp-form__note {
-    grid-column: 1 / -1;
-  }
-
-  .fund-form .donation-tier-picker {
-    grid-column: 1;
-  }
-
-  .fund-form .donation-fields {
-    grid-column: 2;
-    grid-row: 2;
-  }
-}
-
-/* ---------------- кнопка, догоняющая на телефоне ------------------------- */
-
-.fund-dock {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  left: 1rem;
-  z-index: 40;
-  display: none;
-}
-
-.fund-dock .camp-btn {
-  box-shadow: 0 10px 28px rgba(73, 47, 19, 0.28);
-}
-
-@media (max-width: 980px) {
-  .fund-cover__inner {
-    grid-template-areas:
-      "copy"
-      "shots"
-      "deal";
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .fund-cover__copy,
-  .fund-cover__deal {
-    align-self: auto;
-    max-width: 38rem;
-  }
-
-  /* Полоса кадров идёт от края до края: на узком экране колонок нет, и
-     поля по бокам съедали бы и без того небольшую высоту. */
+  max-width: 19ch; margin: 0 0 1.3rem;
+  font-family: var(--font-sans); font-size: clamp(2.25rem, 3.6vw, 3.6rem);
+  font-weight: 750; line-height: 1.12; letter-spacing: -.035em; text-wrap: balance;
+}
+.fund-cover__title em { display: block; color: var(--c-amber-text); font-family: var(--font-serif); font-weight: 500; font-style: italic; letter-spacing: -.035em; }
+.fund-cover__title > span { display: block; }
+.fund-cover__lead { max-width: 47ch; margin: 0; color: #574f45; font-size: 1.0625rem; line-height: 1.65; }
+.fund-money { display: grid; gap: .85rem; font-variant-numeric: tabular-nums; }
+.fund-money__bar { order: 2; height: 36px; background: #d9ceb9; }
+.fund-money__bar i { min-width: 0; animation: none; }
+.fund-money__bar[data-status="active"] i { overflow: hidden; }
+.fund-money__bar[data-status="active"] i::after {
+  inset: 0 auto 0 0;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.32), transparent);
+  animation: fund-sheen 5.5s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes fund-sheen {
+  0%, 60% { transform: translateX(-150%); opacity: 0; }
+  63% { opacity: 1; }
+  83% { transform: translateX(330%); opacity: 1; }
+  85%, 100% { transform: translateX(330%); opacity: 0; }
+}
+.fund-money__percent { position: absolute; inset: 0 .85rem 0 auto; display: grid; align-items: center; color: #342c20; font-size: .85rem; font-weight: 650; line-height: 1; }
+.fund-money__sums { order: 1; display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.fund-money__sums > div { display: grid; gap: .4rem; }
+.fund-money__sums > div:last-child { text-align: right; }
+.fund-money__sums small { color: #655c4f; font-size: .8rem; }
+.fund-money__sums b { font-family: var(--font-serif); font-size: clamp(2rem, 3vw, 2.7rem); font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+.fund-money__sums strong { font-size: 1.25rem; font-weight: 600; line-height: 1.6; }
+.fund-money__rest { order: 3; margin: 0; color: #655c4f; font-size: .82rem; }
+.fund-cover__actions { display: flex; }
+.fund-cover__actions .camp-btn { width: auto; min-width: 13rem; min-height: 54px; font-size: 1rem; }
+.fund-help-link { isolation: isolate; }
+.fund-help-link > svg, .fund-help-link > span:not(.fund-help__shine) { position: relative; z-index: 1; }
+.fund-help__shine { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.fund-help__shine::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 45%; background: linear-gradient(105deg, transparent, rgba(255,255,255,.48), transparent); animation: fund-sheen 5.5s cubic-bezier(.4,0,.2,1) infinite; }
+.fund-help-link:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 5px; }
+.fund-closed { display: flex; align-items: center; gap: .6rem; color: #454832; font-size: .94rem; }
+.fund-dates { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin: 0; }
+.fund-dates > span { display: grid; grid-template-columns: auto 1fr; gap: .3rem .5rem; align-items: center; }
+.fund-dates svg { grid-row: 1 / span 2; color: var(--c-amber-text); width: 16px; }
+.fund-dates small { color: #655c4f; font-size: .72rem; }
+.fund-dates b { font-family: var(--font-serif); font-size: 1.12rem; font-weight: 600; line-height: 1.4; }
+.fund-share { display: flex; flex-direction: column; align-items: flex-start; gap: .85rem; width: fit-content; max-width: 100%; padding-top: .5rem; }
+.fund-share__error { max-width: 42ch; margin: 0; color: #65513a; font-size: .8rem; overflow-wrap: anywhere; }
+.fund-share__error a { text-decoration: underline; text-underline-offset: .2em; }
+.fund-share__label { display: inline-flex; align-items: center; gap: .6rem; color: #65513a; font-family: var(--font-serif); font-size: 1rem; font-style: italic; }
+.fund-share__label svg { color: var(--c-amber-text); }
+.fund-share__actions { display: flex; gap: .6rem; }
+.fund-share__btn { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: #28251f; color: #fff8e9; cursor: pointer; transition: background .2s ease, color .2s ease, border-color .2s ease; }
+.fund-share__btn[data-channel="tg"] { background: var(--c-amber); color: #28251f; }
+.fund-share__btn[data-channel="link"] { border-color: #9a8060; background: transparent; color: #65513a; }
+.fund-share__btn svg { width: 19px; height: 19px; transition: transform .22s cubic-bezier(.22,1,.36,1); }
+.fund-share__btn:hover, .fund-share__btn:focus-visible { background: #fff8e9; border-color: #9a8060; color: #6d480e; }
+.fund-share__btn:hover svg { transform: rotate(-8deg); }
+.fund-share__btn:focus-visible { outline: 2px solid var(--c-amber-text); outline-offset: 4px; }
+.fund-share__btn[data-copied="true"] { background: #d9dfc5; border-color: #6b754e; color: #354522; }
+.fund-shots { position: relative; grid-area: shots; align-self: stretch; min-width: 0; min-height: 32rem; }
+.fund-shots__viewport { position: relative; height: 100%; min-height: inherit; }
+.fund-shots__stack { position: absolute; inset: 0; overflow: hidden; background: var(--c-paper); }
+.fund-shots__main { width: 100%; height: 100%; }
+.fund-shots__main .fund-shots__slide { position: relative; height: 100%; background: var(--c-paper); }
+.fund-shots__img { width: 100%; height: 100%; object-fit: cover; }
+.fund-cover[data-status="closed"] .fund-shots__img { filter: grayscale(.55); }
+.fund-shots__arrow { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid rgba(255,253,248,.6); border-radius: 50%; background: #fffdf8; color: #30281d; cursor: pointer; transition: background-color .2s, color .2s, border-color .2s; }
+.fund-shots__arrow--prev { left: 1rem; }
+.fund-shots__arrow--next { right: 1rem; }
+.fund-shots__arrow:hover { background: var(--c-amber); border-color: var(--c-amber); }
+.fund-shots__arrow:focus-visible, .fund-shots__thumb:focus-visible { outline: 3px solid var(--c-amber-text); outline-offset: 4px; }
+.fund-shots__count { position: absolute; top: 1rem; left: 1rem; padding: .35rem .75rem; border-radius: 999px; background: #28251f; color: #fffdf8; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.fund-shots__count i { margin: 0 .35rem; opacity: .65; font-style: normal; }
+.fund-shots__arrow, .fund-shots__count { z-index: 2; }
+.fund-shots__arrow { translate: 0 -50%; transform: none; }
+.fund-shots__thumbs { --thumb-size: 80px; position: absolute; z-index: 2; bottom: var(--fund-gallery-bottom, 1rem); left: 50%; transform: translateX(-50%); width: calc(var(--thumb-count) * (var(--thumb-size) + 8px) + 10px); max-width: calc(100% - 2rem); padding: .5rem; border: 1px solid rgba(255,253,248,.3); border-radius: 20px; background: rgba(34,29,23,.72); box-shadow: 0 6px 24px rgba(25,20,12,.16); }
+.fund-shots__thumb-rail { width: 100%; border-radius: 12px; }
+.fund-shots__thumb-rail .swiper-slide { width: var(--thumb-size); height: auto; }
+.fund-shots__thumb { position: relative; display: block; width: 100%; height: 64px; overflow: hidden; padding: 0; border: 2px solid transparent; border-radius: 12px; background: #fffdf8; opacity: .65; cursor: pointer; transition: opacity .2s, border-color .2s; }
+.fund-shots__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.fund-shots__thumb:hover, .fund-shots__thumb[aria-pressed="true"] { opacity: 1; border-color: var(--c-amber-text); }
+.fund-title { margin: 0; font-family: var(--font-sans); font-size: clamp(1.8rem,3vw,2.8rem); font-weight: 750; line-height: 1.12; letter-spacing: -.035em; }
+.fund-title em { color: var(--c-amber-text); font-family: var(--font-serif); font-weight: 500; }
+.fund-story { padding: var(--fund-section-space) 0 calc(var(--fund-section-space) + var(--fund-section-overlap)); background: var(--c-sheet); }
+.fund-story, .fund-backers { position: relative; border-radius: 2.5rem 2.5rem 0 0; margin-top: calc(-1 * var(--fund-section-overlap)); }
+.fund-story { z-index: 2; }
+@media (min-width: 768px) {
+  .fund-story, .fund-backers { border-top-left-radius: 3.5rem; border-top-right-radius: 3.5rem; }
+}
+.fund-story > .camp-inner { max-width: 1180px; }
+.fund-story .fund-switch { display: block; }
+.fund-story .fund-switch__tabs { flex-direction: row; align-items: center; margin: 0 0 2rem; gap: clamp(1.5rem,4vw,3rem); }
+.fund-story__text { display: grid; gap: 1.4rem; max-width: 68ch; color: #39342c; font-size: 1.0625rem; line-height: 1.8; }
+.fund-story__text p { margin: 0; }
+.fund-story__text p:first-child { color: var(--c-ink); font-size: 1.2rem; line-height: 1.65; }
+.fund-story__text h3 { margin: .8rem 0 -.6rem; font-size: 1.35rem; line-height: 1.3; font-weight: 650; }
+.fund-story__text ul, .fund-story__text ol { margin: 0; padding-left: 1.3rem; }
+.fund-story__text ul { list-style: disc; }
+.fund-story__text ol { list-style: decimal; }
+.fund-story__text li + li { margin-top: .5rem; }
+.fund-story__text strong { font-weight: 650; }
+.fund-story__more { display: inline-flex; align-items: center; gap: .5rem; border-radius: 3px; color: var(--c-amber-text); font-size: .9rem; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .25em; transition: color .2s ease, background-color .2s ease, text-decoration-color .2s ease; }
+.fund-story__more svg { flex-shrink: 0; transition: transform .2s ease; }
+.fund-story__more:hover, .fund-story__more:focus-visible { color: #392c1b; background-color: #f5dfb5; text-decoration-color: #392c1b; }
+.fund-story__more:hover svg, .fund-story__more:focus-visible svg { transform: translate(2px,-2px); }
+.fund-story__more:focus-visible { outline: 2px solid var(--c-amber-text); outline-offset: 5px; }
+.fund-backers { padding: var(--fund-section-space) 0; background: #f3e6cd; }
+.fund-backers { z-index: 3; isolation: isolate; }
+.fund-backers::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; background-image: radial-gradient(circle, rgba(155,100,25,.13) 1.5px, transparent 1.8px); background-size: 32px 32px; }
+.fund-backers > .camp-inner { max-width: 1180px; }
+.fund-backers__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.fund-backers__list li { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.25rem .5rem; align-items: center; padding: 1.25rem; border: 1px solid #e2d2b6; border-radius: 16px; background: #fffaf1; content-visibility: auto; contain-intrinsic-size: auto 168px; }
+.fund-backer__who { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: .65rem; min-width: 0; font-size: 1rem; font-weight: 550; }
+.fund-backer__identity { display: grid; gap: .25rem; overflow-wrap: anywhere; }
+.fund-backer__mark { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; color: #76634c; }
+.fund-backer__mark svg { width: 21px; height: 21px; }
+[data-monthly="true"] .fund-backer__mark { color: #a16410; }
+.fund-backer__kind { color: #76634c; font-size: .76rem; font-weight: 500; }
+[data-monthly="true"] .fund-backer__kind { color: #594021; font-weight: 650; }
+.fund-backer__when { display: inline-flex; align-items: center; gap: .35rem; color: #705431; font-size: .73rem; font-weight: 550; }
+.fund-backer__when svg { flex-shrink: 0; color: var(--c-amber-text); }
+.fund-backer__amount { grid-column: 2; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: center; gap: .2rem .35rem; padding: .4rem .65rem; border-radius: 12px; background: #eee8dc; color: #443323; font-family: var(--font-serif); font-size: 1.2rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+[data-monthly="true"] .fund-backer__amount { background: #f6deb1; color: #654417; }
+.fund-backer__amount small { font-family: var(--font-sans); font-size: .65rem; font-weight: 500; }
+.fund-backers .camp-blank { margin: 0; max-width: 44rem; padding: 2rem 0; border: 0; background: transparent; box-shadow: none; text-align: left; justify-items: start; }
+.fund-more { padding: var(--fund-section-space) 0; background: var(--c-sheet); }
+.camp--fund .camp-call { padding-block: var(--fund-section-space) calc(var(--fund-section-space) + var(--c-footer-r)); }
+.fund-more .camp-list__head { align-items: center; }
+.fund-more__all { width: auto; }
+.fund-switch__icon { display: inline-flex; color: var(--c-amber-text); flex-shrink: 0; }
+.fund-switch { scroll-margin-top: 24px; }
+.fund-switch__tabs { display: flex; gap: clamp(1.3rem,4vw,3rem); margin-bottom: 2rem; }
+.fund-switch__tab { display: inline-flex; align-items: center; gap: .6rem; position: relative; min-height: 44px; padding: .25rem 0 .8rem; border: 0; background: none; color: #6c6253; font: inherit; font-size: clamp(1.3rem,2.6vw,2.1rem); font-weight: 650; letter-spacing: -.025em; line-height: 1.2; text-align: left; cursor: pointer; transition: color .18s; }
+.fund-switch__tab[aria-selected="true"] { color: var(--c-ink); }
+.fund-switch__tab:hover { color: var(--c-amber-text); }
+.fund-switch__mark { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; background: var(--c-amber); }
+.fund-switch__stage { position: relative; min-width: 0; overflow: clip; overflow-anchor: none; }
+.fund-switch__panel { position: absolute; top: 0; left: 0; width: 100%; opacity: 0; visibility: hidden; transition: opacity .2s ease; }
+.fund-switch__panel[data-active="true"] { position: relative; opacity: 1; visibility: visible; }
+.fund-switch__panel[data-scroll="true"] { height: 100%; overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: thin; scrollbar-color: #ae8750 transparent; scrollbar-gutter: stable; padding: .1rem .65rem .1rem 0; }
+.fund-switch__panel:focus-visible { outline: 2px solid var(--c-amber-text); outline-offset: -2px; }
+.fund-form { --donation-ink: #27221d; --donation-muted: #655c4f; --donation-paper: #fffdf8; --donation-wash: #fff8e8; --donation-line: rgba(54,46,38,.2); --donation-amber: #f3a400; }
+.fund-form .camp-form { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); align-items: start; gap: 2rem 3rem; }
+.fund-form .camp-form__intent, .fund-form .camp-form__note { grid-column: 1 / -1; }
+.fund-form .camp-form__note { grid-column: 2; }
+.fund-form .donation-tier-picker { grid-column: 1; }
+.fund-form .donation-fields { grid-column: 2; grid-row: 2; }
+.camp-form .camp-form__intent { justify-self: start; width: fit-content; max-width: min(100%, 38rem); gap: 1rem; border-radius: 20px; padding: 1rem 1.15rem; background: #fffaf1; border: 1px solid #e2d2b6; box-shadow: 0 4px 14px rgba(91,62,19,.04); }
+.camp-form .camp-form__intent-icon { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: #fbe5b8; color: #a76608; }
+.camp-form .camp-form__intent--free .camp-form__intent-icon { background: #eee7d9; }
+.camp-form .camp-form__intent strong { font-size: 1rem; line-height: 1.5; }
+.camp-form .camp-form__intent button { width: 36px; height: 36px; background: #f3eadb; }
+.camp-form .camp-form__intent button:hover { background: #fbe5b8; }
+.camp-form .donation-tier-picker[data-compact="true"] .donation-tier-picker__list { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem; }
+.camp-form .donation-tier-picker[data-compact="true"] .donation-tier { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: .65rem; min-height: 90px; padding: .85rem; border-width: 1px; border-radius: 18px; box-shadow: none; transform: none; transition: background-color .2s ease, border-color .2s ease; }
+.camp-form .donation-tier-picker[data-compact="true"] .donation-tier[data-selected="true"] { background: #fff3d4; border-color: #b77909; }
+.camp-form .donation-tier__icon { width: 2.75rem; }
+.camp-form .donation-tier__copy strong { font-family: var(--font-sans); font-size: 1.15rem; font-weight: 700; letter-spacing: -.025em; white-space: nowrap; }
+.camp-form .donation-tier__mark { width: 1rem; }
+.camp-form .donation-tier-picker[data-compact="true"] .donation-tier--custom { grid-column: 1 / -1; margin-top: .3rem; }
+.camp-form .donation-tier--custom small { display: none; }
+.camp-form .donation-tier__custom-control { grid-column: 3; width: 7rem; margin: 0; }
+.camp-form .donation-tier__custom-control input { font-weight: 500; font-size: 1rem; }
+.camp-form .donation-fields { gap: 1.1rem; }
+.camp-form .donation-cadence__options { padding: 0; gap: .6rem; border: 0; background: transparent; }
+.camp-form .donation-cadence__options label { min-height: 90px; padding: .85rem; border-radius: 18px; gap: .65rem; background: rgba(255,255,255,.72); }
+.camp-form .donation-cadence__options label[data-selected="true"] { background: var(--donation-amber); }
+.camp-form .donation-cadence__icon { display: grid; width: 2.75rem; flex-basis: 2.75rem; }
+.camp-form .donation-cadence__copy strong { font-size: .82rem; letter-spacing: 0; text-transform: none; }
+.camp-form .donation-anonymous-toggle { width: fit-content; max-width: 100%; min-height: 52px; justify-content: flex-start; gap: .85rem; background: transparent; border: 0; border-radius: 0; padding: .25rem 0; }
+.camp-form .donation-anonymous-toggle:hover { background: transparent; }
+.camp-form .donation-anonymous-toggle__copy { gap: .2rem; }
+.camp-form .donation-anonymous-toggle__copy strong { font-size: .82rem; font-weight: 600; }
+.camp-form .donation-anonymous-toggle__copy small { font-size: .72rem; }
+.camp-form .donation-anonymous-toggle__track { flex-basis: 44px; width: 44px; height: 26px; border: 0; background: #b5ab99; }
+.camp-form .donation-anonymous-toggle__track i { width: 20px; height: 20px; top: 3px; left: 3px; }
+.camp-form .donation-anonymous-toggle input:checked + .donation-anonymous-toggle__track i { transform: translateX(18px); }
+.camp-form .donation-field input { min-height: 50px; border-radius: 8px; font-size: 1rem; }
+.camp-form .donation-field input, .camp-form .donation-tier__custom-control input {
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+.camp-form .donation-field > span { transition: color .18s ease; }
+.camp-form .donation-field:focus-within > span { color: var(--c-amber-text); }
+.camp-form .donation-field input:focus, .camp-form .donation-tier__custom-control input:focus {
+  background: #fffdf8;
+  border-color: #9b6800;
+  box-shadow: 0 0 0 3px rgba(155,104,0,.12);
+}
+.camp-form .donation-cadence__options label { transform: none; transition: background-color .2s ease, color .2s ease; }
+.camp-form .donation-cadence__icon { transition: transform .22s cubic-bezier(.22,1,.36,1), background-color .2s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier:hover { background: #fff4d9; border-color: #b77909; }
+  .camp-form .donation-tier:hover .donation-tier__icon { background: #f5be48; transform: rotate(-7deg) scale(1.08); }
+  .camp-form .donation-cadence__options label:hover { background: #ffe6ad; }
+  .camp-form .donation-cadence__options label[data-selected="true"]:hover { background: #ec9b00; }
+  .camp-form .donation-cadence__options label:hover .donation-cadence__icon { transform: rotate(-6deg) scale(1.07); }
+  .camp-form .donation-field input:hover, .camp-form .donation-tier__custom-control input:hover { border-color: #b77909; background: #fffaf0; }
+  .camp-form .donation-field:hover > span { color: var(--c-amber-text); }
+}
+.camp-form .donation-provider-button { width: 100%; margin: .25rem 0 0; min-height: 64px; border: 0; border-radius: 999px; box-shadow: none; }
+.camp-form .donation-provider-button::before { content: none; }
+.camp-form .donation-provider-button__icon { display: grid; }
+.camp-form .donation-provider-button__copy { min-width: 0; }
+.camp-form .donation-provider-button__copy strong { font-size: 1rem; white-space: normal; }
+.camp-form .donation-provider-button__copy small { max-width: none; font-size: .73rem; letter-spacing: 0; text-transform: none; }
+.camp-form .donation-provider-note { margin: 0; text-align: left; color: #655c4f; font-size: .78rem; line-height: 1.5; }
+.camp-form .camp-form__note { margin: 0; font-size: .8rem; }
+.camp-form .donation-field input[aria-invalid="true"],
+.camp-form .donation-tier__custom-control input[aria-invalid="true"] { border-color: #a03824; box-shadow: 0 0 0 2px rgba(160,56,36,.12); }
+.fund-dock { position: fixed; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); left: 1rem; z-index: 40; display: none; }
+.fund-dock .camp-btn { box-shadow: 0 8px 24px rgba(73,47,19,.22); }
+.fund-cover__inner:not(:has(.fund-shots)) { grid-template-areas: "copy deal"; }
+@media (min-width: 1101px) {
+  .fund-cover { --fund-top: clamp(5.5rem, 12vh, 7rem); padding-top: var(--fund-top); }
+  .fund-cover__inner { grid-template-columns: minmax(0,1fr) minmax(0,.98fr); }
   .fund-shots {
-    min-height: 0;
-    aspect-ratio: 4 / 3;
-    margin-block: 0;
-    margin-inline: calc(-1 * var(--c-inner));
+    --fund-gallery-bottom: calc(var(--fund-section-overlap) + 1.5rem);
+    min-height: calc(100svh + var(--fund-section-overlap));
+    margin-top: calc(-1 * var(--fund-top));
+    margin-bottom: calc(-1 * (var(--fund-section-space) + var(--fund-section-overlap)));
+    margin-right: calc(-1 * (max(0px, (100vw - 1400px) / 2) + var(--c-inner)));
   }
-
-  .fund-shots__disc {
-    top: 0;
-    left: 0;
-    width: clamp(5rem, 22vw, 8rem);
-    translate: -45% -45%;
-  }
+  .fund-shots__stack { border-radius: 0; }
 }
-
+@media (min-width: 681px) and (max-width: 1100px) {
+  .fund-cover__inner { grid-template-areas: "copy copy" "shots deal"; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 2.5rem 2rem; }
+  .fund-cover__title { max-width: 24ch; font-size: clamp(2.5rem,4.7vw,3.4rem); }
+  .fund-cover__lead { max-width: 62ch; }
+  .fund-crumbs { margin-bottom: 1.5rem; }
+  .fund-shots { min-height: 25rem; margin: 0; }
+  .fund-shots__stack { border-radius: 24px; }
+  .fund-cover__deal { gap: 1.15rem; }
+  .fund-dates { gap: 1rem; }
+  .fund-share { gap: .75rem; }
+}
 @media (max-width: 860px) {
-  .fund-dock {
-    display: block;
-  }
-
-  .fund-cover__actions .camp-btn {
-    width: 100%;
-  }
+  .fund-dock { display: block; }
+  .fund-story .fund-switch { display: block; }
+  .fund-story .fund-switch__tabs { flex-direction: row; margin-bottom: 1.75rem; }
+  .fund-form .camp-form { grid-template-columns: 1fr; gap: 1.5rem; }
+  .fund-form .donation-tier-picker, .fund-form .donation-fields { grid-column: auto; grid-row: auto; }
+  .fund-form .camp-form__note { grid-column: 1; }
+  .fund-form { max-width: 42rem; }
 }
-
-@media (max-width: 600px) {
-  .fund-backers__list li {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .fund-backers__list b {
-    grid-column: 1;
-    grid-row: auto;
-    padding-left: calc(34px + 0.6rem);
-  }
+@media (max-width: 1100px) {
+  .fund-backers__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
+@media (max-width: 680px) {
+  .fund-cover { padding-top: 5.5rem; }
+  .fund-cover__inner, .fund-cover__inner:not(:has(.fund-shots)) { grid-template-areas: "copy" "shots" "deal"; grid-template-columns: minmax(0,1fr); gap: 1.75rem; }
+  .fund-cover__inner:not(:has(.fund-shots)) { grid-template-areas: "copy" "deal"; }
+  .fund-cover__title { max-width: 22ch; font-size: clamp(1.85rem,7.6vw,2.8rem); line-height: 1.15; margin-bottom: 1rem; }
+  .fund-cover__lead { font-size: 1rem; line-height: 1.6; }
+  .fund-crumbs { margin-bottom: 1.5rem; }
+  .fund-shots { margin: 0; min-height: 0; }
+  .fund-shots__viewport { height: auto; aspect-ratio: 8 / 9; }
+  .fund-shots__stack { border-radius: 24px; }
+  .fund-shots__arrow { width: 44px; height: 44px; }
+  .fund-shots__arrow--prev { left: .75rem; }
+  .fund-shots__arrow--next { right: .75rem; }
+  .fund-shots__thumbs { --thumb-size: clamp(52px, 16vw, 72px); }
+  .fund-shots__thumb { height: clamp(46px, 14.5vw, 58px); }
+  .camp-form .camp-form__intent { padding: .85rem; gap: .65rem; }
+  .camp-form .camp-form__intent-icon { width: 36px; height: 36px; border-radius: 12px; }
+  .fund-shots__img { object-position: center 25%; }
+  .fund-cover__deal { gap: 1.25rem; }
+  .fund-money__sums b { font-size: 2rem; }
+  .fund-money__sums strong { font-size: 1.125rem; }
+  .fund-cover__actions .camp-btn { width: 100%; }
+  .fund-share { gap: .5rem; }
+  .fund-share__label { font-size: .95rem; }
+  .fund-share__btn { padding: 0; }
+  .fund-dates { gap: 1rem 1.4rem; }
+  .fund-story__text { font-size: 1rem; line-height: 1.7; }
+  .fund-story__text p:first-child { font-size: 1.1rem; }
+  .fund-switch__tabs { gap: 1rem; }
+  .fund-switch__tab { font-size: clamp(.94rem,3.9vw,1.3rem); gap: .4rem; }
+  .fund-switch__icon svg { width: 18px; height: 18px; }
+  .fund-backers__list { grid-template-columns: 1fr; gap: .75rem; }
+  .fund-backers__list li { padding: 1rem; gap: 1rem .6rem; }
+  .fund-backer__who { gap: .55rem; font-size: 1rem; }
+  .fund-backer__mark { flex-basis: 26px; width: 26px; height: 26px; }
+  .fund-backer__mark svg { width: 20px; height: 20px; }
+  .fund-backer__kind { font-size: .75rem; }
+  .fund-backer__when { font-size: .75rem; }
+  .fund-backer__amount { padding: .4rem .6rem; font-size: 1rem; gap: .1rem; border-radius: 14px; }
+  .fund-backer__amount small { flex-basis: 100%; text-align: center; font-size: .6rem; }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier { padding: .75rem; }
+  .camp-form .donation-tier__custom-control { width: 7rem; }
+  .camp-form .donation-tier--custom .donation-tier__copy strong { font-size: .95rem; }
+}
+@media (max-width: 480px) {
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier { grid-template-columns: minmax(0,1fr) auto; gap: .6rem; padding: .85rem; }
+  .camp-form .donation-tier__icon { grid-column: 1; grid-row: 1; width: 2.5rem; }
+  .camp-form .donation-tier__mark { grid-column: 2; grid-row: 1; }
+  .camp-form .donation-tier__copy { grid-column: 1 / -1; grid-row: 2; }
+  .camp-form .donation-tier__copy strong { font-size: 1.2rem; }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier--custom { grid-template-columns: auto minmax(0,1fr); }
+  .camp-form .donation-tier--custom .donation-tier__copy { grid-column: 2; grid-row: 1; }
+  .camp-form .donation-tier__custom-control { grid-column: 2; grid-row: 2; width: 100%; }
+  .camp-form .donation-cadence__options label { flex-direction: column; align-items: flex-start; justify-content: center; min-height: 116px; }
+  .camp-form .donation-cadence__icon { width: 2.5rem; flex-basis: auto; }
+}
+@media (max-width: 680px) {
+  .camp-form .donation-tier-picker { min-width: 0; max-width: 100%; }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier-picker__list {
+    display: flex; flex-wrap: nowrap; gap: .75rem; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity; scroll-padding-inline: 4px; scrollbar-width: thin;
+    scrollbar-color: #b18a50 transparent; padding: 4px 4px 10px; margin: -4px;
+  }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier {
+    flex: 0 0 144px; min-height: 120px; grid-template-columns: minmax(0,1fr) auto;
+    scroll-snap-align: start; padding: .85rem;
+  }
+  .camp-form .donation-tier__icon { grid-column: 1; grid-row: 1; width: 2.5rem; }
+  .camp-form .donation-tier__mark { grid-column: 2; grid-row: 1; }
+  .camp-form .donation-tier__copy { grid-column: 1 / -1; grid-row: 2; }
+  .camp-form .donation-tier__copy strong { font-size: 1.2rem; }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier--custom { flex-basis: 240px; grid-template-columns: auto minmax(0,1fr); margin-top: 0; }
+  .camp-form .donation-tier--custom .donation-tier__copy { grid-column: 2; grid-row: 1; }
+  .camp-form .donation-tier__custom-control { grid-column: 2; grid-row: 2; width: 100%; }
+  .camp-form .donation-tier-picker__hint { display: flex; margin-top: .6rem; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .fund-shots__img,
-  .fund-shots__nav button,
-  .fund-share__btn {
-    transition: none;
-  }
-}
-
-/* Живых кадров у сбора может не оказаться: записи в CMS переживают свои
-   файлы. Тогда колонка под круг не нужна, и поле идёт одной. */
-.fund-cover__inner:not(:has(.fund-shots)) {
-  grid-template-areas:
-    "copy"
-    "deal";
-  grid-template-columns: minmax(0, 1fr);
+  .fund-shots__slide, .fund-shots__arrow, .fund-shots__thumb, .fund-switch__panel, .fund-share__btn, .fund-share__btn svg, .fund-crumbs a, .fund-story__more, .fund-story__more svg { transition: none; }
+  .fund-story__more:hover svg, .fund-story__more:focus-visible svg { transform: none; }
+  .fund-money__bar[data-status="active"] i::after, .fund-help__shine::before { animation: none; opacity: 0; }
+  .fund-share__btn:hover svg { transform: none; }
+  .camp-form .donation-tier-picker[data-compact="true"] .donation-tier,
+  .camp-form .donation-tier__icon, .camp-form .donation-cadence__options label,
+  .camp-form .donation-cadence__icon, .camp-form .donation-field input,
+  .camp-form .donation-tier__custom-control input { transition: none; }
+  .camp-form .donation-tier:hover .donation-tier__icon,
+  .camp-form .donation-cadence__options label:hover .donation-cadence__icon { transform: none; }
 }

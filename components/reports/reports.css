@@ -3052,7 +3052,7 @@
 
 .reports-flow > div {
   display: grid;
-  grid-template-columns: 210px 1fr auto;
+  grid-template-columns: 210px 1fr;
   gap: 1.25rem;
   align-items: center;
 }
@@ -3082,6 +3082,10 @@
 }
 
 .reports-flow dd {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1.25rem;
   margin: 0;
   font-family: var(--font-playfair), Georgia, serif;
   font-size: 1.15rem;
@@ -3579,6 +3583,11 @@
   }
 
   .reports-flow > div {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .reports-flow dd {
     grid-template-columns: 1fr;
     gap: 0.35rem;
   }

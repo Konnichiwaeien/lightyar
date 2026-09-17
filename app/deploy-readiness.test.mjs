@@ -70,17 +70,22 @@ test("remote gallery images fail gracefully and thumbnail rail cannot widen the 
 test("pet cards keep the detail link separate from their buttons", async () => {
   const card = await read("../components/pets/pet-card.tsx");
 
-  assert.match(card, /aria-label=\{`Подробнее о питомце \$\{pet\.name\}`\}/);
-  assert.match(card, /className="absolute inset-0 z-\d+/);
+  assert.match(card, /<h2[^>]*><Link href=\{`\/pets\/\$\{pet\.slug \|\| pet\.id\}`\}/);
+  assert.match(card, /aria-pressed=\{favorite\}/);
   assert.doesNotMatch(card, /<Link[\s\S]{0,500}<article/);
 });
 
-test("pets page paginates the catalog in Strapi and uses a lightweight quiz query", async () => {
+test("pets page paginates in Strapi and loads the quiz only on request", async () => {
   const page = await read("./pets/page.tsx");
   const service = await read("../lib/api/services/pets.ts");
 
   assert.match(page, /getPetsCollection/);
-  assert.match(page, /getQuizPets/);
+  const launcher = await read("../components/pets/pets-quiz-launcher.tsx");
+  const quizRoute = await read("./api/pets/quiz/route.ts");
+  assert.doesNotMatch(page, /getQuizPets|allPets=/);
+  assert.match(quizRoute, /getQuizPets/);
+  assert.match(launcher, /dynamic\(/);
+  assert.match(launcher, /fetch\('\/api\/pets\/quiz'/);
   assert.doesNotMatch(page, /limit:\s*150/);
   assert.match(service, /fields\[0\]=name/);
   assert.match(service, /populate\[photos\]\[fields\]/);
@@ -131,9 +136,12 @@ test("page metadata relies on the root title template without repeating the bran
   for (const source of [campaigns, pet, campaign, news]) {
     assert.doesNotMatch(source, /title:\s*[`"'][^\n]*\|\s*Светлый/);
   }
-  assert.match(pet, /title:\s*`\$\{pet\.name\} \| Наши питомцы`/);
+  // The profile owns a full status-specific title; absolute prevents a duplicate root brand.
+  assert.match(pet, /title:\s*\{\s*absolute:\s*title\s*\}/);
   assert.match(about, /export const metadata[\s\S]*?title:\s*"О нас"/);
-  assert.match(newsIndex, /export const metadata[\s\S]*?title:\s*"Новости и истории спасения"/);
+  assert.match(newsIndex, /export async function generateMetadata/);
+  assert.match(newsIndex, /Новости и истории спасения/);
+  assert.match(newsIndex, /alternates:\s*\{\s*canonical\s*\}/);
   assert.match(reports, /export const metadata[\s\S]*?title:\s*"Отчётность"/);
 });
 

@@ -25,6 +25,7 @@ const QUIZ_PETS_QUERY = [
   "fields[8]=friendliness",
   "fields[9]=trainability",
   "fields[10]=socialized",
+  "fields[11]=slug",
   "populate[photos][fields][0]=url",
   "populate[dogBreed][fields][0]=name",
   "populate[catBreed][fields][0]=name",
@@ -35,6 +36,34 @@ const QUIZ_PETS_QUERY = [
 
 
 export class PetsService extends StrapiClient {
+  async getPetByIdOrSlug(identifier: string): Promise<StrapiPet | null> {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(identifier)) return null;
+    if (/^[a-z0-9]{24}$/.test(identifier)) {
+      const pet = await this.getPetById(identifier);
+      if (pet) return pet;
+    }
+    const response = await this.fetchJson<StrapiResponseCollection<StrapiPet>>(
+      `/pets?filters[slug][$eq]=${encodeURIComponent(identifier)}&populate[0]=photos&populate[1]=dogBreed&populate[2]=catBreed&populate[3]=color&pagination[limit]=1`,
+      { next: { revalidate: 60 } },
+    );
+    return response.data?.[0] || null;
+  }
+
+  async getAllPetIdentifiers(): Promise<{ id: string; slug?: string }[]> {
+    const pets: { id: string; slug?: string }[] = [];
+    let start = 0;
+    while (true) {
+      const response = await this.fetchJson<StrapiResponseCollection<Pick<StrapiPet, 'documentId' | 'slug'>>>(
+        `/pets?fields[0]=documentId&fields[1]=slug&sort[0]=id:asc&pagination[limit]=100&pagination[start]=${start}`,
+        { next: { revalidate: 60 } },
+      );
+      const items = response.data || [];
+      pets.push(...items.map(pet => ({ id: pet.documentId, slug: pet.slug })));
+      start += items.length;
+      if (!items.length || start >= (response.meta?.pagination?.total ?? start)) break;
+    }
+    return pets;
+  }
   /**
    * Fetch all pets with pagination and population
    */
@@ -96,7 +125,7 @@ export class PetsService extends StrapiClient {
       return response.data || [];
     } catch (error) {
       console.error("[PetsService] getQuizPets failed:", error);
-      return [];
+      throw error;
     }
   }
 
@@ -107,13 +136,14 @@ export class PetsService extends StrapiClient {
     try {
       // In Strapi v5, we fetch by documentId. We can fetch using /pets/[documentId]
       const response = await this.fetchJson<{ data: StrapiPet }>(
-        `/pets/${id}?populate[0]=photos&populate[1]=dogBreed&populate[2]=catBreed&populate[3]=color`,
+        `/pets/${encodeURIComponent(id)}?populate[0]=photos&populate[1]=dogBreed&populate[2]=catBreed&populate[3]=color`,
         {
           next: { revalidate: 60 }
         }
       );
       return response.data || null;
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Strapi API Error: 404 ')) return null;
       console.error(`[PetsService] getPetById failed for ID: ${id}`, error);
       throw error;
     }

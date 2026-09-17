@@ -1,6 +1,6 @@
 # Светлый — сайт благотворительной организации
 
-Официальный сайт АНБО «Светлый» (Ярославль) — помощь бездомным и попавшим в беду животным: [lightyar.shdk.tech](https://lightyar.shdk.tech)
+Официальный сайт АНБО «Светлый» (Ярославль) — помощь бездомным и попавшим в беду животным: [lightyar.ru](https://lightyar.ru)
 
 ## Стек
 
@@ -14,7 +14,7 @@
 
 ```bash
 npm ci
-cp .env.example .env.local   # заполнить REST_API_KEY и STRAPI_API_URL
+cp .env.example .env.development.local   # заполнить STRAPI_READ_TOKEN и STRAPI_API_URL; NEXT_PUBLIC_SITE_URL=http://localhost:3000
 npm run dev                  # http://localhost:3000
 ```
 

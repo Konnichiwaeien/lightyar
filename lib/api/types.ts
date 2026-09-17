@@ -96,9 +96,10 @@ export interface StrapiColor {
 export interface StrapiPet {
   id: number;
   documentId: string;
+  slug?: string;
   name: string;
   petStatus: 'shelter' | 'home';
-  sex: 'male' | 'female';
+  sex: 'male' | 'female' | 'mixed' | 'unknown';
   type: 'cat' | 'dog';
   createdAt: string;
   updatedAt: string;

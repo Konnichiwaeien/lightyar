@@ -1,38 +1,35 @@
-import ReactDOM from "react-dom";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowUpRight, CalendarDays, CheckCircle2, Flag, HandHeart, PawPrint, Tag } from "lucide-react";
+import { notFound, permanentRedirect } from "next/navigation";
+import { ArrowUpRight, BookOpen, CalendarDays, CalendarHeart, CheckCircle2, Flag, HandHeart, HeartHandshake, HouseHeart, PawPrint, Tag, UsersRound } from "lucide-react";
 
 import { CampaignCall } from "@/components/campaigns/campaign-call";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
 import { CampaignCountdown } from "@/components/campaigns/campaign-countdown";
 import { CampaignDonateDialog } from "@/components/campaigns/campaign-donate-dialog";
 import { CampaignDonateForm } from "@/components/campaigns/campaign-donate-form";
-import { CampaignHelpButton } from "@/components/campaigns/campaign-help-button";
+import { CampaignFormLink } from "@/components/campaigns/campaign-form-link";
 import { CampaignMobileCta } from "@/components/campaigns/campaign-mobile-cta";
 import { CampaignPhotos } from "@/components/campaigns/campaign-photos";
+import { CampaignReveal } from "@/components/campaigns/campaign-reveal";
 import { CampaignShare } from "@/components/campaigns/campaign-share";
 import { FundTabs } from "@/components/campaigns/fund-tabs";
+import { CampaignStory } from "@/components/campaigns/campaign-story";
+import { CampaignTitle } from "@/components/campaigns/campaign-title";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { aboutPageService } from "@/lib/api/services/about-page";
 import { campaignsService } from "@/lib/api/services/campaigns";
 import { resolveCovers } from "@/lib/campaigns/cover";
 import { fundDate, fundPhotos, loadFund } from "@/lib/campaigns/fund";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
-import { plural } from "@/lib/reports/shelter-scales";
 import { siteUrl } from "@/lib/seo/site";
 import "@/components/campaigns/campaigns.css";
 
 /**
  * Страница одного сбора.
  *
- * Собрана в том же языке, что и каталог: плоские цветные поля одно под
- * другим, кадр это круг с плоской фигурой за ним, значки рисованные,
- * прямоугольных фотоблоков нет. До переделки страница жила своей жизнью:
- * белые карточки с тенями, эмодзи вместо значков, снимки в рамках и своя
- * форма взноса в липкой колонке — вторая копия той, что и так открывается
- * окном по кнопке «Помочь».
+ * Тёплые цветные поля каталога, крупный снимок, спокойная типографика.
+ * Форма на странице и окно помощи используют общие поля пожертвования.
  *
  * Разбор грамматики: docs/campaigns-scroll-plan.md.
  */
@@ -61,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: { canonical: `/campaigns/${fund.slug || fund.documentId}` },
     openGraph: {
+      url: siteUrl(`/campaigns/${fund.slug || fund.documentId}`),
       title: `${fund.title} — АНБО «Светлый»`,
       description,
       images: [{ url: cover, width: 1200, height: 630, alt: fund.title }],
@@ -95,12 +93,20 @@ export default async function FundPage({ params }: PageProps) {
   ]);
 
   if (!fund) notFound();
+  if (fund.slug && id !== fund.slug) permanentRedirect(`/campaigns/${encodeURIComponent(fund.slug)}`);
 
-  const photos = await fundPhotos(fund);
-  /* Первый кадр это самый крупный элемент первого экрана. Он лежит в
-     клиентском островке, и без этой строки его загрузка начиналась после
-     гидратации. */
-  if (photos[0]) ReactDOM.preload(photos[0], { as: "image", fetchPriority: "high" });
+  // Independent media checks run together. The hero Image already renders
+  // eager/high-priority markup on the server; preloading its raw URL would
+  // download the original in addition to Next's responsive image.
+  const [photos, others] = await Promise.all([
+    fundPhotos(fund),
+    resolveCovers(
+      (othersData.data || [])
+        .filter((item) => item.documentId !== fund.documentId)
+        .slice(0, 3)
+        .map(normalizeCampaignData),
+    ),
+  ]);
 
   const total = Number(fund.total) || 0;
   const current = Number(fund.current) || 0;
@@ -110,11 +116,6 @@ export default async function FundPage({ params }: PageProps) {
 
   const started = fundDate(fund.publishedAt || fund.createdAt);
   const deadline = fund.deadline ? new Date(fund.deadline) : null;
-
-  const story = (fund.longDesc || fund.shortDesc || "")
-    .split(/\n{2,}/)
-    .map((piece) => piece.trim())
-    .filter(Boolean);
 
   /* Про фонд коротко: чем занимаемся, как работаем и откуда взялись. Дальше
      читателя ведёт ссылка на страницу фонда. */
@@ -134,17 +135,6 @@ export default async function FundPage({ params }: PageProps) {
       amount: Number(donation.amount) || 0,
     }));
 
-  /* Показываем дюжину свежих: у долгого сбора взносов бывают сотни, и
-     страница выросла бы в ленту, где после первого экрана уже ничего нет. */
-  const shownBackers = backers.slice(0, 12);
-  const restBackers = backers.length - shownBackers.length;
-
-  const others = await resolveCovers(
-    (othersData.data || [])
-      .filter((item) => item.documentId !== fund.documentId)
-      .slice(0, 3)
-      .map(normalizeCampaignData),
-  );
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -157,7 +147,7 @@ export default async function FundPage({ params }: PageProps) {
   };
 
   return (
-    <div className="camp">
+    <div className="camp camp--fund">
       <InnerHeader />
 
       <main id="main-content">
@@ -165,7 +155,7 @@ export default async function FundPage({ params }: PageProps) {
             всему полю, как на обложке каталога. */}
         <section className="fund-cover" data-status={closed ? "closed" : "active"}>
           <div className="camp-inner fund-cover__inner">
-            <div className="fund-cover__copy">
+            <CampaignReveal className="fund-cover__copy" entrance>
               <nav aria-label="Где вы находитесь" className="fund-crumbs">
                 <Link href="/">Главная</Link>
                 <span aria-hidden="true">/</span>
@@ -196,16 +186,16 @@ export default async function FundPage({ params }: PageProps) {
                 )}
               </p>
 
-              <h1 className="fund-cover__title">{fund.title}</h1>
+              <CampaignTitle title={fund.title} />
 
               {fund.shortDesc ? <p className="fund-cover__lead">{fund.shortDesc}</p> : null}
-            </div>
+            </CampaignReveal>
 
             <CampaignPhotos photos={photos} title={fund.title} />
 
             {/* Деньги, кнопка и сроки стоят отдельным блоком: на узком экране
                 они уходят под кадр, а заголовок с описанием остаются над ним. */}
-            <div className="fund-cover__deal">
+            <CampaignReveal className="fund-cover__deal" entrance delay={.06}>
               <div className="fund-money">
                 <div
                   aria-label={`Собрано ${current} рублей из ${total}`}
@@ -217,18 +207,14 @@ export default async function FundPage({ params }: PageProps) {
                   role="progressbar"
                 >
                   <i style={{ "--fill": `${share * 100}%` } as React.CSSProperties} />
+                  <span className="fund-money__percent" aria-hidden="true">{Math.round(share * 100)}%</span>
                 </div>
 
-                <p className="fund-money__sums">
-                  <b>{money(current)}</b>
-                  <span>
-                    {closed
-                      ? `цель ${money(total)}`
-                      : rest > 0
-                        ? `осталось ${money(rest)} из ${money(total)}`
-                        : "цель собрана"}
-                  </span>
-                </p>
+                <div className="fund-money__sums">
+                  <div><small>Собрано</small><b>{money(current)}</b></div>
+                  <div><small>Цель сбора</small><strong>{money(total)}</strong></div>
+                </div>
+                <p className="fund-money__rest">{closed ? "Сбор завершён" : rest > 0 ? `Осталось собрать ${money(rest)}` : "Цель собрана"}</p>
               </div>
 
               <div className="fund-cover__actions" id="fund-help">
@@ -238,9 +224,8 @@ export default async function FundPage({ params }: PageProps) {
                     Сбор закрыт, спасибо всем, кто помог
                   </span>
                 ) : (
-                  <CampaignHelpButton id={fund.documentId} title={fund.title} />
+                  <CampaignFormLink />
                 )}
-                <CampaignShare title={fund.title} />
               </div>
 
               <p className="fund-dates">
@@ -261,7 +246,8 @@ export default async function FundPage({ params }: PageProps) {
                   </b>
                 </span>
               </p>
-            </div>
+              <CampaignShare title={fund.title} url={siteUrl(`/campaigns/${fund.slug || fund.documentId}`)} />
+            </CampaignReveal>
           </div>
         </section>
 
@@ -269,7 +255,7 @@ export default async function FundPage({ params }: PageProps) {
             Второе читателю нужно ровно тогда, когда он решает, можно ли сюда
             переводить деньги, и отдельной страницей это вопрос не снимает. */}
         <section aria-labelledby="fund-story-title" className="fund-story">
-          <div className="camp-inner">
+          <CampaignReveal className="camp-inner">
             <h2 className="sr-only" id="fund-story-title">
               Подробности сбора
             </h2>
@@ -279,24 +265,20 @@ export default async function FundPage({ params }: PageProps) {
                 {
                   key: "fund",
                   label: "О сборе",
+                  icon: <BookOpen size={22} />,
                   panel: (
                     <div className="fund-story__text">
-                      {story.length > 0 ? (
-                        story.map((paragraph) => <p key={paragraph.slice(0, 40)}>{paragraph}</p>)
-                      ) : (
-                        <p>{fund.shortDesc}</p>
-                      )}
+                      <CampaignStory text={fund.longDesc || fund.shortDesc || ""} />
                     </div>
                   ),
                 },
                 {
                   key: "shelter",
                   label: "О фонде",
+                  icon: <HouseHeart size={22} />,
                   panel: (
                     <div className="fund-story__text">
-                      {shelter.map((paragraph) => (
-                        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
-                      ))}
+                      <CampaignStory text={shelter.join("\n\n")} />
                       <p>
                         <Link className="fund-story__more" href="/about">
                           Всё о фонде: команда, отчёты, документы
@@ -308,25 +290,29 @@ export default async function FundPage({ params }: PageProps) {
                 },
               ]}
             />
-          </div>
+          </CampaignReveal>
         </section>
 
         {/* Взнос и помощники тоже парой: форма та же, что на главной, без
             вкладок панели и без подопечного над кромкой. */}
         <section aria-labelledby="fund-help-title" className="fund-backers">
-          <div className="camp-inner">
+          <CampaignReveal className="camp-inner">
             <h2 className="sr-only" id="fund-help-title">
               Поддержать сбор
             </h2>
             <FundTabs
               label="Взнос и помощники сбора"
+              anchorId="fund-contribution"
+              heightFrom="give"
               tabs={[
                 {
                   key: "give",
                   label: "Сделать взнос",
+                  icon: <HeartHandshake size={22} />,
                   panel: (
                     <div className="fund-form">
                       <CampaignDonateForm
+                        listenForIntent={false}
                         initial={{ kind: "campaign", id: fund.documentId, title: fund.title, amount: 500 }}
                       />
                     </div>
@@ -335,31 +321,27 @@ export default async function FundPage({ params }: PageProps) {
                 {
                   key: "heroes",
                   label: "Наши герои",
+                  icon: <UsersRound size={22} />,
                   panel:
                     backers.length > 0 ? (
                       <div>
                         <ul className="fund-backers__list">
-                          {shownBackers.map((backer) => (
-                            <li key={backer.id}>
+                          {backers.map((backer) => (
+                            <li key={backer.id} data-monthly={backer.monthly}>
                               <span className="fund-backer__who">
                                 <span aria-hidden="true" className="fund-backer__mark">
-                                  <HandHeart size={16} />
+                                  {backer.monthly ? <CalendarHeart size={24} /> : <HandHeart size={24} />}
                                 </span>
-                                {backer.name}
+                                <span className="fund-backer__identity">
+                                  {backer.name}
+                                  <small className="fund-backer__kind">{backer.monthly ? "Опека · каждый месяц" : "Разовый взнос"}</small>
+                                </span>
                               </span>
-                              <span className="fund-backer__when">
-                                {backer.date}
-                                {backer.monthly ? " · ежемесячно" : ""}
-                              </span>
-                              <b>{money(backer.amount)}</b>
+                              <span className="fund-backer__when"><CalendarDays aria-hidden="true" size={14} />{backer.date}</span>
+                              <b className="fund-backer__amount">{money(backer.amount)}{backer.monthly && <small>/ мес.</small>}</b>
                             </li>
                           ))}
                         </ul>
-                        {restBackers > 0 ? (
-                          <p className="fund-backers__more">
-                            и ещё {restBackers} {plural(restBackers, "взнос", "взноса", "взносов")} до них
-                          </p>
-                        ) : null}
                       </div>
                     ) : (
                       /* Пустое состояние карточкой, как в каталоге: строка
@@ -379,12 +361,12 @@ export default async function FundPage({ params }: PageProps) {
                 },
               ]}
             />
-          </div>
+          </CampaignReveal>
         </section>
 
         {others.length > 0 ? (
           <section aria-labelledby="fund-more-title" className="fund-more">
-            <div className="camp-inner">
+            <CampaignReveal className="camp-inner">
               <header className="camp-list__head">
                 <div className="camp-list__title">
                   <h2 className="fund-title" id="fund-more-title">
@@ -402,7 +384,7 @@ export default async function FundPage({ params }: PageProps) {
                   <CampaignCard fund={item} index={index} key={item.id} />
                 ))}
               </ul>
-            </div>
+            </CampaignReveal>
           </section>
         ) : null}
 
@@ -418,7 +400,7 @@ export default async function FundPage({ params }: PageProps) {
       </main>
 
       {closed ? null : (
-        <CampaignMobileCta anchor="fund-help" id={fund.documentId} title={fund.title} />
+        <CampaignMobileCta anchor="fund-help" />
       )}
 
       <CampaignDonateDialog />

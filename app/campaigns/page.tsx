@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import ReactDOM from "react-dom";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, PackageOpen, Sparkles } from "lucide-react";
 
@@ -20,13 +21,18 @@ import { getCampaignSummary } from "@/lib/campaigns/summary";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
 import { plural } from "@/lib/reports/shelter-scales";
 import { siteUrl } from "@/lib/seo/site";
+import { pageMetadata } from "@/lib/seo/page-metadata";
+import { campaignCatalogState } from "@/lib/campaigns/catalog-state";
 import "@/components/campaigns/campaigns.css";
 
-export const metadata: Metadata = {
-  title: "Все сборы",
-  description: "Открытые и закрытые сборы АНБО «Светлый»: на что собираем, сколько уже есть и сколько осталось.",
-  alternates: { canonical: "/campaigns" },
-};
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const state = campaignCatalogState(await searchParams);
+  const title = `${state.status === "closed" ? "Завершённые сборы" : "Все сборы"}${state.page > 1 ? ` — страница ${state.page}` : ""}`;
+  return {
+    ...pageMetadata(title, "Открытые и закрытые сборы АНБО «Светлый»: на что собираем, сколько уже есть и сколько осталось.", state.canonical),
+    robots: { index: !state.noindex, follow: true },
+  };
+}
 
 /**
  * Страница собирается на сервере при каждом запросе: фильтр, сортировка и
@@ -67,10 +73,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
   for (const src of COVER_ART) ReactDOM.preload(src, { as: "image", fetchPriority: "high" });
 
   const resolved = await searchParams;
-  const status = resolved.status === "closed" ? "closed" : "active";
-  const sort = typeof resolved.sort === "string" ? resolved.sort : "date_desc";
-  const parsedPage = typeof resolved.page === "string" ? Number.parseInt(resolved.page, 10) : 1;
-  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+  const { status, sort, page } = campaignCatalogState(resolved);
 
   /* Обложка считается по всем открытым сборам, список по фильтру из адреса,
      а число закрытых нужно вкладке фильтра. Запросы идут разом:
@@ -90,6 +93,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
   const list = await resolveCovers((campaignsData.data || []).map(normalizeCampaignData));
   const total = campaignsData.meta?.pagination?.total || 0;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  if (page > Math.max(1, totalPages)) notFound();
   const safePage = Math.max(1, Math.min(page, totalPages || 1));
   const counts = { active: summary?.funds ?? 0, closed: closedData.meta?.pagination?.total || 0 };
 
@@ -104,7 +108,7 @@ export default async function CampaignsPage({ searchParams }: PageProps) {
     itemListElement: list.map((fund, index) => ({
       "@type": "ListItem",
       position: (safePage - 1) * ITEMS_PER_PAGE + index + 1,
-      url: siteUrl(`/campaigns/${fund.id}`),
+      url: siteUrl(`/campaigns/${fund.slug || fund.id}`),
       name: fund.title,
     })),
   };

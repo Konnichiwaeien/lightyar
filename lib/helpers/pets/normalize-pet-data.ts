@@ -4,6 +4,7 @@ import { calculateAgeInYears } from "./calculate-age-in-years";
 
 export interface MappedPet {
   id: string;
+  slug?: string;
   name: string;
   species: string;
   breed: string;
@@ -21,6 +22,7 @@ export interface MappedPet {
   friendliness: number;
   trainability: number;
   socialized: boolean;
+  characteristics?: { activity?: number; friendliness?: number; trainability?: number };
 }
 
 /**
@@ -33,7 +35,7 @@ export interface MappedPet {
 export function normalizePetData(pet: StrapiPet): MappedPet {
   const petStatus = pet.petStatus || "shelter";
   const speciesText = pet.type === "dog" ? "Собака" : "Кошка";
-  const genderText = pet.sex === "male" ? "Мальчик" : "Девочка";
+  const genderText = pet.sex === "male" ? "Мальчик" : pet.sex === "female" ? "Девочка" : pet.sex === "mixed" ? "Мальчики и девочки" : "Пол не указан";
   
   // Resolve breed
   const breedText = pet.type === "dog" 
@@ -51,9 +53,6 @@ export function normalizePetData(pet: StrapiPet): MappedPet {
   let primaryImage = "";
   let imagesList: string[] = [];
 
-  // Use first character's char code of the ID for consistent hash indexing
-  const idHash = pet.documentId ? pet.documentId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
-
   if (pet.photos && pet.photos.length > 0) {
     primaryImage = petsService.resolveMediaUrl(pet.photos[0].url);
     imagesList = pet.photos.map(photo => petsService.resolveMediaUrl(photo.url));
@@ -66,14 +65,11 @@ export function normalizePetData(pet: StrapiPet): MappedPet {
   let tag = "Ищет дом";
   if (petStatus === "home") {
     tag = "Дома";
-  } else if (idHash % 4 === 1) {
-    tag = "Новенький";
-  } else if (idHash % 4 === 2) {
-    tag = "Срочно";
   }
 
   return {
     id: pet.documentId,
+    slug: pet.slug,
     name: pet.name,
     species: speciesText,
     breed: breedText,
@@ -82,7 +78,7 @@ export function normalizePetData(pet: StrapiPet): MappedPet {
     image: primaryImage,
     images: imagesList,
     status: petStatus,
-    description: pet.shortDescr || pet.descr || "Ищет заботливую семью. Очень ласковый, послушный и приученный к порядку.",
+    description: pet.shortDescr || pet.descr || "О характере и привычках питомца расскажет куратор при знакомстве.",
     tag: tag,
     colorName,
     colorHex,
@@ -91,5 +87,11 @@ export function normalizePetData(pet: StrapiPet): MappedPet {
     friendliness: pet.friendliness || 3,
     trainability: pet.trainability || 3,
     socialized: pet.socialized !== undefined ? pet.socialized : true,
+    // Display only recorded assessments, never the matching algorithm's defaults.
+    characteristics: Object.fromEntries(
+      (['activity', 'friendliness', 'trainability'] as const)
+        .filter(key => Number.isInteger(pet[key]) && pet[key]! >= 1 && pet[key]! <= 5)
+        .map(key => [key, pet[key]])
+    ),
   };
 }

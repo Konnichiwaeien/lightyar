@@ -28,6 +28,17 @@ function media(
 
 const resolveMediaUrl = (url: string) => `https://cms.example.test${url}`;
 
+test("video covers are not repeated as a static image before the video", () => {
+  const poster = media(55, "/uploads/clip-poster.jpg", "image/jpeg");
+  const slides = buildNewsSlides({title:"Клип",mainImage:poster,attachments:[{
+    kind:"video",provider:"vk",title:"Клип",poster,externalUrl:"https://vk.com/video-12_88",
+  }]},resolveMediaUrl);
+  assert.deepEqual(slides.map(slide=>slide.kind),["video"]);
+  assert.equal(slides[0].kind === "video" && slides[0].poster,"https://cms.example.test/uploads/clip-poster.jpg");
+  const broken = buildNewsSlides({title:"Клип",mainImage:poster,attachments:[{kind:"video",provider:"vk",title:"Клип",poster}]},resolveMediaUrl);
+  assert.deepEqual(broken.map(slide=>slide.kind),["image"]);
+});
+
 test("buildNewsSlides keeps legacy images and never sends video media to Image", () => {
   const slides = buildNewsSlides(
     {

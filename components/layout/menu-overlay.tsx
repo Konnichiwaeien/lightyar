@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useLenis } from "@/components/ui/smooth-scroll";
@@ -20,6 +20,8 @@ const MENU_ITEMS = [
 export function MenuOverlay() {
   const [isOpen, setIsOpen] = useState(false);
   const savedScrollYRef = useRef(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const { getLenis } = useLenis();
 
   const open = useCallback(() => setIsOpen(true), []);
@@ -58,24 +60,57 @@ export function MenuOverlay() {
     }
   }, [isOpen, getLenis]);
 
-  // Escape key
+  // Keep keyboard and assistive-technology navigation inside the open dialog.
   useEffect(() => {
     if (!isOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]'));
+    const outside: { element: HTMLElement; inert: boolean }[] = [];
+    let branch: HTMLElement = dialog;
+    while (branch.parentElement) {
+      for (const sibling of Array.from(branch.parentElement.children)) {
+        if (sibling !== branch && sibling instanceof HTMLElement && !["SCRIPT", "STYLE", "LINK"].includes(sibling.tagName)) {
+          outside.push({ element: sibling, inert: sibling.inert });
+          sibling.inert = true;
+        }
+      }
+      if (branch.parentElement === document.body) break;
+      branch = branch.parentElement;
+    }
+    focusable()[0]?.focus({ preventScroll: true });
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") { e.preventDefault(); close(); }
+      if (e.key !== "Tab") return;
+      const elements = focusable();
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    };
+    const containFocus = (e: FocusEvent) => {
+      if (!dialog.contains(e.target as Node)) focusable()[0]?.focus({ preventScroll: true });
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("focusin", containFocus);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("focusin", containFocus);
+      outside.forEach(({ element, inert }) => { element.inert = inert; });
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
   }, [isOpen, close]);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={dialogRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: reduceMotion ? 0 : 0.5, ease: "easeInOut" }}
           role="dialog"
           aria-modal="true"
           aria-label="Главное меню"
@@ -114,10 +149,10 @@ export function MenuOverlay() {
               {MENU_ITEMS.map((item, i) => (
                 <div key={item.label} className="overflow-hidden px-14">
                   <motion.div
-                    initial={{ y: "100%" }}
+                    initial={{ y: reduceMotion ? 0 : "100%" }}
                     animate={{ y: 0 }}
-                    exit={{ y: "100%" }}
-                    transition={{ duration: 0.5, delay: i * 0.05 + 0.1, ease: [0.33, 1, 0.68, 1] }}
+                    exit={{ y: reduceMotion ? 0 : "100%" }}
+                    transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : i * 0.05 + 0.1, ease: [0.33, 1, 0.68, 1] }}
                   >
                     {/* Стрелка вынесена из потока: иначе она резервирует место
                         и подпись всё время стоит левее настоящего центра. */}

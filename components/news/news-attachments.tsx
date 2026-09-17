@@ -10,7 +10,7 @@ export function NewsAttachments({ items }: NewsAttachmentsProps) {
   if (items.length === 0) return null;
 
   return (
-    <section className="mx-auto mt-12 max-w-3xl" aria-labelledby="news-attachments-title">
+    <section className="news-article-attachments" aria-labelledby="news-attachments-title">
       <h2 id="news-attachments-title" className="mb-5 font-serif text-2xl text-[#1c1c1c]">
         Материалы к новости
       </h2>

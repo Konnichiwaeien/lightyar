@@ -8,6 +8,7 @@ import { requestDonationIntent } from "@/lib/donations/donation-intent";
 
 interface CampaignItem {
   id: string;
+  slug?: string;
   title: string;
   desc: string;
   current: number;
@@ -123,7 +124,7 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
                         Помочь
                       </button>
                       <Link
-                        href={`/campaigns/${fund.id}`}
+                        href={`/campaigns/${fund.slug || fund.id}`}
                         className="bg-white/10 text-white py-4 md:py-6 px-6 md:px-8 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest text-xs md:text-sm hover:bg-white/20 transition-all pointer-events-auto cursor-none flex items-center justify-center gap-2 border border-white/10 hover:border-white/30 transform hover:-translate-y-1 focus-visible:ring-4 focus-visible:ring-amber-500 focus-visible:outline-hidden"
                       >
                         <ArrowUpRight size={20} aria-hidden="true" />

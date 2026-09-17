@@ -31,7 +31,7 @@ export function YearArrivals({ data }: { data: YearReport }) {
         <ul className="reports-arrivals-grid">
           {data.arrived.map((pet, index) => (
             <li key={pet.documentId} style={{ "--i": index } as React.CSSProperties}>
-              <Link href={`/pets/${pet.documentId}`} className="reports-arrival">
+              <Link href={`/pets/${pet.slug || pet.documentId}`} className="reports-arrival">
                 <span className="reports-arrival-frame">
                   {pet.cover || pet.photo ? (
                     <Image src={(pet.cover || pet.photo)!} alt="" fill sizes="(max-width: 700px) 45vw, 20vw" />

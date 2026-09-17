@@ -57,7 +57,8 @@ export function FinancialFlow({
           {rows.map((row, index) => (
             <div key={row.label}>
               <dt>{row.label}</dt>
-              <div className={`reports-bar${row.soft ? " reports-bar--soft" : ""}`}>
+              <dd>
+              <div aria-hidden="true" className={`reports-bar${row.soft ? " reports-bar--soft" : ""}`}>
                 <motion.i
                   style={{ width: `${Math.max((Math.abs(row.value) / scale) * 100, row.value > 0 ? 1.5 : 0)}%` }}
                   initial={false}
@@ -65,7 +66,8 @@ export function FinancialFlow({
                   transition={{ duration: 1.2, delay: reduced ? 0 : index * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
-              <dd>{money(row.value)}</dd>
+              <span>{money(row.value)}</span>
+              </dd>
             </div>
           ))}
         </dl>

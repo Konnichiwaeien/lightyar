@@ -1,0 +1,62 @@
+.pets-cover{background:var(--pets-warm) url('/pets/paper-speckles.svg');overflow:clip}
+.pets-cover__inner{position:relative;isolation:isolate;max-width:1800px;min-height:730px;margin:auto;padding:16px 32px 330px}
+.pets-cover__copy{position:relative;z-index:3;text-align:center;max-width:700px;margin:auto}
+.pets-cover h1{font-size:clamp(3.2rem,6.4vw,6.2rem);font-weight:600;line-height:1.1;letter-spacing:-.045em}
+.pets-cover h1 span{display:block;width:fit-content;margin:10px auto 0;padding:0 .16em .11em;background:var(--pets-amber);font-family:var(--font-playfair),serif;font-weight:500;font-style:italic;letter-spacing:-.035em}
+.pets-cover__copy>p{max-width:44ch;margin:24px auto;font-size:17px;line-height:1.6;color:#544e43}
+.pets-cover__intro{text-wrap:pretty}
+.pets-cover__intro>strong{display:block;margin-bottom:8px;font-size:1.12em;line-height:1.4;font-weight:500;color:var(--pets-ink)}
+.pets-cover__intro em{font-family:var(--font-playfair),serif;font-size:1.12em;font-weight:500;color:#8c580e}
+.pets-cover__intro mark{padding:.08em .24em;background:#f5cf81;color:#493619;border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.pets-cover__intro>span{display:block;text-wrap:balance}
+.pets-cover__scene{position:absolute;inset:auto 0 -70px;z-index:-1;pointer-events:none}
+.pets-cover__scene img{display:block;width:100%;height:auto}
+.pets-cover__collage{position:absolute;inset:0;pointer-events:none;z-index:2}
+.pets-cover__animal{position:absolute;height:auto;object-fit:contain;filter:drop-shadow(0 6px 2px #45321a12);transform:rotate(var(--tilt,0deg))}
+.pets-cover__animal--dzhek{width:26%;left:3%;bottom:40px;--tilt:-5deg;--enter-delay:100ms}
+.pets-cover__animal--silviya{width:17%;left:18%;bottom:16px;--tilt:5deg;--enter-delay:180ms}
+.pets-cover__animal--tessi{width:17%;left:34%;bottom:17px;--tilt:-6deg;--enter-delay:250ms}
+.pets-cover__animal--bim{display:none}
+.pets-cover__animal--kapral{width:16%;right:14%;bottom:15px;--tilt:-4deg;--enter-delay:350ms}
+.pets-cover__animal--tisha{width:23%;right:25%;bottom:22px;--tilt:3deg;--enter-delay:300ms}
+
+
+@media(min-width:1800px){.pets-cover__inner{min-height:790px;padding-top:10px}.pets-cover__scene{bottom:-95px}}
+@media(min-width:1200px) and (max-width:1399px){.pets-cover__inner{min-height:690px;padding-bottom:285px}.pets-cover__animal--tisha{right:22%}}
+@media(min-width:600px) and (max-width:1199px){
+  .pets-cover__inner{min-height:770px;padding:14px 28px 390px}
+  .pets-cover__copy{max-width:610px}.pets-cover h1{font-size:clamp(3.4rem,7.5vw,5.5rem)}
+  .pets-cover__copy>p{max-width:41ch;font-size:16px}
+  .pets-cover__scene{bottom:-100px;width:100%;max-width:1000px;margin:auto}
+  .pets-cover__animal--dzhek{width:32%;left:2%;bottom:60px}
+  .pets-cover__animal--silviya{width:24%;left:20%;bottom:36px}
+  .pets-cover__animal--tessi{width:22%;left:42%;bottom:22px}
+  .pets-cover__animal--bim{display:none}
+  .pets-cover__animal--kapral{display:none}
+  .pets-cover__animal--tisha{width:30%;right:14%;bottom:48px}
+
+}
+@media(min-width:600px) and (max-width:799px){.pets-cover__inner{min-height:720px;padding-bottom:350px}.pets-cover__scene{bottom:-70px}.pets-cover__animal--dzhek{bottom:32px}}
+@media(max-width:599px){
+  .pets-cover__inner{min-height:600px;padding:8px 20px 235px}
+  .pets-cover__copy{max-width:420px}
+  .pets-cover h1{font-size:clamp(2.5rem,9.1vw,3.4rem);line-height:1.14}
+  .pets-cover__copy>p{font-size:15px;line-height:1.6;margin:20px auto;max-width:34ch}
+  .pets-cover__copy .pets-button{font-size:14px;padding:13px 20px}
+  .pets-cover__scene{bottom:-12px;inset-inline:0}
+  .pets-cover__animal--dzhek{width:49%;left:3%;bottom:38px;--tilt:-4deg}
+  .pets-cover__animal--silviya,.pets-cover__animal--bim{display:none}
+  .pets-cover__animal--tessi{width:29%;left:35%;bottom:10px;--tilt:-6deg}
+  .pets-cover__animal--kapral{display:none}
+  .pets-cover__animal--tisha{width:39%;right:7%;bottom:26px;--tilt:4deg}
+
+
+}
+@media(max-width:359px){.pets-cover__inner{min-height:600px;padding-bottom:235px}}
+@media(prefers-reduced-motion:no-preference){
+  .pets-cover__copy{animation:pets-copy-in 600ms cubic-bezier(.22,1,.36,1) both}
+  .pets-cover__animal{animation:pets-animal-in 750ms cubic-bezier(.22,1,.36,1) var(--enter-delay,0ms) both}
+
+  @keyframes pets-copy-in{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
+  @keyframes pets-animal-in{from{opacity:0;translate:0 28px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+}

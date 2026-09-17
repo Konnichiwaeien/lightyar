@@ -26,6 +26,7 @@ const CENSUS_QUERY = [
   "fields[9]=sterilized",
   "fields[10]=weight",
   "fields[11]=height",
+  "fields[12]=slug",
   "populate[photos][fields][0]=url",
   "populate[photos][fields][1]=formats",
   "populate[photos][fields][2]=width",
@@ -37,6 +38,7 @@ const CENSUS_QUERY = [
 /** Карточка подопечного для поля «лиц»: минимум, достаточный для кружка и ссылки */
 export interface CensusPet {
   documentId: string;
+  slug?: string;
   name: string;
   photo?: string;
   /** Тот же кадр крупно: кружку хватает превью, плитке в тримапе нет */
@@ -69,6 +71,7 @@ function parseWeight(value: number | string | null | undefined): number | undefi
 
 interface StrapiCensusPet extends PetStatsInput {
   documentId: string;
+  slug?: string;
   name: string;
   birthDate?: string | null;
   sex?: string | null;
@@ -93,7 +96,7 @@ export class PetStatsService extends StrapiClient {
    * Сводка по всем подопечным. Отчётность обновляется редко, поэтому кэш
    * держится час: постоянно пересчитывать 79 карточек на каждый визит незачем.
    */
-  async getPetStats(): Promise<PetStats> {
+  async getPetStats({ throwOnError = false } = {}): Promise<PetStats> {
     try {
       const response = await this.fetchJson<StrapiResponseCollection<PetStatsInput>>(
         `/pets?${STATS_QUERY}`,
@@ -102,6 +105,7 @@ export class PetStatsService extends StrapiClient {
       return buildPetStats(response.data || []);
     } catch (error) {
       console.error("[PetStatsService] getPetStats failed:", error);
+      if (throwOnError) throw error;
       return EMPTY_PET_STATS;
     }
   }
@@ -124,6 +128,7 @@ export class PetStatsService extends StrapiClient {
         const intakeYear = pet.intakeDate ? Number(String(pet.intakeDate).slice(0, 4)) : undefined;
         return {
           documentId: pet.documentId,
+          slug: pet.slug,
           name: pet.name,
           photo: source ? this.resolveMediaUrl(source) : undefined,
           cover: large ? this.resolveMediaUrl(large) : undefined,
@@ -144,7 +149,7 @@ export class PetStatsService extends StrapiClient {
             const width = format?.width ?? photo.width;
             const height = format?.height ?? photo.height;
             return url && width && height ? [{ src: this.resolveMediaUrl(url), width, height }] : [];
-          }),
+          }),
           inTreatment: pet.undergoingTreatment === true && pet.petStatus !== "home",
         };
       });

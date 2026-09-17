@@ -14,6 +14,7 @@ export interface WishlistItem {
 }
 
 export interface WishlistSettings {
+  acceptingOrders?: boolean;
   pickupAddress?: string;
   marketplaceName: string;
   marketplaceUrl?: string;
@@ -35,6 +36,7 @@ interface StrapiWishlistItem {
 }
 
 interface StrapiWishlistSettings {
+  acceptingOrders?: boolean;
   pickupAddress?: string | null;
   marketplaceName?: string | null;
   marketplaceUrl?: string | null;
@@ -43,6 +45,10 @@ interface StrapiWishlistSettings {
 }
 
 const DEFAULT_SETTINGS: WishlistSettings = { marketplaceName: "Ozon" };
+function safeLink(value?: string | null): string | undefined {
+  try { const url = new URL(value?.trim() || ""); return url.protocol === "https:" ? url.href : undefined; }
+  catch { return undefined; }
+}
 
 export class WishlistService extends StrapiClient {
   async getItems(): Promise<WishlistItem[]> {
@@ -58,7 +64,7 @@ export class WishlistService extends StrapiClient {
         specs: item.specs?.trim() || undefined,
         approxPrice: item.approxPrice === null || item.approxPrice === undefined ? undefined : Number(item.approxPrice),
         image: item.image?.url ? this.resolveMediaUrl(item.image.url) : undefined,
-        marketplaceUrl: item.marketplaceUrl?.trim() || undefined,
+        marketplaceUrl: safeLink(item.marketplaceUrl),
         note: item.note?.trim() || undefined,
         urgent: item.urgency === "urgent",
       }));
@@ -77,11 +83,12 @@ export class WishlistService extends StrapiClient {
       const data = response.data;
       if (!data) return DEFAULT_SETTINGS;
       return {
+        acceptingOrders: data.acceptingOrders === true && Boolean(data.pickupAddress?.trim()) && process.env.GIFT_ORDERS_ENABLED === "true" && Boolean(process.env.STRAPI_GIFT_WRITE_TOKEN),
         pickupAddress: data.pickupAddress?.trim() || undefined,
         marketplaceName: data.marketplaceName?.trim() || DEFAULT_SETTINGS.marketplaceName,
-        marketplaceUrl: data.marketplaceUrl?.trim() || undefined,
+        marketplaceUrl: safeLink(data.marketplaceUrl),
         instructions: data.instructions?.trim() || undefined,
-        contactUrl: data.contactUrl?.trim() || undefined,
+        contactUrl: safeLink(data.contactUrl),
       };
     } catch (error) {
       console.error("[WishlistService] getSettings failed; using defaults:", error);

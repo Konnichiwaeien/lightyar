@@ -1,26 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/seo/site";
-import { Golos_Text, Playfair_Display } from "next/font/google";
+import "./fonts.css";
 import "./globals.css";
-
-// Наборный шрифт: кириллица родная, рисовалась под русский язык,
-// а не пририсовывалась к латинице — для ярославского фонда это уместнее нейтрального гротеска
-const golos = Golos_Text({
-  variable: "--font-golos",
-  subsets: ["latin", "cyrillic"],
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  adjustFontFallback: true,
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin", "cyrillic"],
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-  adjustFontFallback: true,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -64,7 +45,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ru" className={`${golos.variable} ${playfair.variable} antialiased`}>
+    <html lang="ru" data-scroll-behavior="smooth" className="antialiased">
+      <head>
+        <link rel="preload" href="/fonts/ffe0837c71e69159-s.p.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/47f136985ef5b5cb-s.p.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-screen overflow-x-hidden">
         <CursorProvider>
           <SmoothScroll>

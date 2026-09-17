@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/page-metadata";
 import { HandCoins, Wallet, Users } from "lucide-react";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { DocumentStack } from "@/components/reports/document-stack";
@@ -24,6 +25,7 @@ import type { FinancialSummary, TrustNote } from "@/lib/reports/normalize-report
 import "@/components/reports/reports.css";
 
 export const metadata: Metadata = {
+  ...pageMetadata("Отчётность", "Итоги работы АНБО «Светлый» с октября 2024 года: подопечные, движение средств и годовые отчёты с исходными документами.", "/reports"),
   title: "Отчётность",
   description:
     "Итоги работы АНБО «Светлый» с октября 2024 года: подопечные, движение средств и годовые отчёты с исходными документами.",

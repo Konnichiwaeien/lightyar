@@ -10,6 +10,7 @@ export class CampaignsService extends StrapiClient {
     sort?: string;
     limit?: number;
     start?: number;
+    petId?: string;
   }): Promise<StrapiResponseCollection<StrapiCampaign>> {
     try {
       const sortQuery = options?.sort || "createdAt:desc";
@@ -19,6 +20,7 @@ export class CampaignsService extends StrapiClient {
       if (options?.status) {
         query += `&filters[status][$eq]=${options.status}`;
       }
+      if (options?.petId) query += `&filters[pet][documentId][$eq]=${encodeURIComponent(options.petId)}`;
       if (options?.limit) {
         query += `&pagination[limit]=${options.limit}`;
       }
@@ -41,19 +43,17 @@ export class CampaignsService extends StrapiClient {
    */
   async getCampaignByIdOrSlug(idOrSlug: string): Promise<StrapiCampaign | null> {
     try {
-      // In Strapi v5, we can check by documentId directly, or look up by slug.
-      // Let's check both: first try fetching by documentId. If that fails or is empty, we search by slug.
-      let response;
-      try {
-        response = await this.fetchJson<{ data: StrapiCampaign }>(
-          `/campaigns/${idOrSlug}?populate[0]=images&populate[1]=pet&populate[2]=pet.photos&populate[3]=donations`,
-          { next: { revalidate: 60 } }
-        );
-        if (response && response.data) {
-          return response.data;
+      // Avoid a guaranteed 404 request for a human-readable slug.
+      if (/^[a-z0-9]{24}$/.test(idOrSlug)) {
+        try {
+          const response = await this.fetchJson<{ data: StrapiCampaign }>(
+            `/campaigns/${encodeURIComponent(idOrSlug)}?populate[0]=images&populate[1]=pet&populate[2]=pet.photos&populate[3]=donations`,
+            { next: { revalidate: 60 } },
+          );
+          if (response?.data) return response.data;
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("404")) throw error;
         }
-      } catch {
-        // Document ID not found or invalid format, try searching by slug
       }
 
       // If documentId fetch failed, try slug filter

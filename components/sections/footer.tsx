@@ -11,7 +11,7 @@ import Link from "next/link";
 import { ShdkTerminal } from "@/components/ui/shdk-terminal";
 import { useCursor } from "@/components/ui/cursor-context";
 import { BrandLogo } from "@/components/ui/brand-logo";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const DOCUMENTS = [
   { name: "Отчёт о благотворительной деятельности за 2024 год", size: "13 КБ", href: "/documents/charity-2024.docx" },
@@ -44,6 +44,7 @@ const VKIcon = ({ size = 20 }: { size?: number }) => (
 export function Footer() {
   const { textEnter, textLeave } = useCursor();
   const [showReq, setShowReq] = useState(false);
+  const reduceMotion = useReducedMotion();
   const cursorClass = "cursor-none";
 
   return (
@@ -73,7 +74,7 @@ export function Footer() {
               >
                 Светлый.
               </Link>
-              <p className="text-[15px] text-[#1c1c1c]/60 leading-relaxed font-light max-w-[300px]">
+              <p className="text-[15px] text-[#1c1c1c]/70 leading-relaxed font-light max-w-[300px]">
                 АНБО «Светлый» помогает бездомным и попавшим в беду животным в Ярославле. Даём им временный дом и уход, учим снова доверять людям и ищем ответственных хозяев.
               </p>
             </div>
@@ -81,9 +82,9 @@ export function Footer() {
 
           {/* Column 2: Compact Contacts */}
           <div className="lg:pl-8">
-            <h4 className="mb-5 text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
+            <h2 className="mb-5 text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/70 font-sans">
               Связаться с нами
-            </h4>
+            </h2>
             <div className="text-[15px] text-[#1c1c1c]/80 font-light">
               <div className="space-y-2">
                 <a
@@ -94,23 +95,23 @@ export function Footer() {
                   onMouseEnter={textEnter}
                   onMouseLeave={textLeave}
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#1c1c1c]/5 flex items-center justify-center text-[#1c1c1c]/60 group-hover:bg-amber-100 group-hover:text-amber-700 group-focus-visible:bg-amber-100 group-focus-visible:text-amber-700 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-[#1c1c1c]/5 flex items-center justify-center text-[#1c1c1c]/70 group-hover:bg-amber-100 group-hover:text-amber-700 group-focus-visible:bg-amber-100 group-focus-visible:text-amber-700 transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none shrink-0">
                     <VKIcon size={16} />
                   </div>
                   <span className="decoration-amber-500/60 decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">Написать нам в ВК</span>
                 </a>
-                <p className="text-[13px] text-[#1c1c1c]/50 leading-relaxed font-light pl-11">
+                <p className="text-[13px] text-[#1c1c1c]/70 leading-relaxed font-light pl-11">
                   Хотите помочь или узнать о подопечных? Напишите нам во ВКонтакте. Ответим, как только сможем.
                 </p>
               </div>
 
               <div className="mt-5 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#1c1c1c]/5 flex items-center justify-center text-[#1c1c1c]/60 shrink-0">
-                  <MapPin size={14} />
+                <div className="w-8 h-8 rounded-full bg-[#1c1c1c]/5 flex items-center justify-center text-[#1c1c1c]/70 shrink-0">
+                  <MapPin aria-hidden="true" size={14} />
                 </div>
                 <div className="leading-tight pt-1">
                   <span className="block font-medium">г. Ярославль</span>
-                  <span className="text-[11px] text-[#1c1c1c]/40">точный адрес по запросу</span>
+                  <span className="text-[11px] text-[#1c1c1c]/70">точный адрес по запросу</span>
                 </div>
               </div>
             </div>
@@ -118,9 +119,9 @@ export function Footer() {
 
           {/* Column 3: Documents and Requisites Trigger */}
           <div className="space-y-6">
-            <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/40 font-sans">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#1c1c1c]/70 font-sans">
               Документы и реквизиты
-            </h4>
+            </h2>
             
             <ul className="space-y-2 text-sm">
               {DOCUMENTS.map((doc) => (
@@ -133,11 +134,11 @@ export function Footer() {
                     onMouseLeave={textLeave}
                   >
                     <span className="flex items-center gap-2 truncate">
-                      <FileText size={14} className="text-[#1c1c1c]/40 shrink-0" />
+                      <FileText aria-hidden="true" size={14} className="text-[#1c1c1c]/70 shrink-0" />
                       <span className="truncate font-medium decoration-amber-500/60 decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">{doc.name}</span>
                     </span>
                     <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-amber-700 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-focus-visible:opacity-100 group-focus-visible:translate-x-0 transition-[opacity,translate,scale,rotate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none motion-reduce:transform-none">
-                      {doc.size} <Download size={10} />
+                      {doc.size} <Download aria-hidden="true" size={10} />
                     </div>
                   </a>
                 </li>
@@ -162,7 +163,7 @@ export function Footer() {
               onMouseLeave={textLeave}
             >
               <span>Юридические реквизиты</span>
-              <ChevronDown size={14} className={`text-[#1c1c1c]/40 group-hover:text-amber-700 group-focus-visible:text-amber-700 transition-[color,translate,scale,rotate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${showReq ? "rotate-180" : ""}`} />
+              <ChevronDown aria-hidden="true" size={14} className={`text-[#1c1c1c]/70 group-hover:text-amber-700 group-focus-visible:text-amber-700 transition-[color,translate,scale,rotate] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${showReq ? "rotate-180" : ""}`} />
             </button>
           </div>
         </div>
@@ -177,33 +178,33 @@ export function Footer() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: reduceMotion ? 0 : 0.3 }}
               className="overflow-hidden border-b border-[#1c1c1c]/10"
             >
               <div className="py-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-xs font-mono text-[#1c1c1c]/70 bg-white/50 rounded-2xl px-6 my-4 border border-[#1c1c1c]/5 shadow-2xs">
                 <div>
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">ИНН</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">ИНН</span>
                   <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.inn}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">КПП</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">КПП</span>
                   <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.kpp}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">ОГРН</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">ОГРН</span>
                   <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.ogrn}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">БИК</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">БИК</span>
                   <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.bik}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">Расчетный счет</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">Расчетный счет</span>
                   <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.account}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/40 uppercase block mb-1">Банк получателя</span>
-                  <span className="text-sm font-medium text-white/0 text-[#1c1c1c]">{REQUISITES.bank}</span>
+                  <span className="text-[9px] font-sans font-bold text-[#1c1c1c]/70 uppercase block mb-1">Банк получателя</span>
+                  <span className="text-sm font-medium text-[#1c1c1c]">{REQUISITES.bank}</span>
                 </div>
               </div>
             </motion.div>
@@ -212,12 +213,12 @@ export function Footer() {
 
         {/* Нижняя строка: юридическое имя фонда слева, подпись разработчика справа */}
         <div className="pt-8 md:pt-12 lg:pt-16 border-t border-[#1c1c1c]/10 flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col items-center lg:items-start gap-2 text-center lg:text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1c1c1c]/45">
+          <div className="flex flex-col items-center lg:items-start gap-2 text-center lg:text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1c1c1c]/70">
             <div className="flex flex-col sm:flex-row items-center gap-x-6 gap-y-1">
               <span>© {new Date().getFullYear()} АНБО «Светлый»</span>
               <span>Все права защищены</span>
             </div>
-            <span className="normal-case tracking-normal text-[12px] text-[#1c1c1c]/40">
+            <span className="normal-case tracking-normal text-[12px] text-[#1c1c1c]/70">
               Ярославль · помощь бездомным животным
             </span>
           </div>

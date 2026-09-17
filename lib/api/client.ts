@@ -39,6 +39,8 @@ export class StrapiClient {
     const config: RequestInit = {
       ...options,
       headers,
+      // One deadline covers retries as well as response-body reads.
+      signal: options?.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000),
     };
     const method = (config.method || "GET").toUpperCase();
     const retryDelays = method === "GET" ? GET_RETRY_DELAYS_MS : [0];
@@ -51,6 +53,7 @@ export class StrapiClient {
       }
 
       try {
+        config.signal?.throwIfAborted();
         const response = await fetch(url, config);
         if (!response.ok) {
           const error = new Error(`Strapi API Error: ${response.status} ${response.statusText} for ${url}`);
@@ -69,7 +72,7 @@ export class StrapiClient {
         return await response.json() as T;
       } catch (error) {
         const isHttpError = error instanceof Error && error.message.startsWith("Strapi API Error:");
-        const canRetry = method === "GET" && !isHttpError && attempt < retryDelays.length - 1;
+        const canRetry = method === "GET" && !isHttpError && !config.signal?.aborted && attempt < retryDelays.length - 1;
 
         if (canRetry) {
           lastError = error;

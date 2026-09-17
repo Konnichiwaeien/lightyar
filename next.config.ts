@@ -14,8 +14,8 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${developmentScriptPolicy}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "img-src 'self' data: blob: https://storage.yandexcloud.net",
-  "media-src 'self' blob: https://storage.yandexcloud.net",
+  "img-src 'self' data: blob: https://storage.yandexcloud.net https://s3.twcstorage.ru",
+  "media-src 'self' blob: https://storage.yandexcloud.net https://s3.twcstorage.ru",
   `connect-src 'self'${process.env.NODE_ENV === "development" ? " ws: http://localhost:1443 http://127.0.0.1:1443" : ""}`,
 ].join("; ");
 
@@ -32,8 +32,15 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'swiper'],
   },
   images: {
+    qualities: [75, 90],
     ...(process.env.NODE_ENV === 'development' ? { dangerouslyAllowLocalIP: true } : {}),
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s3.twcstorage.ru",
+        pathname: "/424f064a-878c-480c-8980-cdf6c368ff22/**",
+        search: "",
+      },
       {
         protocol: "https",
         hostname: "storage.yandexcloud.net",

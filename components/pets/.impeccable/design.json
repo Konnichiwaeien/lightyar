@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T22:59:17.405Z",
+  "title": "Design System: Светлый — питомцы",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "profile-action",
+        "value": "0 4px 12px #68543809",
+        "purpose": "Resting detail light action."
+      },
+      {
+        "name": "profile-action-hover",
+        "value": "0 6px 18px #5a42221a",
+        "purpose": "Hover lift for detail light actions."
+      },
+      {
+        "name": "catalog-card",
+        "value": "0 5px 16px #2e262006",
+        "purpose": "Resting catalog card."
+      },
+      {
+        "name": "catalog-card-hover",
+        "value": "0 18px 42px #35221212",
+        "purpose": "Catalog card on hover."
+      }
+    ],
+    "motion": [
+      {
+        "name": "profile-action",
+        "value": "220ms ease",
+        "purpose": "Detail action background, shadow, and transform transitions."
+      },
+      {
+        "name": "profile-photo",
+        "value": "340ms Swiper slide",
+        "purpose": "Visitor-controlled photo transition; no autoplay."
+      },
+      {
+        "name": "profile-related-photo",
+        "value": "550ms cubic-bezier(.2,.7,.3,1)",
+        "purpose": "Related image hover scale."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "(prefers-reduced-motion: reduce)",
+        "purpose": "Disable local animations and transitions; retain native immediate anchor scrolling."
+      },
+      {
+        "name": "profile-modal",
+        "value": "300ms enter / 180ms exit",
+        "purpose": "Framer Motion opacity and restrained transform; native focus trap remains through exit."
+      },
+      {
+        "name": "profile-form",
+        "value": "280ms cubic-bezier(.22,1,.36,1)",
+        "purpose": "Identity height and cadence highlight preserve continuity; zero duration under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "detail-large",
+        "value": "1800px"
+      },
+      {
+        "name": "detail-intermediate-max",
+        "value": "1100px"
+      },
+      {
+        "name": "detail-mobile-max",
+        "value": "767px"
+      },
+      {
+        "name": "detail-related-single-max",
+        "value": "599px"
+      },
+      {
+        "name": "catalog-two-columns-max",
+        "value": "999px"
+      },
+      {
+        "name": "catalog-mobile-controls-max",
+        "value": "700px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Detail light action",
+      "kind": "button",
+      "refersTo": "profile-button",
+      "description": "Contact and introduction action on warm paper or amber.",
+      "html": "<button class=\"ds-profile-button\">Давайте знакомиться</button>",
+      "css": ".ds-profile-button{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:14px 23px;background:#fffcf5;color:#24231f;border:1px solid #d3c6b2;border-radius:40px;font-size:16px;font-weight:500;line-height:1.35;font-family:var(--font-golos),sans-serif;box-shadow:0 4px 12px #68543809;transition:background-color .22s ease,box-shadow .22s ease,transform .22s ease}.ds-profile-button:hover{background:#fff;box-shadow:0 6px 18px #5a42221a;transform:translateY(-2px)}.ds-profile-button:focus-visible{outline:3px solid #795013;outline-offset:5px}.ds-profile-button:active{transform:translateY(1px) scale(.98)}@media(prefers-reduced-motion:reduce){button,a,input{transition:none!important;animation:none!important}}"
+    },
+    {
+      "name": "Catalog dark action",
+      "kind": "button",
+      "refersTo": "catalog-button",
+      "description": "Existing catalog action variant.",
+      "html": "<button class=\"ds-catalog-button\">Познакомиться</button>",
+      "css": ".ds-catalog-button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:15px 24px;border:0;border-radius:999px;background:#24231f;color:#fff;font-size:15px;font-weight:500;font-family:var(--font-golos),sans-serif;transition:transform 180ms cubic-bezier(.22,1,.36,1),background-color 180ms ease,box-shadow 220ms ease}.ds-catalog-button:hover{background:#f59e0b;color:#24231f;box-shadow:0 5px 16px #d4932029;transform:translateY(-2px)}.ds-catalog-button:focus-visible{outline:3px solid #8c4809;outline-offset:4px;background:#f59e0b;color:#24231f;box-shadow:0 0 0 5px #f59e0b26}.ds-catalog-button:active{transform:scale(.96)}@media(prefers-reduced-motion:reduce){button,a,input{transition:none!important;animation:none!important}}"
+    },
+    {
+      "name": "Catalog search field",
+      "kind": "input",
+      "description": "Search shell and field, extracted without router behavior.",
+      "html": "<label class=\"ds-search\">Имя питомца<div><input type=\"search\" placeholder=\"Имя питомца\" aria-label=\"Имя питомца\" /><button type=\"button\">Найти</button></div></label>",
+      "css": ".ds-search{display:block;max-width:610px;color:#625d54;font-size:13px;font-family:var(--font-golos),sans-serif;}.ds-search>div{display:flex;gap:8px;padding:6px;border:1px solid #ded7cc;border-radius:999px;background:#fff;box-shadow:0 2px 3px #24231f03}.ds-search input{width:100%;min-width:0;min-height:48px;padding:10px 12px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:15px;color:#24231f}.ds-search input::placeholder{color:#716b61;opacity:1}.ds-search button{min-height:48px;padding:10px 23px;background:#f59e0b;color:#35230d;border:0;border-radius:999px;font:inherit;font-weight:600}.ds-search>div:focus-within{border-color:#a36b21;box-shadow:0 0 0 4px #c48a2420}.ds-search :is(input,button):focus-visible{outline:3px solid #8c4809;outline-offset:4px}.ds-search button:hover{background:#ed9408}.ds-search button:active{transform:scale(.96)}"
+    },
+    {
+      "name": "Detail breadcrumb",
+      "kind": "nav",
+      "description": "Quiet route back to the catalog with the current animal name.",
+      "html": "<nav class=\"ds-breadcrumb\" aria-label=\"Хлебные крошки\"><a href=\"/pets\">Все питомцы</a><span aria-hidden=\"true\">/</span><span aria-current=\"page\">Имя питомца</span></nav>",
+      "css": ".ds-breadcrumb{display:flex;align-items:center;gap:16px;color:#625d54;font-size:14px;font-family:var(--font-golos),sans-serif;}.ds-breadcrumb a{display:inline-flex;align-items:center;min-height:44px;color:#24231f;text-decoration:none}.ds-breadcrumb [aria-current]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-breadcrumb a:hover{color:#8c580e}.ds-breadcrumb a:focus-visible{outline:3px solid #795013;outline-offset:5px}.ds-breadcrumb a:active{transform:translateY(1px) scale(.98)}"
+    },
+    {
+      "name": "Detail status labels",
+      "kind": "chip",
+      "refersTo": "profile-seeking-status",
+      "description": "Read-only state labels; green home state is not a filter.",
+      "html": "<div class=\"ds-status-row\"><span class=\"ds-status\">Ищет дом</span><span class=\"ds-status ds-status-home\">Уже дома</span></div>",
+      "css": ".ds-status-row{display:flex;flex-wrap:wrap;gap:12px}.ds-status{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#fff9e9;color:#785015;border:1px solid #d9bc86;border-radius:30px;font-size:14px;font-family:var(--font-golos),sans-serif;}.ds-status-home{background:#e9efdf;color:#3b552e;border-color:#a9b598}"
+    },
+    {
+      "name": "Catalog card container",
+      "kind": "card",
+      "refersTo": "catalog-card",
+      "description": "Catalog card shell with a neutral specimen label; detail facts do not use this container.",
+      "html": "<article class=\"ds-pet-card\"><div class=\"ds-pet-card-body\"><h2><a href=\"/pets\">Имя питомца</a></h2><p>Карточка каталога</p></div></article>",
+      "css": ".ds-pet-card{max-width:360px;border:1px solid #e2dbcf;border-radius:30px;background:#fff;color:#24231f;overflow:clip;box-shadow:0 5px 16px #2e262006;font-family:var(--font-golos),sans-serif;transition:transform 280ms cubic-bezier(.22,1,.36,1),box-shadow 280ms ease,border-color 220ms ease}.ds-pet-card-body{padding:24px}.ds-pet-card h2{font-family:var(--font-playfair),serif;font-size:clamp(1.9rem,2.5vw,2.6rem);line-height:1.25;margin:0}.ds-pet-card a{color:inherit;text-decoration:none}.ds-pet-card p{font-size:14px;line-height:1.7;color:#625d54}.ds-pet-card:hover{transform:translateY(-5px);border-color:#d5bea0;box-shadow:0 18px 42px #35221212}.ds-pet-card:focus-within{border-color:#c7a16b;box-shadow:0 12px 30px #3222140d}.ds-pet-card a:focus-visible{outline:3px solid #8c4809;outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-pet-card{transition:none}.ds-pet-card:hover{transform:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Реальный портрет и честная анкета",
+    "overview": "The owner rejected the arched gallery, outer white frame, and tablet two-column profile. The gallery now sits directly on paper; at 1100px and below the opening uses a single reading column. Status and favorite sit together. Full-width temperament tracks use amber, rose and sage with numeric values. The duplicate story collage is removed; real extra facts remain in a disclosure. Swiper drives both gallery views. Framer Motion animates the light modal and form changes. Pet-specific active campaigns and donors follow the form. Personal support pairs handmade paper care decor with a compact photo-identified form. The contact envelope and action sit above three meeting steps. Playfair names, badges, visible icons and working interactions remain. The profile name uses the homepage amber underline while retaining Playfair and responsive wrapping.",
+    "keyCharacteristics": [
+      "Warm paper and amber fields with dark, readable type.",
+      "Real shelter photography carries the identity of each animal.",
+      "Golos for interface text; Playfair for animal names and selected emphasis.",
+      "Consistent section rhythm within each surface and breakpoint.",
+      "Quiet, reversible interactions that respect reduced motion."
+    ],
+    "rules": [],
+    "dos": [
+      "Do preserve the pinned paper, amber, Golos, Playfair, and real-photo identity.",
+      "Do keep animal captions readable and long factual content able to wrap.",
+      "Do keep detail section spacing consistent within each breakpoint.",
+      "Do retain keyboard focus, pressed states, explicit labels, and reduced-motion behavior.",
+      "Do validate missing data, missing images, home status, and narrow screens alongside the complete profile."
+    ],
+    "donts": [
+      "Don't turn the detail composition into a replacement identity for the whole site.",
+      "Don't invent animal facts, ratings, vaccination status, or biography to fill the layout.",
+      "Do not reintroduce an arched gallery, ruled table-like facts, or remove catalog-style badges and icons.",
+      "Don't add autoplay, hide the full-photo option, or reintroduce removed detail eyebrow labels.",
+      "Don't claim this documentation itself establishes browser or accessibility test coverage."
+    ]
+  }
+}

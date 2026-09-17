@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   # Проверки идут до деплоя: без них сломанный контракт доезжает до прода,
   # потому что next build падает только на ошибке компиляции, а не на упавшем тесте.
@@ -39,93 +43,27 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     environment: prod
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Require pinned SSH host identity
+        env:
+          FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
+        run: test -n "$FINGERPRINT"
 
-      - name: SSH & Deploy
+      - name: Deploy verified commit with rollback and health checks
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          command_timeout: 30m
           script: |
-            # ==============================================================================
-            # 1. Настройка окружения и строгий режим выполнения
-            # ==============================================================================
-            set -euo pipefail
+            set -eu
             cd /home/lightyar
-
-            # ==============================================================================
-            # 2. Обновление кода из репозитория
-            # ==============================================================================
-            echo "🔄 Обновление кода"
-            git fetch --prune
-            git pull --ff-only origin master
-            echo "✅ Код успешно обновлен!"
-
-            # ==============================================================================
-            # 3. Настройка Node.js через nvm
-            # ==============================================================================
-            echo "🚀 Активация Node.js через nvm..."
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            echo "ℹ️ Версия Node.js: $(node -v)"
-            echo "ℹ️ Версия npm: $(npm -v)"
-
-            # ==============================================================================
-            # 4. Установка зависимостей и сборка проекта
-            # ==============================================================================
-            echo "🔧 Установка production-зависимостей..."
-            npm ci
-
-            echo "Удаление прошлой сборки"
-            rm -rf .next
-
-            echo "🏗️ Сборка проекта..."
-            npm run build
-            echo "✅ Сборка успешно завершена!"
-
-            # ==============================================================================
-            # 5. Работа с PM2 через ecosystem.config.js
-            # ==============================================================================
-            echo "🚀 Настройка PM2 через ecosystem.config.js..."
-
-            # 5.1. Проверяем существование приложения
-            if pm2 id lightyar >/dev/null 2>&1; then
-                echo "🔄 Приложение существует, выполняем reload..."
-                
-                # 5.2. Обновляем конфигурацию из ecosystem-файла
-                pm2 reload ecosystem.config.js --only lightyar
-                
-                # 5.3. Сохраняем список процессов для автозапуска
-                pm2 save
-            else
-                echo "⭐ Приложение не найдено, выполняем первый запуск..."
-                
-                # 5.4. Запускаем приложение по конфигурации
-                pm2 start ecosystem.config.js --only lightyar
-                
-                # 5.5. Настраиваем автозапуск
-                pm2 startup
-                pm2 save
-            fi
-
-            # ==============================================================================
-            # 6. Проверка статуса
-            # ==============================================================================
-            echo "✅ Деплой завершен! Текущий статус:"
-            pm2 status lightyar
-
-            for attempt in $(seq 1 30); do
-              if curl --fail --silent --show-error http://127.0.0.1:3003/ >/dev/null; then
-                echo "✅ Frontend health check пройден"
-                exit 0
-              fi
-              sleep 2
-            done
-
-            echo "❌ Frontend не ответил после перезапуска"
-            pm2 logs lightyar --lines 80 --nostream
-            exit 1
+            git fetch origin master
+            sha='${{ github.sha }}'
+            git cat-file -e "$sha^{commit}"
+            script=$(mktemp)
+            trap 'rm -f "$script"' EXIT
+            git show "$sha:scripts/deploy.sh" >"$script"
+            bash "$script" "$sha"

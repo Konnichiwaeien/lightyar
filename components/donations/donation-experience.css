@@ -736,6 +736,10 @@
   cursor: not-allowed;
 }
 
+.donation-field-error { display: block; margin: .2rem 0 0; color: #a03824; font-size: .78rem; font-weight: 500; line-height: 1.5; letter-spacing: 0; overflow-wrap: anywhere; }
+.donation-field input[aria-invalid="true"], .donation-tier__custom-control input[aria-invalid="true"] { border-color: #a03824; box-shadow: 0 0 0 2px rgba(160,56,36,.12); }
+.donation-check:has(input[aria-invalid="true"]) > span { border-color: #a03824; }
+
 .donation-fields__agreements {
   display: grid;
   gap: 0.65rem;

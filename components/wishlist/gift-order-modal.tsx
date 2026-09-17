@@ -66,15 +66,22 @@ export function GiftOrderModal({
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+      if (event.key === "Tab") {
+        const elements = Array.from(panelRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), textarea, select') || []).filter(el => el.getClientRects().length);
+        const first = elements[0], last = elements[elements.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     const focusTimer = window.setTimeout(() => panelRef.current?.focus(), 60);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       window.clearTimeout(focusTimer);
       previous?.focus();
     };
@@ -174,12 +181,16 @@ export function GiftOrderModal({
                     <PawPrint size={30} />
                   </span>
                   <p>
-                    Заявка на «{item.title}» у нас. Волонтёры заберут посылку по штрих-коду и напишут вам, когда
-                    получат её.
+                    Заявка на «{item.title}» сохранена. Если понадобится уточнить детали, волонтёры свяжутся с вами.
                   </p>
                   <button type="button" className="gift-submit" onClick={onClose}>
                     Закрыть
                   </button>
+                </div>
+              ) : !settings.acceptingOrders ? (
+                <div className="gift-done">
+                  <p>Перед заказом уточните у нас адрес и способ доставки. Поможем выбрать нужный подарок и договоримся, как его передать.</p>
+                  <a className="gift-submit" href={settings.contactUrl || "https://vk.com/im?sel=-228082117"} target="_blank" rel="noopener noreferrer">Связаться с приютом <ArrowUpRight size={17} aria-hidden="true" /></a>
                 </div>
               ) : (
                 <>
@@ -187,6 +198,8 @@ export function GiftOrderModal({
                     Закажите <b>{item.title}</b> на {settings.marketplaceName} самостоятельно и укажите наш пункт
                     выдачи в адресе доставки.
                   </p>
+
+                  {settings.instructions ? <p className="gift-lead gift-lead--quiet">{settings.instructions}</p> : null}
 
                   {settings.pickupAddress ? (
                     <div className="gift-address">
@@ -224,14 +237,14 @@ export function GiftOrderModal({
                       <span className="gift-label">
                         Имя дарителя <i aria-hidden="true">*</i>
                       </span>
-                      <input id="gift-donor-name" name="donorName" required placeholder="Как к вам обращаться" autoComplete="name" />
+                      <input id="gift-donor-name" name="donorName" required minLength={2} maxLength={100} placeholder="Как к вам обращаться" autoComplete="name" />
                     </label>
 
                     <label htmlFor="gift-phone">
                       <span className="gift-label">
                         Телефон <i aria-hidden="true">*</i>
                       </span>
-                      <input id="gift-phone" name="phone" required placeholder="+7 (999) 999-99-99" inputMode="tel" autoComplete="tel" />
+                      <input id="gift-phone" name="phone" required maxLength={32} placeholder="+7 (999) 999-99-99" inputMode="tel" autoComplete="tel" />
                     </label>
 
                     <label htmlFor="gift-email">
@@ -248,7 +261,7 @@ export function GiftOrderModal({
                         name="barcode"
                         type="file"
                         required
-                        accept="image/*,application/pdf"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
                         onChange={(event) => setFileName(event.target.files?.[0]?.name || null)}
                       />
                       <span className="gift-hint">{fileName || "Фотография или PDF, до 8 МБ"}</span>

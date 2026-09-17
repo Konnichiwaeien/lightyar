@@ -87,12 +87,20 @@ export function buildNewsSlides(
   const slides: NewsSlide[] = [];
   const imageUrls = new Set<string>();
   const images = [article.mainImage, ...(article.gallery ?? [])];
+  const videoPosters = new Set(
+    (article.attachments ?? [])
+      .filter((attachment) => attachment.kind === "video" &&
+        (playableAttachmentSource(attachment, resolveMediaUrl, "video/") || attachment.externalUrl) &&
+        hasMimePrefix(attachment.poster, "image/"))
+      .map((attachment) => resolveOptionalMedia(attachment.poster, resolveMediaUrl))
+      .filter(Boolean),
+  );
 
   images.forEach((media, index) => {
     if (!media?.url || !hasMimePrefix(media, "image/")) return;
 
     const src = resolveMediaUrl(media.url);
-    if (!src || imageUrls.has(src)) return;
+    if (!src || imageUrls.has(src) || videoPosters.has(src)) return;
 
     imageUrls.add(src);
     slides.push({

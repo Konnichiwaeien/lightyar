@@ -1,102 +1,82 @@
-import { Suspense } from "react";
-import { PetsControls } from "@/components/pets/pets-controls";
-import { PetsPagination } from "@/components/pets/pets-pagination";
-import { InnerHeader } from "@/components/layout/inner-header";
-import { Metadata } from "next";
-import { petsService } from "@/lib/api/services/pets";
-import { siteMediaService } from "@/lib/api/services/site-media";
-import { normalizePetData } from "@/lib/helpers/pets/normalize-pet-data";
-import { PetsHero } from "@/components/pets/pets-hero";
-import { PetsGrid } from "@/components/pets/pets-grid";
-import { CatalogUnavailable } from "@/components/pets/catalog-unavailable";
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowUpRight, MessageCircle } from 'lucide-react';
+import { InnerHeader } from '@/components/layout/inner-header';
+import { PetsHero } from '@/components/pets/pets-hero';
+import { PetsControls } from '@/components/pets/pets-controls';
+import { PetsGrid } from '@/components/pets/pets-grid';
+import { PetsControlsSkeleton } from '@/components/pets/pets-skeleton';
+import { PetsPagination } from '@/components/pets/pets-pagination';
+import { PetsQuizLauncher } from '@/components/pets/pets-quiz-launcher';
+import { CatalogUnavailable } from '@/components/pets/catalog-unavailable';
+import { petsService } from '@/lib/api/services/pets';
+import { normalizePetData } from '@/lib/helpers/pets/normalize-pet-data';
+import { catalogCanonical, hasCatalogFilters, parseCatalogQuery, PETS_PER_PAGE, type CatalogSearch } from '@/lib/pets/catalog-query';
+import { siteUrl } from '@/lib/seo/site';
+import '@/components/pets/pets.css';
 
-export const metadata: Metadata = {
-  title: "Наши питомцы",
-  description: "Ищете верного друга? Посмотрите наш каталог собак и кошек из приюта «Светлый» в Ярославле. Все питомцы привиты, социализированы и очень ждут свою любящую семью. Подарите хвостику дом!",
-  keywords: ["приют для животных", "взять собаку из приюта", "взять кошку", "ярославль", "светлый", "бездомные животные", "найти друга"],
-};
+interface PageProps { searchParams: Promise<CatalogSearch> }
+const description = 'Собаки и кошки приюта «Светлый» в Ярославле: фотографии, возраст и истории питомцев. Найдите того, с кем хотите познакомиться.';
 
-interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const { page, options } = parseCatalogQuery(params);
+  const title = `${options.status === 'home' ? 'Питомцы, которые нашли дом' : 'Собаки и кошки ищут дом в Ярославле'}${page > 1 ? ` · Страница ${page}` : ''}`;
+  const canonical = catalogCanonical(params);
+  return { title, description, alternates: { canonical }, robots: hasCatalogFilters(params) ? { index: false, follow: true } : undefined,
+    openGraph: { title, description, url: canonical, type: 'website', locale: 'ru_RU', images: ['/og-image.jpg'] },
+    twitter: { card: 'summary_large_image', title, description, images: ['/og-image.jpg'] } };
 }
 
 export default async function PetsPage({ searchParams }: PageProps) {
-  const resolvedSearchParams = await searchParams;
-  const status = typeof resolvedSearchParams.status === "string" ? resolvedSearchParams.status : "shelter";
-  const sort = typeof resolvedSearchParams.sort === "string" ? resolvedSearchParams.sort : "name_asc";
-  const parsedPage = typeof resolvedSearchParams.page === "string" ? parseInt(resolvedSearchParams.page, 10) : 1;
-  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
-
-  // New filters
-  const type = typeof resolvedSearchParams.type === "string" && (resolvedSearchParams.type === "dog" || resolvedSearchParams.type === "cat") ? resolvedSearchParams.type : undefined;
-  const sex = typeof resolvedSearchParams.sex === "string" && (resolvedSearchParams.sex === "male" || resolvedSearchParams.sex === "female") ? resolvedSearchParams.sex : undefined;
-  const size = typeof resolvedSearchParams.size === "string" && (resolvedSearchParams.size === "small" || resolvedSearchParams.size === "medium" || resolvedSearchParams.size === "large") ? resolvedSearchParams.size : undefined;
-  const search = typeof resolvedSearchParams.search === "string" ? resolvedSearchParams.search : undefined;
-
-  const isFavorites = resolvedSearchParams.favorites === "true";
-  const favoritesIdsStr = typeof resolvedSearchParams.ids === "string" ? resolvedSearchParams.ids : "";
-  const favoriteIds = favoritesIdsStr ? favoritesIdsStr.split(",") : [];
-
-  const itemsPerPage = 12;
-
-  // Map UI sort values to Strapi sort parameters
-  const sortMap: Record<string, string> = {
-    name_asc: 'name:asc',
-    name_desc: 'name:desc',
-    age_asc: 'birthDate:desc',   // younger = later birthDate
-    age_desc: 'birthDate:asc',   // older = earlier birthDate
-  };
-  const strapiSort = sortMap[sort] || 'name:asc';
-
-  // The catalog is paginated in Strapi. The quiz uses a separate lightweight
-  // projection instead of serializing every populated pet into the page.
-  const [petsResponse, allShelterPetsRaw, siteMedia] = await Promise.all([
-    petsService.getPetsCollection({
-      status: status === "home" ? "home" : "shelter",
-      type,
-      sex,
-      size,
-      search,
-      sort: strapiSort,
-      ids: isFavorites ? favoriteIds : undefined,
-      limit: itemsPerPage,
-      start: (page - 1) * itemsPerPage,
-    }),
-    petsService.getQuizPets(),
-    siteMediaService.getSiteMedia(),
-  ]);
-
-  if (!petsResponse) {
-    return <CatalogUnavailable />;
+  const params = await searchParams;
+  const { page, options, favorites } = parseCatalogQuery(params);
+  // Only the requested page crosses the boundary. Quiz data loads on opening.
+  const response = await petsService.getPetsCollection(options).catch(() => null);
+  if (!response) return <CatalogUnavailable />;
+  const pets = response.data.map(normalizePetData);
+  const total = response.meta?.pagination?.total ?? pets.length;
+  const totalPages = Math.ceil(total / PETS_PER_PAGE);
+  if (page > Math.max(1, totalPages)) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => { if (typeof value === 'string') query.set(key, value); });
+    query.set('page', String(Math.max(1, totalPages)));
+    redirect(`/pets?${query}`);
   }
-
-  const paginated = (petsResponse.data || []).map(normalizePetData);
-  const totalItems = petsResponse.meta?.pagination?.total || paginated.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const safePage = Math.max(1, Math.min(page, totalPages || 1));
-
-  const allShelterPetsMapped = (allShelterPetsRaw || []).map(normalizePetData);
-
+  const structuredData = {
+    '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Питомцы приюта «Светлый»', url: siteUrl(catalogCanonical(params)),
+    mainEntity: { '@type': 'ItemList', numberOfItems: total, itemListElement: pets.map((pet, index) => ({ '@type': 'ListItem', position: (page - 1) * PETS_PER_PAGE + index + 1, name: pet.name, url: siteUrl(`/pets/${pet.slug || pet.id}`) })) },
+  };
   return (
-    <div className="min-h-screen bg-[#e8e4dc] selection:bg-amber-500 selection:text-white">
+    <div className="pets-page">
       <InnerHeader />
-      <main className="text-[#1c1c1c] pt-12 px-4 sm:px-6 md:px-12 pb-24">
-        <div className="max-w-[1400px] mx-auto relative">
-          
-          <PetsHero allPets={allShelterPetsMapped} videoUrl={siteMedia.heroVideo} posterUrl={siteMedia.heroPoster} />
-
-          <Suspense fallback={null}>
-            <PetsControls />
-          </Suspense>
-
-          <PetsGrid pets={paginated} />
-
-          <Suspense fallback={null}>
-            <PetsPagination currentPage={safePage} totalPages={totalPages} />
-          </Suspense>
-
-        </div>
+      <main id="main-content" tabIndex={-1}>
+        <PetsHero />
+        <section className="pets-catalog pets-wrap" id="pets-catalog" aria-label="Каталог питомцев">
+          <p className="sr-only" role="status" aria-live="polite">{total === 0 ? 'По этим фильтрам питомцев нет' : `Найдено питомцев: ${total}. Страница ${page} из ${totalPages}.`}</p>
+          <Suspense fallback={<PetsControlsSkeleton />}><PetsControls /></Suspense>
+          <PetsGrid pets={pets} favorites={favorites} />
+          <Suspense fallback={null}><PetsPagination currentPage={page} totalPages={totalPages} /></Suspense>
+        </section>
+        <section className="pets-help" aria-labelledby="pets-help-title">
+          <div className="pets-wrap pets-help__inner">
+            <figure className="pets-help__photo"><Image src="/about/real/dog-hand.jpg" alt="Собака положила лапу на руку человека" width={1400} height={1867} sizes="(max-width: 599px) 240px, (max-width: 899px) 260px, 340px" /></figure>
+            <div className="pets-help__content"><h2 id="pets-help-title">Не знаете,<br /> с кого <em>начать?</em></h2><p>Ответьте на четыре вопроса. Мы предложим питомцев для знакомства, а куратор расскажет, какой у них характер и что нужно для жизни дома.</p><PetsQuizLauncher /></div>
+          </div>
+        </section>
+        <section className="pets-meeting" aria-labelledby="pets-meeting-title">
+          <div className="pets-meeting__inner pets-wrap">
+          <Image className="pets-meeting__art" src="/pets/decor-letter.webp" alt="" width={640} height={640} sizes="(max-width: 599px) 132px, 160px" />
+          <h2 id="pets-meeting-title">Сначала <em>познакомимся</em></h2>
+          <p>Приглянулся кто-то из питомцев? Напишите нам: расскажем о нём подробнее, ответим на вопросы и договоримся о встрече.</p>
+          <Link className="pets-button pets-button--light pets-meeting__button" href="https://vk.com/im?sel=-228082117" target="_blank" rel="noopener noreferrer"><MessageCircle size={20} aria-hidden="true" />Написать в приют <ArrowUpRight size={18} aria-hidden="true" /><span className="sr-only"> (в новой вкладке)</span></Link>
+          </div>
+        </section>
       </main>
+      {!favorites && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />}
     </div>
   );
 }

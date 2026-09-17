@@ -3,7 +3,7 @@ module.exports = {
     name: "lightyar",
     script: "npm",
     args: "start",
-    cwd: "/home/lightyar",
+    cwd: __dirname,
     interpreter: "none",
     autorestart: true,
     watch: false,
@@ -11,6 +11,7 @@ module.exports = {
     env: {
       NODE_ENV: "production",
       PORT: 3003,
+      LIGHTYAR_RELEASE: process.env.LIGHTYAR_RELEASE || 'local',
     },
     env_dev: {
       NODE_ENV: "development",

@@ -70,7 +70,9 @@ test("donation experience uses semantic controls and has no fake payment", async
     assert.match(picker, new RegExp(icon));
   }
   assert.match(picker, /donation-tier--custom/);
-  assert.match(picker, /id="donation-custom-amount"/);
+  assert.match(picker, /const inputId = useId\(\)/);
+  assert.ok(picker.includes('id={`${inputId}-custom-amount`}'));
+  assert.ok(picker.includes('htmlFor={`${inputId}-custom-amount`}'));
   assert.match(picker, /type="number"/);
   assert.match(picker, /Другая сумма/);
   assert.ok(
@@ -88,9 +90,11 @@ test("donation experience uses semantic controls and has no fake payment", async
   assert.match(fields, /каждый месяц/);
   assert.match(fields, /Разовая помощь/);
   assert.doesNotMatch(fields, /один раз/);
-  assert.match(fields, /id="donation-name"/);
+  assert.ok(fields.includes('id={`${inputId}-name`}'));
+  assert.ok(fields.includes('htmlFor={`${inputId}-name`}'));
   assert.match(fields, /autoComplete="name"/);
-  assert.match(fields, /id="donation-email"/);
+  assert.ok(fields.includes('id={`${inputId}-email`}'));
+  assert.ok(fields.includes('htmlFor={`${inputId}-email`}'));
   assert.match(fields, /autoComplete="email"/);
   assert.match(fields, /name="anonymous"/);
   assert.match(fields, /Анонимная помощь/);

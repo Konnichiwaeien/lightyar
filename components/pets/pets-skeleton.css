@@ -1,0 +1,31 @@
+.pets-skeleton__block,.pets-skeleton__line{display:block;background:#e9e2d6}
+.pets-skeleton__line{height:12px;border-radius:6px}
+.pets-skeleton-controls__search{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:62px;padding:6px 7px 6px 22px;border:1px solid #ded7cc;border-radius:999px;background:#fff}
+.pets-skeleton-controls__search>.pets-skeleton__line{width:130px;max-width:45%}
+.pets-skeleton-controls__submit{height:48px;width:112px;border-radius:999px;flex-shrink:0}
+.pets-skeleton-controls__status{width:292px;min-height:60px;align-items:center;gap:20px}
+.pets-skeleton-controls__status>.pets-skeleton__block{width:138px;height:48px;border-radius:999px;flex-shrink:0}
+.pets-skeleton-controls__status>.pets-skeleton__line{width:84px}
+.pets-skeleton-controls__caption{width:78px}
+.pets-skeleton-controls__filter{height:48px;width:140px;border-radius:999px}
+.pets-skeleton-controls__filter:nth-last-child(3){width:170px}
+.pets-skeleton-controls__filter:last-child{margin-left:auto;width:193px}
+.pets-skeleton-card__status{position:absolute;top:17px;left:15px;width:110px;height:34px;border-radius:999px;background:#f7f3eb}
+.pets-skeleton-card__favorite{position:absolute;top:14px;right:14px;width:46px;height:46px;border-radius:50%;background:#f7f3eb}
+.pets-skeleton-card__name{height:38px;width:46%;margin-bottom:16px}
+.pets-skeleton-card__badges{display:flex;flex-wrap:wrap;gap:7px;max-width:330px}
+.pets-skeleton-card__badges>span{width:80px;height:30px;border-radius:999px}
+.pets-skeleton-card__badges>span:nth-child(3){width:112px}
+.pets-skeleton-card__description{display:grid;gap:12px;margin-top:20px;min-height:69px}
+.pets-skeleton-card__description>span:last-child{width:72%}
+.pets-skeleton-card__details{margin-top:16px;padding-block:17px;border-top:1px solid #e9e3d9}
+.pets-skeleton-card__details>span{width:58%}
+.pets-skeleton-card__button{width:194px;max-width:100%;height:48px;border-radius:999px;margin-top:14px}
+@media(prefers-reduced-motion:no-preference){.pets-skeleton__block,.pets-skeleton__line{animation:pets-skeleton-breathe 1.8s ease-in-out infinite}@keyframes pets-skeleton-breathe{50%{opacity:.5}}}
+@media(max-width:1100px){.pets-skeleton-controls__caption{width:100%}.pets-skeleton-controls__filter:last-child{margin-left:0}}
+@media(max-width:700px){
+ .pets-skeleton-controls__status{width:100%;justify-content:space-around;gap:12px}.pets-skeleton-controls__status>.pets-skeleton__block{width:48%}
+ .pets-skeleton-controls .pets-skeleton-controls__fields{display:none}
+ .pets-skeleton-controls__mobile>span{height:46px;border:1px solid #ded7cc;background:#fff;border-radius:16px}
+ .pets-skeleton-controls__mobile>span:first-child{flex:1}.pets-skeleton-controls__mobile>span:last-child{width:62px}
+}

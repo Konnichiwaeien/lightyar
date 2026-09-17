@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Target, X } from "lucide-react";
+import { PawPrint, Target, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { DONATION_TIERS } from "@/lib/donations/donation-tiers";
 import { getDonationTier } from "@/lib/donations/get-donation-tier";
-import { DONATION_INTENT_EVENT, type DonationIntent } from "@/lib/donations/donation-intent";
+import { donationErrors, type DonationValidationField } from "@/lib/donations/donation-schema";
+import { DONATION_INTENT_EVENT, DONATION_INTENT_LABELS, type DonationIntent } from "@/lib/donations/donation-intent";
 import { DonationFields } from "@/components/donations/donation-fields";
 import { DonationTierPicker } from "@/components/donations/donation-tier-picker";
 /* Стили ступеней и полей лежат рядом с панелью главной и подключались её
@@ -38,30 +40,42 @@ export function CampaignDonateForm({
   initial = null,
   onClose,
   onReady,
+  listenForIntent = true,
+  lockIntent = false,
 }: {
   initial?: DonationIntent | null;
   onClose?: () => void;
   onReady?: () => void;
+  listenForIntent?: boolean;
+  lockIntent?: boolean;
 }) {
   const [intent, setIntent] = useState<DonationIntent | null>(initial);
+  const still = useReducedMotion();
   const [cadence, setCadence] = useState<"monthly" | "once">("once");
   const [amount, setAmount] = useState(initial?.amount || 500);
   const [customAmount, setCustomAmount] = useState("");
+  const [customActive, setCustomActive] = useState(false);
+  const [touched, setTouched] = useState<Partial<Record<DonationValidationField, boolean>>>({});
   const [donorName, setDonorName] = useState("");
   const [email, setEmail] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [consent, setConsent] = useState(false);
   const selectedTier = useMemo(() => getDonationTier(amount), [amount]);
+  const errors = donationErrors({ amount: customActive ? customAmount : amount, cadence, donorName, email, anonymous, consent });
+  const visibleErrors = Object.fromEntries(Object.entries(errors).filter(([field]) => touched[field as DonationValidationField]));
 
   /* Назначение приходит событием: кнопка «Помочь» на карточке сбора шлёт
      сбор и сумму, кнопки «Сделать взнос» и «Помочь без цели» не шлют ничего. */
   useEffect(() => {
+    if (!listenForIntent || lockIntent) return;
     const receive = (event: Event) => {
       const detail = (event as CustomEvent<DonationIntent>).detail;
       if (!detail || !Number.isFinite(detail.amount) || detail.amount <= 0) return;
       setIntent(detail);
       setCadence("once");
       setAmount(detail.amount);
+      setCustomActive(!DONATION_TIERS.some((tier) => tier.amount === detail.amount));
+      setTouched({});
       setCustomAmount(DONATION_TIERS.some((tier) => tier.amount === detail.amount) ? "" : String(detail.amount));
     };
     window.addEventListener(DONATION_INTENT_EVENT, receive);
@@ -69,15 +83,17 @@ export function CampaignDonateForm({
        форма догрузилась, и тогда окно повторяет его сюда. */
     onReady?.();
     return () => window.removeEventListener(DONATION_INTENT_EVENT, receive);
-  }, [onReady]);
+  }, [listenForIntent, lockIntent, onReady]);
 
   const chooseTier = (next: number) => {
     setAmount(next);
     setCustomAmount("");
+    setCustomActive(false);
   };
 
   const changeCustomAmount = (value: string) => {
     setCustomAmount(value);
+    setCustomActive(true);
     const parsed = Number(value);
     if (Number.isFinite(parsed) && parsed > 0) setAmount(parsed);
   };
@@ -88,21 +104,35 @@ export function CampaignDonateForm({
   };
 
   return (
-    <form className="camp-form" onSubmit={(event) => event.preventDefault()}>
+    <form className="camp-form" aria-label={intent ? `${DONATION_INTENT_LABELS[intent.kind]}: ${intent.title}` : 'Пожертвование приюту'} noValidate onBlurCapture={(event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      const field = input.name === "customAmount" ? "amount" : input.name;
+      if (field === "amount" || field === "donorName" || field === "email" || field === "consent") {
+        setTouched(previous => ({ ...previous, [field]: true }));
+      }
+    }} onSubmit={(event) => {
+      event.preventDefault();
+      setTouched({ amount: true, donorName: true, email: true, consent: true });
+      const first = Object.keys(errors)[0];
+      if (first) event.currentTarget.querySelector<HTMLInputElement>(`[name="${first === "amount" ? "customAmount" : first}"]`)?.focus();
+    }}>
+      {intent && <><input type="hidden" name="donationTargetKind" value={intent.kind} /><input type="hidden" name="donationTargetId" value={intent.id} /><input type="hidden" name="donationTargetTitle" value={intent.title} /></>}
       {intent ? (
-        <p className="camp-form__intent">
-          <Target aria-hidden="true" size={17} />
+        <motion.p className="camp-form__intent" key={intent.id} initial={false}
+          whileHover={still ? undefined : { y: -2 }} transition={{ duration: .2 }}>
+          <span className="camp-form__intent-icon">{intent.kind === 'pet' ? <PawPrint aria-hidden="true" size={22} /> : <Target aria-hidden="true" size={22} />}</span>
           <span>
-            <small>Взнос в сбор</small>
+            <small>{DONATION_INTENT_LABELS[intent.kind]}</small>
             <strong>{intent.title}</strong>
           </span>
-          <button aria-label="Убрать назначение взноса" onClick={() => setIntent(null)} type="button">
+          {!lockIntent && <button aria-label="Убрать назначение взноса" onClick={() => setIntent(null)} type="button">
             <X aria-hidden="true" size={15} />
-          </button>
-        </p>
+          </button>}
+        </motion.p>
       ) : (
         <p className="camp-form__intent camp-form__intent--free">
-          <Target aria-hidden="true" size={17} />
+          <span className="camp-form__intent-icon"><Target aria-hidden="true" size={22} /></span>
           <span>
             <small>Взнос без цели</small>
             <strong>Приют направит туда, где нужнее</strong>
@@ -111,13 +141,20 @@ export function CampaignDonateForm({
       )}
 
       <DonationTierPicker
+        compact
         customAmount={customAmount}
+        customActive={customActive}
+        amountError={visibleErrors.amount}
         onCustomAmountChange={changeCustomAmount}
         onSelect={chooseTier}
         selected={selectedTier}
       />
 
       <DonationFields
+        animateTransitions={intent?.kind === 'pet'}
+        showStatusNote={false}
+        errors={visibleErrors}
+        amountValid={!errors.amount}
         amount={amount}
         anonymous={anonymous}
         cadence={cadence}
@@ -133,14 +170,11 @@ export function CampaignDonateForm({
 
       {/* Про то, что оплата не подключена, говорит сама кнопка платежа внутри
           полей; здесь только выход, и он нужен лишь в окне. */}
-      <p className="camp-form__note">
-        Перевести можно по реквизитам из подвала сайта.{" "}
-        {onClose ? (
+      {onClose && <p className="camp-form__note">
           <button onClick={onClose} type="button">
             Закрыть окно
           </button>
-        ) : null}
-      </p>
+      </p>}
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/page-metadata";
 import { notFound } from "next/navigation";
 import { InnerHeader } from "@/components/layout/inner-header";
 import { DocumentStack } from "@/components/reports/document-stack";
@@ -40,11 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/reports/[year]">)
   if (year === undefined) notFound();
   const report = await loadReport(year);
   if (!report) notFound();
-  return {
-    title: `${report.title}. ${report.year}`,
-    description: report.summary,
-    alternates: { canonical: `/reports/${report.year}` },
-  };
+  return pageMetadata(`${report.title}. ${report.year}`, report.summary || `Итоги работы АНБО «Светлый» за ${report.year} год.`, `/reports/${report.year}`);
 }
 
 export default async function AnnualReportPage({ params }: PageProps<"/reports/[year]">) {

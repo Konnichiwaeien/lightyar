@@ -17,6 +17,20 @@ export interface DonationRoll {
 const EMPTY_ROLL: DonationRoll = { count: 0, sum: 0, names: [] };
 
 export class DonationsService extends StrapiClient {
+  /** Only public donor fields; include gifts made through this pet's campaigns. */
+  async getPetDonations(petId: string): Promise<DonationsApiResult> {
+    try {
+      const id = encodeURIComponent(petId);
+      const response = await this.fetchJson<StrapiResponseCollection<StrapiDonation>>(
+        `/donations?filters[$or][0][pet][documentId][$eq]=${id}&filters[$or][1][campaign][pet][documentId][$eq]=${id}&sort[0]=createdAt:desc&pagination[limit]=20&fields[0]=donorName&fields[1]=amount&fields[2]=type&fields[3]=createdAt`,
+        { next: { revalidate: 60 } },
+      );
+      const donations = response.data || [];
+      return donations.length ? { status: 'ready', donations } : { status: 'empty', donations: [] };
+    } catch {
+      return { status: 'unavailable', donations: [] };
+    }
+  }
   /**
    * Fetch the most recent donations for the live feed
    */

@@ -3,6 +3,7 @@ import { campaignsService } from "@/lib/api/services/campaigns";
 
 export interface MappedCampaign {
   id: string;
+  slug?: string;
   title: string;
   desc: string;
   current: number;
@@ -34,6 +35,7 @@ export function normalizeCampaignData(camp: StrapiCampaign): MappedCampaign {
 
   return {
     id: camp.documentId,
+    slug: camp.slug || undefined,
     title: camp.title,
     desc: camp.shortDesc,
     current: Number(camp.current) || 0,
