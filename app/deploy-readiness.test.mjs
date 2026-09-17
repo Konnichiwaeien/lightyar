@@ -4,12 +4,17 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("frontend verification runs from the repository root and includes a production build", async () => {
+test("CI compiles and type-checks without CMS access; VPS performs the full build", async () => {
   const workflow = await read("../.github/workflows/deploy.yml");
 
   assert.match(workflow, /cache-dependency-path:\s*package-lock\.json/);
   assert.doesNotMatch(workflow, /working-directory:\s*lightyar/);
-  assert.match(workflow, /name:\s*Build[\s\S]*?run:\s*npm run build/);
+  assert.match(workflow, /npx next typegen/);
+  assert.match(workflow, /npx tsc --noEmit/);
+  assert.match(workflow, /run:\s*npm run build -- --experimental-build-mode compile/);
+  const deploy = await read("../scripts/deploy.sh");
+  assert.match(deploy, /^npm run build$/m);
+  assert.ok(deploy.indexOf("npm run build") < deploy.indexOf("pm2 startOrReload"));
 });
 
 test("all application responses include the baseline security headers", async () => {

@@ -36,8 +36,14 @@ jobs:
       - name: Tests
         run: npm test
 
-      - name: Build
-        run: npm run build
+      - name: Typecheck
+        run: |
+          npx next typegen
+          npx tsc --noEmit
+
+      # CMS credentials live on the VPS. The full build runs there before switching releases.
+      - name: Build application code
+        run: npm run build -- --experimental-build-mode compile
 
   deploy:
     needs: verify
