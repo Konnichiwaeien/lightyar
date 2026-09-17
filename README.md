@@ -30,4 +30,4 @@ npm run dev                  # http://localhost:3000
 
 ## Деплой
 
-Пуш в `master` запускает GitHub Actions workflow (`.github/workflows/deploy.yml`): сборка на сервере и перезапуск через PM2 (порт 3003, конфиг — `ecosystem.config.js`).
+Пуш в `master` запускает GitHub Actions workflow (`.github/workflows/deploy.yml`): сборка на сервере и запуск или перезапуск через PM2 (порт 3000, конфиг — `ecosystem.config.js`). Перед переключением версия проверяется на временном порту 3004. Nginx направляет запросы к сайту на `127.0.0.1:3000`.

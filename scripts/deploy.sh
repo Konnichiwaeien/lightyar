@@ -22,6 +22,8 @@ npm run build
 export LIGHTYAR_RELEASE="$sha"
 candidate_pid=''
 switched=false
+# Start the daemon before reading JSON so first-start messages cannot pollute it.
+pm2 ping >/dev/null
 previous=$(pm2 jlist | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const p=JSON.parse(s).find(p=>p.name==="lightyar");if(p)process.stdout.write(p.pm2_env.pm_cwd);})')
 previous_release=$(pm2 jlist | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const p=JSON.parse(s).find(p=>p.name==="lightyar");if(p)process.stdout.write(p.pm2_env.LIGHTYAR_RELEASE||"local");})')
 cleanup() {
@@ -33,7 +35,7 @@ cleanup() {
       echo 'Restoring previous application release'
       export LIGHTYAR_RELEASE="$previous_release"
       pm2 startOrReload "$previous/ecosystem.config.js" --only lightyar --update-env
-      if curl --fail --silent --max-time 10 http://127.0.0.1:3003/api/health >/dev/null || curl --fail --silent --max-time 10 http://127.0.0.1:3003/ >/dev/null; then pm2 save; else echo 'ROLLBACK NEEDS ATTENTION'; fi
+      if curl --fail --silent --max-time 10 http://127.0.0.1:3000/api/health >/dev/null || curl --fail --silent --max-time 10 http://127.0.0.1:3000/ >/dev/null; then pm2 save; else echo 'ROLLBACK NEEDS ATTENTION'; fi
     else
       pm2 delete lightyar || true
       echo 'No previous release exists; failed first release stopped'
@@ -61,7 +63,7 @@ switched=true
 pm2 startOrReload "$release/ecosystem.config.js" --only lightyar --update-env
 ready=false
 for attempt in {1..30}; do
-  if check 3003; then ready=true; break; fi
+  if check 3000; then ready=true; break; fi
   sleep 2
 done
 [[ "$ready" == true ]] || { echo 'New release failed health check'; exit 1; }

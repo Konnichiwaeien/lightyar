@@ -10,7 +10,7 @@ module.exports = {
     max_memory_restart: "1G",
     env: {
       NODE_ENV: "production",
-      PORT: 3003,
+      PORT: 3000,
       LIGHTYAR_RELEASE: process.env.LIGHTYAR_RELEASE || 'local',
     },
     env_dev: {
