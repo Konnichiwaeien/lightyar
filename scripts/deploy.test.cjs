@@ -44,7 +44,7 @@ wait() { :; }
 sleep() { :; }
 ln() { echo "linked-current" >>"$MOCK_DIR/log"; }
 `;
-    const candidate=script.replace('checkout=/home/lightyar', 'checkout="$MOCK_DIR"').replace('releases=/home/lightyar-releases','releases="$MOCK_DIR"').replace('export NVM_DIR="$HOME/.nvm"','export NVM_DIR="$MOCK_DIR/no-nvm"');
+    const candidate=script.replace('checkout=/home/apps/lightyar', 'checkout="$MOCK_DIR"').replace('releases=/home/apps/lightyar-releases','releases="$MOCK_DIR"').replace('export NVM_DIR="$HOME/.nvm"','export NVM_DIR="$MOCK_DIR/no-nvm"');
     const result=spawnSync(bash,['-s','--','a'.repeat(40)],{input:harness+'\n'+candidate,encoding:'utf8',env:{...process.env,MOCK_DIR:dir,SCENARIO:scenario},timeout:15000});
     const log=fs.readFileSync(`${dir}/log`,'utf8');
     assert.equal(result.status,scenario==='success'?0:1,result.stdout+result.stderr);

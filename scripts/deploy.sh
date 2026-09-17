@@ -3,8 +3,8 @@ set -Eeuo pipefail
 umask 077
 sha=${1:?Exact verified commit is required}
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 2
-checkout=/home/lightyar
-releases=/home/lightyar-releases
+checkout=/home/apps/lightyar
+releases=/home/apps/lightyar-releases
 mkdir -p "$releases"
 exec 9>"$releases/deploy.lock"
 flock -n 9 || { echo 'Another deployment is active'; exit 1; }

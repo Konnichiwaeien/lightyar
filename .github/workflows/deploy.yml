@@ -53,7 +53,7 @@ jobs:
           command_timeout: 30m
           script: |
             set -eu
-            cd /home/lightyar
+            cd /home/apps/lightyar
             git fetch origin master
             sha='${{ github.sha }}'
             git cat-file -e "$sha^{commit}"
