@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useInView, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
+import { memo, useEffect, useRef, useState } from "react";
+import { motion, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { useCursor } from "@/components/ui/cursor-context";
 import Image from "next/image";
 
@@ -19,7 +19,7 @@ interface Particle {
 }
 
 // Мягкие световые пузырьки с тремя планами глубины.
-function LightParticles() {
+const LightParticles = memo(function LightParticles() {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
@@ -125,7 +125,7 @@ function LightParticles() {
       </div>
     </>
   );
-}
+});
 
 /**
  * Показатели считаются из карточек животных, а не пишутся руками.
@@ -143,18 +143,16 @@ function CountUp({ to }: { to: number }) {
   const seen = useInView(ref, { once: true, amount: 0.6 });
   const value = useMotionValue(0);
   const spring = useSpring(value, { stiffness: 55, damping: 20 });
-  const [shown, setShown] = useState(0);
+  const shown = useTransform(spring, (v) => Math.round(v));
 
   useEffect(() => {
     if (seen) value.set(to);
   }, [seen, to, value]);
 
-  useEffect(() => spring.on("change", (v) => setShown(Math.round(v))), [spring]);
-
   return (
-    <span ref={ref} className="tabular-nums">
+    <motion.span ref={ref} className="tabular-nums">
       {reduced || !seen ? to : shown}
-    </span>
+    </motion.span>
   );
 }
 
@@ -181,6 +179,18 @@ export function AboutSection({
   adopted: number;
 }) {
   const { textEnter, textLeave, imageEnter, imageLeave } = useCursor();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let visible = false;
+    const sync = () => { section.dataset.effectsActive = String(visible && !document.hidden); };
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting && entry.intersectionRatio >= 0.001; sync(); }, { threshold: [0, 0.001] });
+    observer.observe(section);
+    document.addEventListener("visibilitychange", sync);
+    return () => { observer.disconnect(); document.removeEventListener("visibilitychange", sync); };
+  }, []);
 
   const stats: Stat[] = [
     { value: total, unit: "под опекой", note: "сейчас", photo: "dzhek", mark: "bg-[#efe3cb]" },
@@ -188,7 +198,7 @@ export function AboutSection({
     { value: adopted, unit: "уже дома", note: "нашли семью", photo: "kapral", mark: "bg-[#F5A623]" },
   ];
   return (
-    <section className="about-section relative w-full overflow-hidden px-6 pt-20 pb-20 md:px-12 md:pt-28 md:pb-28" id="about">
+    <section ref={sectionRef} className="about-section relative w-full overflow-hidden px-6 pt-20 pb-20 md:px-12 md:pt-28 md:pb-28" id="about">
       <LightParticles />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
@@ -237,7 +247,7 @@ export function AboutSection({
                   />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`/pets/cutout-${photo}.webp`}
+                    src={photo === "mira" ? "/pets/cutout-mira-complete.webp" : `/pets/cutout-${photo}.webp`}
                     alt=""
                     className="relative h-[108%] w-[104%] max-w-none object-contain object-bottom"
                     loading="lazy"

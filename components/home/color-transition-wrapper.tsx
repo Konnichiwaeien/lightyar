@@ -2,6 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { HomeStreamRefresh } from "./home-stream-refresh";
 
 interface Props {
   /** Sections rendered before the dark zone */
@@ -29,7 +30,8 @@ export function ColorTransitionWrapper({ lightZone, darkZoneTrigger, darkZone }:
       className="relative min-h-screen overflow-x-clip pt-0 font-sans cursor-none outline-none"
     >
       {/* Film grain */}
-      <div className="film-grain" aria-hidden="true" />
+      <HomeStreamRefresh />
+      <div className="film-grain home-film-grain" aria-hidden="true" />
 
       {/* ═══ Light zone ═══ */}
       {lightZone}

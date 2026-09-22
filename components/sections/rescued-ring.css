@@ -335,6 +335,8 @@
   color: var(--ring-muted);
 }
 
+.ring-foot--phone { display: none; }
+
 @media (max-width: 1180px) {
   .ring {
     --ring-portrait: 132px;
@@ -380,30 +382,39 @@
 
 @media (max-width: 560px) {
   .ring {
-    --ring-portrait: 82px;
+    --ring-portrait: 124px;
+  }
+
+  /* Only the drawing scales. Type keeps its real screen size inside the orbit. */
+  .ring-center-fit {
+    top: 0;
+    width: 100%;
+    height: 100%;
+    translate: none;
+    scale: none;
   }
 
   .ring-center__copy {
-    width: 58%;
-    gap: 0.25rem;
+    left: 50%;
+    top: 50%;
+    width: 62%;
+    gap: 0.4rem;
   }
 
   .ring-kicker {
     margin-bottom: 0.3rem;
-    font-size: 0.58rem;
-    letter-spacing: 0.28em;
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
   }
 
   .ring-line {
-    font-size: clamp(1.35rem, 7vw, 1.75rem);
-    line-height: 1.18;
+    font-size: clamp(1.25rem, 6.2vw, 1.65rem);
+    line-height: 1.25;
+    white-space: normal;
   }
 
-  .ring-foot {
-    margin-top: 0.65rem;
-    font-size: 0.8rem;
-    line-height: 1.42;
-  }
+  .ring-center .ring-foot { display: none; }
+  .ring-foot--phone { display: block; margin: 0; font-size: 1rem; line-height: 1.55; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -494,24 +505,12 @@
 }
 
 .ring-aside__lead-accent {
-  position: relative;
-  z-index: 0;
-  isolation: isolate;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-.ring-aside__lead-accent::after {
-  position: absolute;
-  z-index: -1;
-  right: -0.06em;
-  bottom: 0.04em;
-  left: -0.06em;
-  height: 0.18em;
-  border-radius: 50%;
-  background: var(--ring-amber);
-  content: "";
-  transform: rotate(-1.2deg);
+  display: inline;
+  white-space: normal;
+  padding-bottom: .035em;
+  background: var(--decorative-underline) left bottom / 100% .18em no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .ring-aside__note {
@@ -667,6 +666,23 @@
 
 @media (max-width: 1180px) {
   .ring-gather { display: none; }
+}
+
+/* Keep the existing timeline and prop anchors; give tall, wide screens more scale. */
+@media (min-width: 1600px) and (min-height: 850px) {
+  .ring-stage { width: min(1600px, 125vh, 100%); }
+  .ring-aside, .ring-gather { width: 42%; right: clamp(-160px, -8vw, -96px); }
+  .ring-aside__lead { font-size: clamp(2.55rem, 2.7vw, 3.2rem); }
+  .ring-aside__note { font-size: clamp(1.15rem, 1.15vw, 1.4rem); }
+  .ring-aside { gap: 0.7rem; }
+  .ring-center .ring-foot { max-width: 20rem; align-self: center; font-size: 0.86rem; }
+  /* Keep the sack beside the longer lines, rather than covering their endings. */
+  .ring-gather__item:nth-child(3) { margin-left: 3.25rem; }
+}
+
+@media (max-width: 560px) {
+  .ring-stage { gap: 1.5rem; }
+  .ring-aside { margin-top: 1.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) and (min-width: 1181px) {

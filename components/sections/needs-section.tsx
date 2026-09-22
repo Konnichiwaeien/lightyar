@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef, useState, type CSSProperties } from "react";
+import { useInView } from "framer-motion";
 import { Gift, HandHeart, Info, ChevronLeft, ChevronRight, CircleDollarSign, MessageCircleHeart } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
@@ -20,7 +20,6 @@ const price = (value: number) =>
 
 /** Три равных сектора орбиты: верх, низ справа и низ слева. */
 const ORBIT_ANGLES = [-90, 30, 150];
-const ORBIT_DURATION = 24;
 
 export function NeedsSection({
   items = [],
@@ -33,10 +32,8 @@ export function NeedsSection({
   const [active, setActive] = useState<WishlistItem | null>(null);
   // стрелки гаснут на краях: кнопка, которая ничего не делает, врёт о своей роли
   const [edges, setEdges] = useState({ start: true, end: false });
-  const reduced = useReducedMotion();
-  // Framer Motion can report `null` during SSR hydration. That means the
-  // preference is unknown, not that motion should be permanently disabled.
-  const orbitMotionEnabled = reduced !== true;
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const orbitVisible = useInView(sceneRef, { margin: "100px" });
 
   const syncEdges = (instance: SwiperClass) =>
     setEdges({ start: instance.isBeginning, end: instance.isEnd });
@@ -63,35 +60,27 @@ export function NeedsSection({
             </p>
           </div>
 
-          <div className="wishlist-scene" aria-hidden="true">
+          <div className="wishlist-scene" ref={sceneRef} data-visible={orbitVisible} aria-hidden="true">
             <div className="wishlist-disc" />
 
             <div className="wishlist-orbit">
               {decor.map((item, index) => {
                 const angle = ORBIT_ANGLES[index];
-                const orbitTransition = { duration: ORBIT_DURATION, repeat: Infinity, ease: "linear" as const };
 
                 return (
-                  <motion.div
+                  <div
                     key={item.documentId}
                     className="wishlist-orbit__slot"
-                    initial={false}
-                    style={{ rotate: angle }}
-                    animate={orbitMotionEnabled ? { rotate: [angle, angle + 360] } : undefined}
-                    transition={orbitTransition}
+                    style={{ "--orbit-angle": `${angle}deg` } as CSSProperties}
                   >
                     <div className="wishlist-object-anchor">
-                      <motion.div
+                      <div
                         className="wishlist-object"
-                        initial={false}
-                        style={{ rotate: -angle }}
-                        animate={orbitMotionEnabled ? { rotate: [-angle, -angle - 360] } : undefined}
-                        transition={orbitTransition}
                       >
                         <GiftObjectArt title={item.title} className="wishlist-object__art" />
-                      </motion.div>
+                      </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

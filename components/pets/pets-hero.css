@@ -54,9 +54,6 @@
 }
 @media(max-width:359px){.pets-cover__inner{min-height:600px;padding-bottom:235px}}
 @media(prefers-reduced-motion:no-preference){
-  .pets-cover__copy{animation:pets-copy-in 600ms cubic-bezier(.22,1,.36,1) both}
-  .pets-cover__animal{animation:pets-animal-in 750ms cubic-bezier(.22,1,.36,1) var(--enter-delay,0ms) both}
-
-  @keyframes pets-copy-in{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
-  @keyframes pets-animal-in{from{opacity:0;translate:0 28px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+  /* The same cover is used by loading.tsx and the resolved page. Keep it
+     visible and stationary across that replacement; no entrance to replay. */
 }

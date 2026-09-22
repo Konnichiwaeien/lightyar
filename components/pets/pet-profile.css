@@ -13,8 +13,13 @@
 .pet-profile__status{display:inline-flex;align-items:center;gap:8px;font-size:14px;background:#fff9e9;color:#785015;border:1px solid #d9bc86;border-radius:30px;padding:8px 14px}
 .pet-profile__status--home{background:#e9efdf;color:#3b552e;border-color:#a9b598}
 .pet-profile h1{font-family:var(--font-playfair),Georgia,serif;font-size:clamp(58px,6.2vw,88px);line-height:1.1;letter-spacing:-.03em;font-weight:500;margin:16px 0 24px;overflow-wrap:anywhere;text-wrap:balance}
-.pet-profile__name-accent{position:relative;isolation:isolate;display:inline-block;max-width:100%}
-.pet-profile__name-accent::after{content:'';position:absolute;z-index:-1;inset-inline:-.025em;bottom:.025em;height:.14em;border-radius:50%;background:#f59e0b;transform:rotate(-1.2deg);pointer-events:none}
+.pet-profile__name-accent{
+  display:inline;
+  padding-bottom:.035em;
+  background:var(--decorative-underline) left bottom/100% .18em no-repeat;
+  -webkit-box-decoration-break:clone;
+  box-decoration-break:clone;
+}
 .pet-profile__badges{display:flex;gap:8px;flex-wrap:wrap;list-style:none}
 .pet-profile__badge{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:24px;background:#ebe7df;color:#514b42;font-size:13px;line-height:1.4}
 .pet-profile__badge svg{flex-shrink:0}

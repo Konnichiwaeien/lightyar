@@ -2,9 +2,10 @@
 
 import { Heart, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { CampaignImage } from "@/components/campaigns/campaign-image";
 import { useCursor } from "@/components/ui/cursor-context";
 import { requestDonationIntent } from "@/lib/donations/donation-intent";
+import { useEffect, useRef } from "react";
 
 interface CampaignItem {
   id: string;
@@ -16,6 +17,7 @@ interface CampaignItem {
   image: string;
   tag: string;
   petName?: string;
+  petImage?: string;
 }
 
 interface CampaignsSectionProps {
@@ -24,6 +26,21 @@ interface CampaignsSectionProps {
 
 export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProps) {
   const { textEnter, textLeave } = useCursor();
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const card = entry.target as HTMLElement;
+        const height = entry.borderBoxSize[0]?.blockSize ?? card.getBoundingClientRect().height;
+        card.style.setProperty("--campaign-card-height", `${height}px`);
+      }
+    });
+    Array.from(list.children).forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [initialCampaigns.length]);
   
   if (initialCampaigns.length === 0) {
     return null; // Don't render section if there are no active campaigns
@@ -43,23 +60,24 @@ export function CampaignsSection({ initialCampaigns = [] }: CampaignsSectionProp
       </div>
 
       <div className="relative max-w-7xl mx-auto">
-        <ul className="w-full" role="list">
+        <ul ref={listRef} className="w-full" role="list">
           {initialCampaigns.map((fund, i) => (
             <li
               key={fund.id}
               className="sticky w-full bg-[#111] border border-white/10 rounded-3xl md:rounded-[2.5rem] p-4 md:p-8 mb-6 shadow-2xl origin-top flex flex-col justify-between block animate-none"
-              style={{ zIndex: i + 1, top: `calc(120px + ${i * 40}px)` }}
+              style={{ zIndex: i + 1, top: `min(calc(120px + ${i * 40}px), calc(100svh - var(--campaign-card-height, 0px) - 24px))` }}
               onMouseEnter={textEnter}
               onMouseLeave={textLeave}
             >
               <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 justify-between items-stretch">
                 {/* Image Container */}
                 <div className="w-full lg:w-[45%] rounded-2xl md:rounded-3xl overflow-hidden relative min-h-[250px] md:min-h-[350px]">
-                  <Image 
+                  <CampaignImage
+                    title={fund.title}
                     src={fund.image} 
                     alt={fund.title} 
                     fill
-                    sizes="(max-width: 1024px) 100vw, 45vw"
+                    sizes="(max-width: 1024px) calc(100vw - 80px), (min-width: 1440px) 520px, 40vw"
                     className="object-cover motion-safe:hover:scale-105 transition-transform duration-1000" 
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />

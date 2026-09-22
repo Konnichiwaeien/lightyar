@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/sections/hero-section";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -23,29 +24,37 @@ import { siteMediaService } from "@/lib/api/services/site-media";
 import type { DonationFeedState } from "@/lib/donations/donation-feed-state";
 import { normalizePetData } from "@/lib/helpers/pets/normalize-pet-data";
 import { normalizeCampaignData } from "@/lib/helpers/campaigns/normalize-campaign-data";
+import { HomeSectionPending } from "@/components/home/home-section-pending";
 
-export default async function Home() {
-  const results = await Promise.allSettled([
-        newsService.getLatestNews(5),
-        petsService.getPets({ status: "shelter", limit: 5 }).then(r => r || []),
-        campaignsService.getCampaigns({ status: "active", limit: 3 }),
-        donationsService.getRecentDonations(20),
-        siteMediaService.getSiteMedia(),
-        wishlistService.getItems(),
-        wishlistService.getSettings(),
-        petStatsService.getPetStats({ throwOnError: true }),
-      ]);
-  const names = ["news", "pets", "campaigns", "donations", "media", "wishlist", "wishlist settings", "statistics"];
-  results.forEach((result, index) => {
-    if (result.status === "rejected") console.error(`[Home] ${names[index]} unavailable`);
-  });
-  const [newsResult, petsResult, campaignsResult, donationsResult, mediaResult, wishlistResult, settingsResult, statsResult] = results;
-  const news = newsResult.status === "fulfilled" ? newsResult.value : [];
-  const siteMedia = mediaResult.status === "fulfilled" ? mediaResult.value : {};
-  const petStats = statsResult.status === "fulfilled" ? statsResult.value : EMPTY_PET_STATS;
-  const wishlistItems = wishlistResult.status === "fulfilled" ? wishlistResult.value : [];
-  const wishlistSettings = settingsResult.status === "fulfilled" ? settingsResult.value : { marketplaceName: "Ozon" };
-  const donationsRaw = donationsResult.status === "fulfilled" ? donationsResult.value : { status: "unavailable" as const };
+// Attach rejection handlers as soon as work starts, even if a boundary is only
+// rendered later. One unavailable source must not discard unrelated sections.
+async function load<T>(name: string, promise: Promise<T>): Promise<PromiseSettledResult<T>> {
+  try { return { status: "fulfilled", value: await promise }; }
+  catch (reason) {
+    console.error(`[Home] ${name} unavailable`);
+    return { status: "rejected", reason };
+  }
+}
+
+type Result<T extends (...args: never[]) => unknown> = Promise<PromiseSettledResult<Awaited<ReturnType<T>>>>;
+
+async function PetStories({ data }: { data: Result<typeof petsService.getPets> }) {
+  const result = await data;
+  const pets = (result.status === "fulfilled" ? result.value || [] : [])
+    .map(normalizePetData)
+    .map((pet) => ({ id: String(pet.id), name: pet.name, tag: pet.tag, image: pet.image }));
+  return <DogsStoriesSection initialPets={pets} />;
+}
+
+async function ActiveCampaigns({ data }: { data: Result<typeof campaignsService.getCampaigns> }) {
+  const result = await data;
+  const campaigns = (result.status === "fulfilled" ? result.value.data || [] : []).map(normalizeCampaignData);
+  return <CampaignsSection initialCampaigns={campaigns} />;
+}
+
+async function Donations({ data }: { data: Result<typeof donationsService.getRecentDonations> }) {
+  const result = await data;
+  const donationsRaw = result.status === "fulfilled" ? result.value : { status: "unavailable" as const };
   const donationFeed: DonationFeedState = donationsRaw.status === "ready"
       ? {
           status: "ready",
@@ -57,16 +66,39 @@ export default async function Home() {
         }
       : { status: donationsRaw.status, items: [] };
 
-  const petsInShelter = (petsResult.status === "fulfilled" ? petsResult.value : [])
-      .map(normalizePetData)
-      .map((pet) => ({
-        id: String(pet.id),
-        name: pet.name,
-        tag: pet.tag,
-        image: pet.image
-      }));
+  return <PaymentSection feed={donationFeed} />;
+}
 
-  const activeCampaigns = (campaignsResult.status === "fulfilled" ? campaignsResult.value.data || [] : []).map(normalizeCampaignData);
+async function Wishlist({ items, settings }: {
+  items: Result<typeof wishlistService.getItems>;
+  settings: Result<typeof wishlistService.getSettings>;
+}) {
+  const [itemsResult, settingsResult] = await Promise.all([items, settings]);
+  return <NeedsSection
+    items={itemsResult.status === "fulfilled" ? itemsResult.value : []}
+    settings={settingsResult.status === "fulfilled" ? settingsResult.value : { marketplaceName: "Ozon" }}
+  />;
+}
+
+async function LatestNews({ data }: { data: Result<typeof newsService.getLatestNews> }) {
+  const result = await data;
+  return <NewsSection initialNews={result.status === "fulfilled" ? result.value : []} unavailable={result.status === "rejected"} />;
+}
+
+export default async function Home() {
+  // Launch all requests together; only the intro's actual dependencies block it.
+  // Retain ISR: do not force a cached homepage into per-request dynamic rendering.
+  const news = load("news", newsService.getLatestNews(5));
+  const pets = load("pets", petsService.getPets({ status: "shelter", limit: 5 }));
+  const campaigns = load("campaigns", campaignsService.getCampaigns({ status: "active", limit: 3 }));
+  const donations = load("donations", donationsService.getRecentDonations(20));
+  const media = load("media", siteMediaService.getSiteMedia());
+  const wishlist = load("wishlist", wishlistService.getItems());
+  const settings = load("wishlist settings", wishlistService.getSettings());
+  const statistics = load("statistics", petStatsService.getPetStats({ throwOnError: true }));
+  const [mediaResult, statsResult] = await Promise.all([media, statistics]);
+  const siteMedia = mediaResult.status === "fulfilled" ? mediaResult.value : {};
+  const petStats = statsResult.status === "fulfilled" ? statsResult.value : EMPTY_PET_STATS;
 
   return (
     <ColorTransitionWrapper
@@ -88,18 +120,28 @@ export default async function Home() {
             dogs={petStats.dogs}
             cats={petStats.cats}
           />}
-          <DogsStoriesSection initialPets={petsInShelter} />
+          <Suspense fallback={<HomeSectionPending section="pets" />}>
+            <PetStories data={pets} />
+          </Suspense>
         </>
       }
       darkZoneTrigger={
-        <CampaignsSection initialCampaigns={activeCampaigns} />
+        <Suspense fallback={<HomeSectionPending section="campaigns" />}>
+          <ActiveCampaigns data={campaigns} />
+        </Suspense>
       }
       darkZone={
         <>
-          <PaymentSection feed={donationFeed} />
-          <NeedsSection items={wishlistItems} settings={wishlistSettings} />
+          <Suspense fallback={<HomeSectionPending section="donate" />}>
+            <Donations data={donations} />
+          </Suspense>
+          <Suspense fallback={<HomeSectionPending section="needs" />}>
+            <Wishlist items={wishlist} settings={settings} />
+          </Suspense>
           <VolunteerSection imageUrl={siteMedia.homeAbout} />
-          <NewsSection initialNews={news} unavailable={newsResult.status === "rejected"} />
+          <Suspense fallback={<HomeSectionPending section="news" />}>
+            <LatestNews data={news} />
+          </Suspense>
         </>
       }
     />

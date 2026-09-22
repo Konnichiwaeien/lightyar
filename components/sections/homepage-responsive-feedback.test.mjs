@@ -130,8 +130,8 @@ test("wishlist objects form an evenly spaced orbit around the cat", async () => 
   assert.doesNotMatch(needs, /const SEATS/);
   assert.match(needs, /const ORBIT_ANGLES\s*=\s*\[-90,\s*30,\s*150\]/);
   assert.match(needs, /wishlist-orbit__slot/);
-  assert.match(needs, /rotate:\s*\[angle,\s*angle\s*\+\s*360\]/);
-  assert.match(needs, /rotate:\s*\[-angle,\s*-angle\s*-\s*360\]/);
+  assert.match(needsCss, /animation: wishlist-orbit-turn 24s linear infinite/);
+  assert.match(needsCss, /animation: wishlist-object-turn 24s linear infinite/);
   assert.match(needsCss, /\.wishlist-orbit\s*\{[\s\S]*?aspect-ratio:\s*1/);
   assert.match(needsCss, /\.wishlist-orbit__slot\s*\{[\s\S]*?position:\s*absolute[\s\S]*?inset:\s*0/);
   assert.doesNotMatch(needs, /style=\{\{\s*left:/);
@@ -144,11 +144,11 @@ test("phone rescued ring keeps a readable centre inside the same square geometry
   ]);
 
   assert.doesNotMatch(ring, /data-ring-index/);
-  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?--ring-portrait:\s*82px/);
+  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?--ring-portrait:\s*124px/);
   assert.doesNotMatch(ringCss, /\.ring-center::before\s*\{/);
   assert.doesNotMatch(ringCss, /data-ring-index="8"/);
-  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?\.ring-center__copy\s*\{[\s\S]*?width:\s*58%/);
-  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?\.ring-line\s*\{[\s\S]*?font-size:\s*clamp\(1\.35rem,\s*7vw,\s*1\.75rem\)/);
+  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?\.ring-center__copy\s*\{[\s\S]*?width:\s*62%/);
+  assert.match(ringCss, /@media \(max-width: 560px\)[\s\S]*?\.ring-line\s*\{[\s\S]*?font-size:\s*clamp\(1\.25rem,\s*6\.2vw,\s*1\.65rem\)/);
 });
 
 test("mobile donation annotation keeps custom amount last and lightens the heading", async () => {
@@ -390,8 +390,8 @@ test("latest mobile polish tightens the wishlist, centers volunteer marks, and r
   ]);
 
   assert.match(needs, /<span>Соберём<\/span>[\s\S]*?<em>посылку<\/em>/);
-  assert.match(needs, /const orbitMotionEnabled = reduced !== true/);
-  assert.match(needs, /style=\{\{ rotate: angle \}\}[\s\S]*?animate=\{orbitMotionEnabled \? \{ rotate: \[angle, angle \+ 360\] \} : undefined\}/);
+  assert.match(needsCss, /prefers-reduced-motion: reduce/);
+  assert.match(needs, /data-visible=\{orbitVisible\}/);
   assert.doesNotMatch(needs, /style=\{reduced \?/);
   assert.match(needsCss, /\.wishlist-stage__copy h2 em\s*\{[\s\S]*?display:\s*block[\s\S]*?font-size:\s*1\.08em/);
   assert.match(

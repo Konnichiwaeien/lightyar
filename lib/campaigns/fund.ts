@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { campaignsService } from "@/lib/api/services/campaigns";
 import type { StrapiCampaign } from "@/lib/api/types";
+import { campaignFallbackCover } from "./fallback-cover";
 
 /**
  * Загрузка одного сбора для его страницы.
@@ -44,8 +45,8 @@ async function keepable(src: string): Promise<boolean> {
 
 /**
  * Кадры сбора: свои снимки, а за ними портреты подопечного, ради которого
- * сбор открыт. Не осталось ни одного живого — страница обходится без круга:
- * композиция без него собирается сама, а заглушка читалась бы сбоем.
+ * сбор открыт. Если все фотографии пропали, используем локальную
+ * тематическую иллюстрацию, а не фотографию чужого питомца.
  *
  * Обёрнута в `cache`: кадры нужны и разметке для соцсетей, и самой странице,
  * а проверка ходит в хранилище.
@@ -55,7 +56,8 @@ export const fundPhotos = cache(async (fund: StrapiCampaign): Promise<string[]> 
   const pet = (fund.pet?.photos ?? []).map((photo) => campaignsService.resolveMediaUrl(photo.url));
   const candidates = [...own, ...pet].slice(0, 6);
   const checks = await Promise.all(candidates.map(keepable));
-  return candidates.filter((_, index) => checks[index]).slice(0, 5);
+  const available = candidates.filter((_, index) => checks[index]).slice(0, 5);
+  return available.length ? available : [campaignFallbackCover(fund.title)];
 });
 
 /** Дата по-русски: «14 сентября 2026». Без «г.»: в строке из трёх слов эта

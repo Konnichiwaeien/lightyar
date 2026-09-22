@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import sharp from "sharp";
+import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
@@ -46,11 +48,29 @@ test("Donation and volunteer scenes use responsive Next images", async () => {
 
 test("Film grain uses the installed tile", async () => {
   const css = await read("../../app/globals.css");
+  const grain = css.match(/\.film-grain\s*\{[^}]*\}/)?.[0];
+  assert.ok(grain, "film grain has its own style rule");
 
-  assert.match(css, /background-image:\s*url\("\/texture\/paper-grain\.png"\)/);
-  assert.match(css, /opacity:\s*0\.04/);
-  assert.match(css, /background-size:\s*512px 512px/);
-  assert.doesNotMatch(css, /feTurbulence|data:image\/svg\+xml/);
+  assert.match(grain, /background-image:\s*url\("\/texture\/paper-grain\.png"\)/);
+  assert.match(grain, /opacity:\s*0\.04/);
+  assert.match(grain, /background-size:\s*512px 512px/);
+  assert.doesNotMatch(grain, /feTurbulence|data:image\/svg\+xml/);
+});
+
+test("Homepage grain alpha mask stays visually equivalent to the original multiply tile", async () => {
+  const css = await read("../../app/globals.css");
+  const rule = css.match(/\.home-film-grain\s*\{[^}]*\}/)?.[0];
+  assert.ok(rule);
+  assert.match(rule, /mix-blend-mode:\s*normal/);
+  assert.match(rule, /mask-image:\s*url\("\/texture\/paper-grain\.png"\)/);
+  const blackAlpha = Number(rule.match(/background-color:\s*rgb\(0 0 0 \/ ([\d.]+)%\)/)?.[1]) / 100;
+  const tile = await sharp(fileURLToPath(new URL("../../public/texture/paper-grain.png", import.meta.url))).stats();
+  const alpha = tile.channels[3].max / 255;
+  for (const channel of tile.channels.slice(0, 3)) {
+    assert.equal(channel.min, channel.max, "the conversion assumes a constant-color alpha tile");
+    const worstError = Math.abs(255 - channel.max - 255 * blackAlpha) * alpha * 0.04;
+    assert.ok(worstError < 0.1, `visible grain color drift: ${worstError}`);
+  }
 });
 
 test("Mobile media stays lightweight while the requested compact orbit keeps moving", async () => {

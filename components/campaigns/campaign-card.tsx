@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CampaignImage } from "./campaign-image";
 import Link from "next/link";
 import { ArrowUpRight, CheckCircle2, PawPrint, Tag } from "lucide-react";
 
@@ -38,7 +38,8 @@ export function CampaignCard({ fund, index }: { fund: CampaignCardFund; index: n
       <div className="camp-item__figure">
         <Link className="camp-item__shot" href={`/campaigns/${fund.slug || fund.id}`} aria-label={fund.title}>
           {fund.shot.src ? (
-            <Image
+            <CampaignImage
+              title={fund.title}
               src={fund.shot.src}
               alt=""
               width={640}

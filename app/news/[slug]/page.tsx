@@ -11,6 +11,7 @@ import { cache } from "react";
 import { siteUrl } from "@/lib/seo/site";
 import { newsArticleSchema, newsDescription, serializeNewsSchema } from "@/lib/news/news-seo";
 import { parseNewsInline } from "@/lib/news/news-inline";
+import { newsPresentation } from "@/lib/news/news-presentation";
 import {
   buildNewsSlides,
   getSupplementaryNewsAttachments,
@@ -35,15 +36,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const description = newsDescription(article);
+  const { title } = newsPresentation(article);
   const url = siteUrl(`/news/${article.slug}`);
   const image = article.mainImage?.url ? newsService.resolveMediaUrl(article.mainImage.url) : siteUrl("/og-image.jpg");
   return {
-    title: `${article.title} | Новости`,
+    title: `${title} | Новости`,
     description, alternates: { canonical: url },
-    openGraph: { title: article.title, description, url, type: "article", locale: "ru_RU", siteName: "Светлый",
+    openGraph: { title, description, url, type: "article", locale: "ru_RU", siteName: "Светлый",
       publishedTime: article.publishedAt, modifiedTime: article.updatedAt,
       images: [{ url: image, alt: article.mainImage?.alternativeText || article.title }] },
-    twitter: { card: "summary_large_image", title: article.title, description, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
@@ -133,6 +135,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
   if (article.slug && resolvedParams.slug !== article.slug) permanentRedirect(`/news/${article.slug}`);
 
   const resolveMediaUrl = (url: string) => newsService.resolveMediaUrl(url);
+  const presentation = newsPresentation(article);
   const mediaSlides = buildNewsSlides(article, resolveMediaUrl);
   const supplementaryAttachments = getSupplementaryNewsAttachments(
     article.attachments,
@@ -168,12 +171,12 @@ export default async function NewsDetailPage({ params }: PageProps) {
               </div>
 
               <h1 className="news-article-title">
-                {article.title}
+                {presentation.title}
               </h1>
 
-              {article.excerpt && article.excerpt.trim() !== article.title.trim() && (
+              {presentation.excerpt && (
                 <p className="news-article-lead">
-                  {article.excerpt}
+                  {presentation.excerpt}
                 </p>
               )}
             </header>
@@ -183,7 +186,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
 
             {/* Article Content */}
             <div className="news-article-content">
-              {renderContent(article.content)}
+              {renderContent(presentation.content)}
             </div>
 
             <NewsAttachments items={supplementaryAttachments} />

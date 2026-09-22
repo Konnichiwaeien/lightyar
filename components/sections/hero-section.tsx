@@ -18,6 +18,7 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
   const { textEnter, textLeave } = useCursor();
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const userPaused = useRef(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -57,11 +58,34 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      userPaused.current = false;
       video.play().catch(() => {});
     } else {
+      userPaused.current = true;
       video.pause();
     }
   };
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let visible = false;
+    const sync = () => {
+      const active = visible && !document.hidden;
+      section.dataset.heroActive = String(active);
+      const video = videoRef.current;
+      if (!video) return;
+      if (active && allowVideo && !shouldReduceMotion && !userPaused.current) void video.play().catch(() => {});
+      else video.pause();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.001;
+      sync();
+    }, { threshold: [0, 0.001] });
+    observer.observe(section);
+    document.addEventListener("visibilitychange", sync);
+    return () => { observer.disconnect(); document.removeEventListener("visibilitychange", sync); };
+  }, [allowVideo, shouldReduceMotion]);
 
   // Animation durations
   const BLUR_DURATION = 4;
@@ -77,16 +101,11 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
   const svetShadow = "0 4px 30px rgba(0,0,0,0.5), 0 0 80px rgba(245,158,11,0.3)";
 
   return (
-    <section ref={sectionRef} className="relative h-screen bg-[#e8e4dc]">
+    <section ref={sectionRef} data-hero-mounted={mounted} className="hero-section relative h-screen bg-[#e8e4dc]">
       <div className="relative h-full overflow-hidden bg-black">
         
         {/* Layer 1: Background with auto-play blur-to-clarity */}
-        <motion.div 
-          className="hero-media-layer absolute inset-0 z-0 will-change-transform"
-          initial={shouldReduceMotion ? { scale: 1, filter: "blur(4px) brightness(88%)" } : { scale: 1.15, filter: "blur(40px) brightness(30%)" }}
-          animate={{ scale: 1, filter: "blur(4px) brightness(88%)" }}
-          transition={shouldReduceMotion ? { duration: 0 } : { duration: BLUR_DURATION, delay: BLUR_DELAY, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
+        <div className="hero-media-layer absolute inset-0 z-0">
           {/* Fallback gradient */}
           <div className="absolute inset-0 hero-video-fallback" />
 
@@ -104,8 +123,10 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
               aria-hidden="true"
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onPlaying={() => { if (sectionRef.current) sectionRef.current.dataset.videoReady = "true"; }}
               onError={(e) => {
                 e.currentTarget.style.display = "none";
+                if (sectionRef.current) sectionRef.current.dataset.videoReady = "false";
                 setIsPlaying(false);
               }}
             >
@@ -115,15 +136,10 @@ export function HeroSection({ videoUrl, posterUrl }: { videoUrl?: string; poster
           
           {/* Subtle warm overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 to-transparent mix-blend-overlay z-2" />
-        </motion.div>
+        </div>
 
         {/* Dark overlay that fades out on load */}
-        <motion.div 
-          className="absolute inset-0 bg-black/50 z-10 pointer-events-none"
-          initial={shouldReduceMotion ? { opacity: 0.15 } : { opacity: 1 }}
-          animate={{ opacity: 0.15 }}
-          transition={shouldReduceMotion ? { duration: 0 } : { duration: BLUR_DURATION, delay: BLUR_DELAY, ease: "easeOut" }}
-        />
+        <div className="hero-intro-shade absolute inset-0 bg-black/50 z-10 pointer-events-none" />
 
         {/* Cinematic vignette — permanent dark edges */}
         <div 

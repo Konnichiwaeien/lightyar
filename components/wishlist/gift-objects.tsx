@@ -280,9 +280,11 @@ function RasterOrDrawing({
 
 /** Предмет вишлиста: фотография предмета, пока её нет — рисунок. */
 export function GiftObjectArt({ title, className }: { title: string; className?: string }) {
+  const slug = objectSlug(title);
+  const paper = ["wet-food", "dry-food", "litter", "medicine", "bowl"].includes(slug);
   return (
     <RasterOrDrawing
-      srcs={[`/wishlist/item-${objectSlug(title)}.webp`]}
+      srcs={[`/wishlist/${paper ? "paper-v2/" : ""}item-${slug}.webp`]}
       fallback={<GiftObject title={title} className={className} />}
       className={className}
     />

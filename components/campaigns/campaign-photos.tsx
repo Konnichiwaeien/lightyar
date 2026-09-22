@@ -6,7 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { A11y, Thumbs } from "swiper/modules";
 import type { Swiper as SwiperInstance } from "swiper";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ResilientImage } from "@/components/ui/resilient-image";
+import { CampaignImage as ResilientImage } from "./campaign-image";
 import "swiper/css";
 import "swiper/css/thumbs";
 import "swiper/css/a11y";
@@ -37,7 +37,7 @@ export function CampaignPhotos({ photos, title }: { photos: string[]; title: str
               <SwiperSlide className="fund-shots__slide" key={src}>
                 {({ isActive, isPrev, isNext }) => (
                   // SSR includes the LCP image; only nearby full-size frames mount after hydration.
-                  index === 0 || isActive || isPrev || isNext ? <ResilientImage
+                    index === 0 || isActive || isPrev || isNext ? <ResilientImage title={title}
                     alt={index === 0 ? title : `${title}: кадр ${index + 1}`}
                     className="fund-shots__img" width={1200} height={1200}
                     fetchPriority={index === 0 ? "high" : "low"}
@@ -70,7 +70,7 @@ export function CampaignPhotos({ photos, title }: { photos: string[]; title: str
           {list.map((src, index) => <SwiperSlide key={src}>
             <button type="button" className="fund-shots__thumb" aria-label={`Показать фото ${index + 1}`}
               aria-pressed={shown === index} onClick={() => main.current?.slideTo(index)}>
-              <ResilientImage src={src} alt="" width={120} height={90} sizes="80px" loading="lazy" />
+              <ResilientImage title={title} src={src} alt="" width={120} height={90} sizes="80px" loading="lazy" />
             </button>
           </SwiperSlide>)}
         </Swiper>

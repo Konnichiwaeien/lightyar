@@ -131,6 +131,26 @@
   position: absolute;
   inset: 0;
   transform-origin: 50% 50%;
+  transform: rotate(var(--orbit-angle));
+  animation: wishlist-orbit-turn 24s linear infinite;
+}
+
+.wishlist-object {
+  transform: rotate(calc(-1 * var(--orbit-angle)));
+  animation: wishlist-object-turn 24s linear infinite;
+}
+.wishlist-scene:not([data-visible="true"]) .wishlist-orbit__slot,
+.wishlist-scene:not([data-visible="true"]) .wishlist-object { animation-play-state: paused; }
+@keyframes wishlist-orbit-turn {
+  from { transform: rotate(var(--orbit-angle)); }
+  to { transform: rotate(calc(var(--orbit-angle) + 360deg)); }
+}
+@keyframes wishlist-object-turn {
+  from { transform: rotate(calc(-1 * var(--orbit-angle))); }
+  to { transform: rotate(calc(-1 * var(--orbit-angle) - 360deg)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wishlist-orbit__slot, .wishlist-object { animation: none; }
 }
 
 .wishlist-object-anchor {

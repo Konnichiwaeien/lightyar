@@ -63,6 +63,7 @@ const PORTRAIT_SCATTER = [
 ];
 
 const compactRingQuery = "(max-width: 1180px)";
+const spaciousRingQuery = "(min-width: 1600px) and (min-height: 850px)";
 const reducedRingQuery = "(prefers-reduced-motion: reduce)";
 
 function subscribeMediaQuery(queryText: string, callback: () => void) {
@@ -72,6 +73,8 @@ function subscribeMediaQuery(queryText: string, callback: () => void) {
 }
 
 const subscribeCompactRing = (callback: () => void) => subscribeMediaQuery(compactRingQuery, callback);
+const subscribeSpaciousRing = (callback: () => void) => subscribeMediaQuery(spaciousRingQuery, callback);
+const getSpaciousRingSnapshot = () => window.matchMedia(spaciousRingQuery).matches;
 const subscribeReducedRing = (callback: () => void) => subscribeMediaQuery(reducedRingQuery, callback);
 const getCompactRingSnapshot = () => window.matchMedia(compactRingQuery).matches;
 const getReducedRingSnapshot = () => window.matchMedia(reducedRingQuery).matches;
@@ -183,7 +186,7 @@ function GatheredItem({
   return (
     <motion.img
       className="ring-gather__item"
-      src={`/wishlist/${item.src}.webp`}
+      src={`/wishlist/paper-v2/${item.src}.webp`}
       alt=""
       loading="lazy"
       decoding="async"
@@ -242,6 +245,7 @@ export function RescuedRing({
     getRingServerSnapshot,
   );
   const still = Boolean(reduced);
+  const spacious = useSyncExternalStore(subscribeSpaciousRing, getSpaciousRingSnapshot, getRingServerSnapshot);
   const ringVisible = useInView(sectionRef, { margin: "120px 0px 120px 0px" });
   const time = useOrbitTime(!still && ringVisible);
 
@@ -251,11 +255,10 @@ export function RescuedRing({
     return () => node?.removeAttribute("data-ring-hydrated");
   }, []);
 
-  /* Считаем видимость по липкой сцене, а не по секции: секция теперь
-     выше экрана и 45% своей высоты не набирает никогда — счётчики так и
-     оставались на нуле. */
   const stickyRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(stickyRef, { once: true, amount: 0.5 });
+  // The compact story is taller than a viewport; count when the ring itself appears.
+  const visualRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(visualRef, { once: true, amount: 0.4 });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -274,9 +277,9 @@ export function RescuedRing({
      0.72–1.00  предметы по очереди опускаются к краям колонки
      Все значения привязаны к scrollYProgress: при движении назад кольцо
      собирается, колонка уходит, а предметы разлетаются тем же маршрутом. */
-  const titleScale = useTransform(scrollYProgress, [0, 0.08, 0.44, 1], [2.15, 2.15, 1, 1]);
-  const ringScale = useTransform(scrollYProgress, [0, 0.6, 0.8, 1], [1, 1, 0.68, 0.68]);
-  const ringX = useTransform(scrollYProgress, [0, 0.6, 0.8, 1], ["0%", "0%", "-30.2%", "-30.2%"]);
+  const titleScale = useTransform(scrollYProgress, [0, 0.08, 0.44, 1], [2.15, 2.15, spacious ? 1.2 : 1, spacious ? 1.2 : 1]);
+  const ringScale = useTransform(scrollYProgress, [0, 0.6, 0.8, 1], [1, 1, spacious ? 0.88 : 0.68, spacious ? 0.88 : 0.68]);
+  const ringX = useTransform(scrollYProgress, [0, 0.6, 0.8, 1], ["0%", "0%", spacious ? "-20%" : "-30.2%", spacious ? "-20%" : "-30.2%"]);
   const storyX = useTransform(scrollYProgress, [0.66, 0.82], ["60vw", "0vw"]);
 
   return (
@@ -298,17 +301,9 @@ export function RescuedRing({
         </div>
       </div>
 
-      {/* По углам — только подписи в разрядку. Дуги отсюда убраны: в
-          референсах поля держат обрезанные фотографии, а не графические
-          линии, и линия читалась как чужая рамка. */}
-      <div className="ring-decor" aria-hidden="true">
-        <span className="ring-decor__label ring-decor__label--tl">Приют «Светлый» · Ярославль</span>
-        <span className="ring-decor__label ring-decor__label--tr">С октября 2024</span>
-      </div>
-
       <div className="ring-sticky" ref={stickyRef}>
         <div className="ring-stage">
-          <div className="ring-visual">
+          <div className="ring-visual" ref={visualRef}>
             {/* .ring-fit держит масштаб под ширину экрана, .ring-orbit — анимацию:
                 оба ставят transform, и на одном узле они бы затёрли друг друга */}
             <div className="ring-fit" aria-hidden="true">
@@ -366,6 +361,11 @@ export function RescuedRing({
               </motion.div>
             </div>
           </div>
+
+          <p className="ring-foot ring-foot--phone">
+            {dogs} собак и {cats} кошек. Кого-то забрали из подвала, кого-то нашли на трассе
+            или в промзоне. Теперь каждый под опекой.
+          </p>
 
           {/* Колонка выходит на освободившееся место справа: круг не
               исчезает, он отступает и продолжает идти за текстом. */}

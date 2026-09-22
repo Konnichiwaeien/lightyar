@@ -20,6 +20,7 @@ const MENU_ITEMS = [
 export function MenuOverlay() {
   const [isOpen, setIsOpen] = useState(false);
   const savedScrollYRef = useRef(0);
+  const lockedPageRef = useRef<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const { getLenis } = useLenis();
@@ -37,6 +38,7 @@ export function MenuOverlay() {
     if (isOpen) {
       const scrollY = window.scrollY;
       savedScrollYRef.current = scrollY;
+      lockedPageRef.current = window.location.pathname;
       // Stop Lenis via React Context
       getLenis()?.stop();
       // Lock body scroll
@@ -46,6 +48,9 @@ export function MenuOverlay() {
       document.body.style.right = "0";
       document.body.style.overflow = "hidden";
     } else {
+      if (lockedPageRef.current === null) return;
+      const samePage = lockedPageRef.current === window.location.pathname;
+      lockedPageRef.current = null;
       const savedY = savedScrollYRef.current;
       // Unlock body
       document.body.style.position = "";
@@ -54,9 +59,11 @@ export function MenuOverlay() {
       document.body.style.right = "";
       document.body.style.overflow = "";
       // Restore scroll position
-      window.scrollTo(0, savedY);
+      if (samePage) window.scrollTo({ top: savedY, behavior: "instant" });
       // Restart Lenis via React Context
       getLenis()?.start();
+      getLenis()?.resize();
+      getLenis()?.scrollTo(samePage ? savedY : window.scrollY, { immediate: true, force: true });
     }
   }, [isOpen, getLenis]);
 
