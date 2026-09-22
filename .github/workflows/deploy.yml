@@ -73,3 +73,18 @@ jobs:
             git show "$sha:scripts/deploy.sh" >"$script"
             bash "$script" "$sha"
           EOF
+
+      - name: Verify public release
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 10 https://lightyar.ru/api/health |
+              node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{try{const j=JSON.parse(s);process.exit(j.status==="ok"&&j.release===process.argv[1]?0:1)}catch{process.exit(1)}})' '${{ github.sha }}'; then
+              echo 'Public site serves the verified build'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Public release mismatch; inspect reverse proxy and live process'
+          exit 1

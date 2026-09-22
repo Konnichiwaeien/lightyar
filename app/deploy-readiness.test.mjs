@@ -14,7 +14,7 @@ test("CI compiles and type-checks without CMS access; VPS performs the full buil
   assert.match(workflow, /run:\s*npm run build -- --experimental-build-mode compile/);
   const deploy = await read("../scripts/deploy.sh");
   assert.match(deploy, /^npm run build$/m);
-  assert.ok(deploy.indexOf("npm run build") < deploy.indexOf("pm2 startOrReload"));
+  assert.ok(deploy.indexOf("npm run build") < deploy.lastIndexOf('start_release "$release"'));
 });
 
 test("all application responses include the baseline security headers", async () => {

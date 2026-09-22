@@ -1,17 +1,16 @@
 module.exports = {
   apps: [{
     name: "lightyar",
-    script: "npm",
-    args: "start",
+    script: "./node_modules/next/dist/bin/next",
+    args: "start -H 127.0.0.1 -p 3000",
     cwd: __dirname,
-    interpreter: "none",
+    interpreter: process.execPath,
     autorestart: true,
     watch: false,
     max_memory_restart: "1G",
     env: {
       NODE_ENV: "production",
       PORT: 3000,
-      LIGHTYAR_RELEASE: process.env.LIGHTYAR_RELEASE || 'local',
     },
     env_dev: {
       NODE_ENV: "development",

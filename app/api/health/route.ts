@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +15,9 @@ export async function GET() {
     if (!response.ok) throw new Error('CMS unavailable');
     const body = await response.json();
     if (!Array.isArray(body.data)) throw new Error('Invalid CMS response');
-    return NextResponse.json({ status: 'ok', release: process.env.LIGHTYAR_RELEASE || 'local' }, { headers: { 'Cache-Control': 'no-store' } });
+    // Identify the running build, not an independently replaceable PM2 env label.
+    const release = (await readFile(join(process.cwd(), '.next', 'BUILD_ID'), 'utf8')).trim();
+    return NextResponse.json({ status: 'ok', release }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return NextResponse.json({ status: 'unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }

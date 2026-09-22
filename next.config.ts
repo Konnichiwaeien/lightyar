@@ -28,6 +28,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  generateBuildId: async () => {
+    const sha = process.env.LIGHTYAR_BUILD_SHA;
+    return sha && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
+  },
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', 'swiper'],
   },
